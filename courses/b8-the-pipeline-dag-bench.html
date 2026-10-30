@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 8 of 8. The pipeline DAG bench parses Penwood's real .gitlab-ci.yml in your browser: stages, needs, rules against a pipeline context, a runner cap, and the Free-tier compute-minutes scorecard. Four rungs from 30:08 to 19:17, a stage-per-job trap that costs 479 minutes a month, and a rules typo that drops the tests and stays green.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="The pipeline DAG bench - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 8 of 8. Four rungs, two clocks, one quota, and a false green you can press.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b8-the-pipeline-dag-bench.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The pipeline DAG bench - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 8 of 8. Stages only 30:08, with needs 26:22, with rules 19:17, two runners 21:53, and 1,803.8 compute minutes against 400.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 8 · The pipeline DAG bench - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 8 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 8 of 8</div>
+    <h1>The pipeline <span class="accent">DAG bench</span></h1>
+    <p class="sub">Every keyword of the track, on one screen and computed in your browser. Penwood, a constructed logistics-analytics team on GitLab.com Free, has a 14-job pipeline. The bench parses its real <code>.gitlab-ci.yml</code> text, resolves the include and the extends, evaluates the workflow and job rules against a pipeline context you choose, builds the DAG from stage order and needs, schedules it with unlimited runners and again under a cap, and prints the two clocks and the compute minutes. Then it shows you two ways to get a pipeline that looks fine and is not: a stage-per-job layout that costs Penwood 479 minutes a month, and a rules typo that drops the tests while the pipeline stays green.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Advanced</span>
+      <span class="chip audience">Builders who finished sessions 3 to 7</span>
+      <span class="chip audience">Leaders who read session 4</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:2">3-12 · How the bench computes</span>
+      <span class="a3" style="flex:6">12-40 · Build-along: the ladder and the traps</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>What tonight proves</h2>
+    </div>
+    <p class="lede">Seven sessions built Penwood's pipeline one keyword at a time. Tonight the whole file is measured. Nothing on this page runs on GitLab: the bench is a parser and a scheduler that follow the CI/CD YAML reference as read on 2026-10-29, and every number it prints is recomputed from the YAML text on each click. An independent Python reference reproduces all 488 values the ladder prints. Penwood is constructed; its job durations are the median of a constructed 20-run log; the runner cap is an assumption printed on the widget; the quota is the pricing page's figure on 2026-10-29. Where the docs did not fix a behaviour, the bench's convention is labelled as the bench's, not GitLab's.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Four numbers you can defend for Penwood's pipeline: 30:08 wall clock with stages only, 26:22 with needs, 19:17 once rules trim a merge-request pipeline to 8 jobs, 21:53 of that on two runners. One scorecard: 1,803.8 compute minutes a month against the Free tier's 400. And two traps you can reproduce on demand: a stage per job that makes wall clock equal serial at 66:18, and a rules typo that runs 7 jobs instead of 8 and passes.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers the path from YAML text to two clocks</span>
+      <h2>Four rungs, two clocks</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The bench does what GitLab does when a pipeline is created, in the same order: read the file, merge what it includes, resolve <code>extends</code>, decide whether a pipeline exists at all (<code>workflow:rules</code>), decide which jobs exist (<code>rules</code>, first match wins), connect them (stage order, or <code>needs</code> edges where given), and then what GitLab leaves to the runners: start each job when its inputs are done and a runner is free.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn flow of the bench's engine. YAML text enters a parser, the include file is merged first and the main file wins, extends does a reverse deep merge, workflow rules decide if a pipeline exists, job rules evaluate top to bottom against a context box holding CI_PIPELINE_SOURCE, branch, default branch and changed paths, the surviving jobs form a DAG from stage order or needs edges, and a scheduler produces wall clock, serial time and compute minutes. The context box is highlighted because it decides which jobs exist.">
+        <defs>
+          <filter id="b8aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="53" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b8aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b8aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b8aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b8aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b8aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b8aV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .b8aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b8aH" x="30" y="26">FROM TEXT TO TWO CLOCKS: WHAT THE BENCH DOES ON EVERY CLICK</text>
+        <text class="b8aS" x="470" y="26">order as the CI/CD YAML reference describes pipeline creation, read 2026-10-29</text>
+
+        <g filter="url(#b8aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="30" y="56" width="130" height="64" rx="9" transform="rotate(-0.8 95 88)" fill="url(#b8aHc)"/>
+          <path d="M164 88 L196 88" marker-end="url(#b8aAr)"/>
+          <rect x="200" y="56" width="150" height="64" rx="9" transform="rotate(0.5 275 88)" fill="#FFFFFF"/>
+          <path d="M354 88 L386 88" marker-end="url(#b8aAr)"/>
+          <rect x="390" y="56" width="150" height="64" rx="9" transform="rotate(-0.5 465 88)" fill="#FFFFFF"/>
+          <path d="M544 88 L576 88" marker-end="url(#b8aAr)"/>
+          <rect x="580" y="56" width="150" height="64" rx="9" transform="rotate(0.6 655 88)" fill="#FFFFFF"/>
+          <path d="M655 124 L655 150" marker-end="url(#b8aAr)"/>
+          <rect x="742" y="156" width="118" height="110" rx="9" transform="rotate(0.8 801 211)" fill="#FC6D26"/>
+          <rect x="580" y="156" width="150" height="110" rx="9" transform="rotate(-0.4 655 211)" fill="#FFFFFF"/>
+          <path d="M576 212 L544 212" marker-end="url(#b8aAr)"/>
+          <rect x="390" y="156" width="150" height="110" rx="9" transform="rotate(0.5 465 211)" fill="#F4F0FC"/>
+          <path d="M386 212 L354 212" marker-end="url(#b8aAr)"/>
+          <rect x="200" y="156" width="150" height="110" rx="9" transform="rotate(-0.6 275 211)" fill="#F4F0FC"/>
+          <path d="M196 212 L164 212" marker-end="url(#b8aAr)"/>
+          <rect x="30" y="156" width="130" height="110" rx="9" transform="rotate(0.7 95 211)" fill="#483698"/>
+        </g>
+
+        <text class="b8aL" x="44" y="80">.gitlab-ci.yml</text>
+        <text class="b8aS" x="44" y="98">text, the real file</text>
+        <text class="b8aL" x="212" y="80">parse + include</text>
+        <text class="b8aS" x="212" y="98">include first, main wins</text>
+        <text class="b8aL" x="402" y="80">extends</text>
+        <text class="b8aS" x="402" y="98">reverse deep merge</text>
+        <text class="b8aL" x="592" y="80">workflow:rules</text>
+        <text class="b8aS" x="592" y="98">pipeline or no pipeline</text>
+
+        <text class="b8aL" x="754" y="180">the context</text>
+        <text class="b8aS" x="754" y="198">CI_PIPELINE_</text>
+        <text class="b8aS" x="754" y="214">SOURCE, branch</text>
+        <text class="b8aS" x="754" y="230">tag, default</text>
+        <text class="b8aS" x="754" y="246">changed paths</text>
+
+        <text class="b8aL" x="592" y="180">job rules</text>
+        <text class="b8aS" x="592" y="198">top to bottom,</text>
+        <text class="b8aS" x="592" y="214">first match wins;</text>
+        <text class="b8aS" x="592" y="230">no match: job not</text>
+        <text class="b8aS" x="592" y="246">added at all</text>
+
+        <text class="b8aL" x="402" y="180">the DAG</text>
+        <text class="b8aS" x="402" y="198">no needs: wait for</text>
+        <text class="b8aS" x="402" y="214">every earlier stage</text>
+        <text class="b8aS" x="402" y="230">needs: wait for the</text>
+        <text class="b8aS" x="402" y="246">named jobs only</text>
+
+        <text class="b8aL" x="212" y="180">schedule</text>
+        <text class="b8aS" x="212" y="198">start when inputs done</text>
+        <text class="b8aS" x="212" y="214">and a runner is free;</text>
+        <text class="b8aS" x="212" y="230">manual waits for a click</text>
+        <text class="b8aS" x="212" y="246">(bench convention)</text>
+
+        <text class="b8aV" x="44" y="186" style="fill:#FFFFFF">two clocks</text>
+        <text class="b8aS" x="44" y="206" style="fill:#FFFFFF">wall: critical path</text>
+        <text class="b8aS" x="44" y="222" style="fill:#FFFFFF">serial: sum of jobs</text>
+        <text class="b8aS" x="44" y="238" style="fill:#FFFFFF">compute min: serial</text>
+        <text class="b8aS" x="44" y="254" style="fill:#FFFFFF">/ 60 x cost factor 1</text>
+
+        <text class="b8aN" x="30" y="300">The context decides which jobs exist before any clock starts. Change it and the same file is a different pipeline.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the same YAML is eight jobs in a merge request and eleven on a push to main, because rules run before anything else</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> The taught subset, and what is left outside <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The bench parses the keywords the track taught: <code>stages</code>, <code>stage</code>, <code>script</code>, <code>image</code>, <code>default</code>, <code>variables</code>, <code>include:local</code>, <code>extends</code>, <code>workflow:rules</code>, <code>rules</code> with <code>if</code>, <code>changes</code> and <code>when</code>, <code>when: manual</code> and <code>never</code>, <code>allow_failure</code>, <code>needs</code> with <code>optional</code>, <code>environment</code>. Its <code>if</code> evaluator handles <code>==</code>, <code>!=</code>, <code>=~</code>, <code>&amp;&amp;</code>, <code>||</code> and a bare variable test. Outside the subset, and reported as an error rather than guessed: <code>rules:exists</code>, <code>parallel:matrix</code>, <code>trigger</code>. Two behaviours the reference did not fix are the bench's conventions and say so on the widget: a <code>needs</code> reference into a later stage is an error, and a manual job is never scheduled, so anything behind it waits.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The self-test that can fail <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>On load the bench checks nine properties: a planted needs cycle is detected; a needs target excluded by rules is an error; the wall clock equals the last finish and is never shorter than the longest job; needs never make the pipeline slower than stages; a runner cap never makes it faster; jobs that never run are not counted as run; the anti-lever's wall clock equals its serial time; the rules typo drops the test job and the pipeline still passes; the scorecard counts all 40 runs. Then it runs itself again with cycle detection switched off, a planted fault, and confirms the first property fails. A self-test that cannot fail measures nothing; the widget prints both results under the panel.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The needs page quotes the error GitLab prints when a job needs another that rules removed: "'unit_tests' job needs 'compile' job, but 'compile' does not exist in the pipeline". The bench reproduces it on a planted file and uses it as a self-test property. Penwood avoids the error on <code>publish-docs</code>, which needs <code>docs-build</code> that only exists when <code>docs/</code> changed, by marking that need <code>optional: true</code>, exactly the fix the page gives.</p>
+    </div>
+  </section>
+
+  <section class="section" id="bench">
+    <div class="section-kicker">
+      <span class="klabel">Build-along · the bench</span>
+      <h2>Climb the ladder, then try to fool it</h2>
+      <span class="tag demo">★ 28 min · the main event</span>
+    </div>
+    <p class="lede">Click the rungs in order and say out loud what will change before you read the panel. The bench recomputes everything from the YAML on each click; the file it parsed is under the panel. Your numbers will match these, because nothing here is random: the YAML, the durations and the run mix are fixed constructed data.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn staircase of four rungs with the wall clock on each. Rung 1 stages only on a push to main: 30 minutes 8 seconds, 13 jobs. Rung 2 adds needs: 26 minutes 22 seconds, same jobs, 66.3 compute minutes either way. Rung 3 adds rules and a merge request context: 19 minutes 17 seconds, 8 jobs, 6 never added, 41.17 compute minutes. Rung 4 caps the runners at two: 21 minutes 53 seconds, two jobs waited 25 minutes 58 seconds in total for a runner. A fifth block, the scorecard, reads 1,803.8 compute minutes a month against 400 and is marked as over the quota.">
+        <defs>
+          <filter id="b8bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="59" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b8bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b8bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b8bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b8bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b8bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b8bV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b8bR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b8bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b8bH" x="30" y="26">THE LADDER: SAME TEAM, SAME JOBS, FOUR WAYS TO WRITE THE FILE</text>
+        <text class="b8bS" x="480" y="26">wall clock as the bench prints it · constructed durations · read 2026-10-29</text>
+
+        <g filter="url(#b8bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="30" y="196" width="160" height="70" rx="9" transform="rotate(-0.6 110 231)" fill="#FFFFFF"/>
+          <rect x="200" y="166" width="160" height="100" rx="9" transform="rotate(0.5 280 216)" fill="#FFFFFF"/>
+          <rect x="370" y="136" width="160" height="130" rx="9" transform="rotate(-0.5 450 201)" fill="#F4F0FC"/>
+          <rect x="540" y="106" width="160" height="160" rx="9" transform="rotate(0.4 620 186)" fill="#F4F0FC"/>
+          <path d="M190 231 L198 231 M360 216 L368 216 M530 201 L538 201" marker-end="url(#b8bAr)"/>
+          <rect x="716" y="56" width="134" height="210" rx="10" transform="rotate(0.6 783 161)" fill="#FEF2F2" stroke="#991B1B"/>
+          <path d="M730 112 L836 112" stroke="#991B1B" stroke-dasharray="4 3"/>
+          <rect x="730" y="118" width="106" height="130" rx="6" fill="#FC6D26"/>
+        </g>
+
+        <text class="b8bL" x="44" y="218">1 · stages only</text>
+        <text class="b8bV" x="44" y="242">30:08</text>
+        <text class="b8bS" x="44" y="258">13 jobs · push to main</text>
+        <text class="b8bL" x="214" y="188">2 · + needs</text>
+        <text class="b8bV" x="214" y="212">26:22</text>
+        <text class="b8bS" x="214" y="228">13 jobs, 66.3 min either</text>
+        <text class="b8bS" x="214" y="244">way: needs move the</text>
+        <text class="b8bS" x="214" y="258">clock, not the bill</text>
+        <text class="b8bL" x="384" y="158">3 · + rules, MR</text>
+        <text class="b8bV" x="384" y="182">19:17</text>
+        <text class="b8bS" x="384" y="198">8 jobs ran, 6 never</text>
+        <text class="b8bS" x="384" y="214">added: no rule matched</text>
+        <text class="b8bS" x="384" y="230">in a merge request</text>
+        <text class="b8bS" x="384" y="246">41.17 compute min</text>
+        <text class="b8bL" x="554" y="128">4 · + 2 runners</text>
+        <text class="b8bV" x="554" y="152">21:53</text>
+        <text class="b8bS" x="554" y="168">same 8 jobs, 41.17 min;</text>
+        <text class="b8bS" x="554" y="184">two jobs waited 25:58</text>
+        <text class="b8bS" x="554" y="200">in total for a runner;</text>
+        <text class="b8bS" x="554" y="216">last to finish:</text>
+        <text class="b8bS" x="554" y="232">scan-dependencies</text>
+
+        <text class="b8bL" x="730" y="80">5 · the scorecard</text>
+        <text class="b8bR" x="730" y="100">over the quota</text>
+        <text class="b8bH" x="740" y="142">1,803.8 min</text>
+        <text class="b8bL" x="740" y="162">a month</text>
+        <text class="b8bL" x="740" y="186">vs 400 Free</text>
+        <text class="b8bL" x="740" y="206">= 450.95%</text>
+        <text class="b8bS" x="740" y="230">24 MR, 12 main,</text>
+        <text class="b8bS" x="740" y="244">4 schedules</text>
+
+        <text class="b8bN" x="30" y="298">Rungs 1 and 2 cost the same 66.3 compute minutes: the DAG buys wall clock, only rules buy minutes. Quota as of 2026-10-29.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - each rung keeps what the one before it added; the scorecard is the number the Free tier bills</figcaption>
+    </figure>
+
+    <div id="gtl-bench"></div>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Rung 1, stages only, push to main.</strong> Five stages, no needs, no rules. 13 jobs run (deploy-production is manual and waits), wall clock 30:08, serial 66:18, 66.30 compute minutes. Read the critical path: lint-sql, build-image, nightly-backfill, publish-image, deploy-staging. The 894-second backfill sits in <code>test</code>, so <code>publish</code> waits for it even though nothing in publish uses it. That is what "the next stage starts only after the previous stage's jobs succeed" costs.</p>
+      </div>
+      <div class="step">
+        <p><strong>Rung 2, add needs.</strong> Same 13 jobs, same 66.30 minutes, wall clock 26:22. The critical path is now lint-yaml, build-image, integration-tests, publish-image, deploy-staging; the backfill runs beside everything from second 0 and nothing waits for it. Open the job table: compile-models starts at 1:47, the moment lint-sql finishes, not at 1:47 plus the rest of the lint stage. Needs moved the clock and not the bill.</p>
+      </div>
+      <div class="step">
+        <p><strong>Rung 3, add rules, in a merge request with pipelines/ changed.</strong> 8 jobs ran, 6 were never added: docs-build (docs/ unchanged), nightly-backfill (not a schedule), and publish-image, publish-docs, deploy-staging, deploy-production, whose rule compares <code>CI_COMMIT_BRANCH</code> with the default branch and that variable is unset in a merge request pipeline. Wall clock 19:17, 41.17 compute minutes. Now switch the context to "merge request, only docs/ changed" and watch data-quality-tests leave and docs-build arrive.</p>
+      </div>
+      <div class="step">
+        <p><strong>Rung 4, cap the runners at two.</strong> Same 8 jobs, same 41.17 minutes, wall clock 21:53. Two jobs waited 25:58 in total for a free runner: unit-tests 7:58 and scan-dependencies 18:00, which had no inputs at all and still finished last. The bench picks the longest remaining path first when runners are scarce; that is its convention, labelled on the widget, because GitLab does not document a queue order for a runner fleet. Slide the cap to 1 and watch wall clock meet serial.</p>
+      </div>
+      <div class="step">
+        <p><strong>Rung 5, the scorecard.</strong> Penwood's constructed month: 24 merge requests at 41.17 minutes, 12 pushes to main at 49.25 (11 jobs: docs-build and the backfill never added), 4 schedules at 56.18 (the backfill runs, unit-tests does not). Total 1,803.8 compute minutes, 450.95% of the Free tier's 400 as of 2026-10-29. The scorecard's wall clocks change with the runner cap; its minutes do not. The quota, not the clock, is Penwood's binding constraint.</p>
+      </div>
+      <div class="step">
+        <p><strong>Press "One job per stage, no needs".</strong> Fourteen stages, one job each, push to main: wall clock 66:18 equals serial 66:18. Against rung 2 on the same push that is 39.93 minutes lost per run and 479.2 minutes a month at Penwood's 12 pushes to main. This is what stages look like when a team uses them as an ordering list. Note the thing it does not change: compute minutes, still 66.30. The trap costs the team's time, not the quota.</p>
+      </div>
+      <div class="step">
+        <p><strong>Rung 3 again, then press "Break it".</strong> The first rule of unit-tests now reads <code>$CI_PIPELINE_SOURCE == "merge_request"</code>. The real value is <code>merge_request_event</code>. No rule matches, unit-tests is never added, 7 jobs run instead of 8, wall clock still 19:17, pipeline passed. Nothing is red, because a job that was never added cannot fail. The widget names the job and the rule that excluded it; GitLab's pipeline page would show only a green pipeline with one fewer job. Restore it before you leave.</p>
+      </div>
+      <div class="step">
+        <p><strong>Switch the context to "push to a feature branch with an open merge request".</strong> No pipeline. Workflow rule 2 matches with <code>when: never</code>, because <code>CI_COMMIT_BRANCH</code> and <code>CI_OPEN_MERGE_REQUESTS</code> are both set. That is the documented fix for duplicate pipelines doing its job, and it costs zero compute minutes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers the two ways a pipeline looks fine and is not</span>
+      <h2>Two traps</h2>
+      <span class="tag concept">4 min live</span>
+    </div>
+    <p class="lede">Both traps pass. One wastes the team's day; the other hides a missing test. Neither shows up as a failed job, which is why a leader reading the pipeline page in session 4 needs two questions, not one: how long did it take, and which jobs were never added.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn panels. Left, one job per stage: fourteen boxes in a single column, each waiting for the one above, wall clock 66 minutes 18 seconds equal to serial, 39.93 minutes lost per run and 479.2 a month versus the needs pipeline, compute minutes unchanged at 66.3. Right, the rules typo: the unit-tests job's first rule compares CI_PIPELINE_SOURCE with merge_request instead of merge_request_event, so in a merge request no rule matches, the job is never added, 7 jobs run instead of 8, and the pipeline is green. The missing job is drawn as a dashed red outline.">
+        <defs>
+          <filter id="b8cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b8cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b8cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b8cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b8cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b8cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b8cV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b8cR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b8cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b8cH" x="30" y="26">TWO PIPELINES THAT PASS AND SHOULD NOT SATISFY YOU</text>
+
+        <g filter="url(#b8cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="30" y="46" width="400" height="230" rx="12" transform="rotate(-0.3 230 161)" fill="#FFFFFF"/>
+          <rect x="52" y="86" width="70" height="18" rx="4" transform="rotate(-1 87 95)" fill="url(#b8cHc)"/>
+          <rect x="52" y="110" width="70" height="18" rx="4" transform="rotate(1 87 119)" fill="url(#b8cHc)"/>
+          <rect x="52" y="134" width="70" height="18" rx="4" transform="rotate(-1 87 143)" fill="url(#b8cHc)"/>
+          <rect x="52" y="158" width="70" height="18" rx="4" transform="rotate(1 87 167)" fill="url(#b8cHc)"/>
+          <rect x="52" y="182" width="70" height="18" rx="4" transform="rotate(-1 87 191)" fill="url(#b8cHc)"/>
+          <rect x="52" y="206" width="70" height="18" rx="4" transform="rotate(1 87 215)" fill="url(#b8cHc)"/>
+          <rect x="52" y="230" width="70" height="18" rx="4" transform="rotate(-1 87 239)" fill="url(#b8cHc)"/>
+          <path d="M87 104 L87 108 M87 128 L87 132 M87 152 L87 156 M87 176 L87 180 M87 200 L87 204 M87 224 L87 228"/>
+          <rect x="150" y="120" width="260" height="60" rx="9" transform="rotate(0.5 280 150)" fill="#FC6D26"/>
+          <rect x="450" y="46" width="400" height="230" rx="12" transform="rotate(0.3 650 161)" fill="#FFFFFF"/>
+          <rect x="472" y="86" width="110" height="26" rx="6" transform="rotate(-0.8 527 99)" fill="#F4F0FC"/>
+          <rect x="592" y="86" width="110" height="26" rx="6" transform="rotate(0.6 647 99)" fill="#F4F0FC"/>
+          <rect x="712" y="86" width="118" height="26" rx="6" transform="rotate(-0.5 771 99)" fill="#F4F0FC"/>
+          <rect x="472" y="122" width="110" height="26" rx="6" transform="rotate(0.7 527 135)" fill="#F4F0FC"/>
+          <rect x="592" y="122" width="110" height="26" rx="6" transform="rotate(-0.9 647 135)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="5 4"/>
+          <rect x="712" y="122" width="118" height="26" rx="6" transform="rotate(0.4 771 135)" fill="#F4F0FC"/>
+          <rect x="472" y="158" width="110" height="26" rx="6" transform="rotate(-0.6 527 171)" fill="#F4F0FC"/>
+          <rect x="592" y="158" width="110" height="26" rx="6" transform="rotate(0.5 647 171)" fill="#F4F0FC"/>
+          <rect x="472" y="208" width="358" height="46" rx="8" transform="rotate(0.2 651 231)" fill="#483698"/>
+        </g>
+
+        <text class="b8cL" x="48" y="72">One job per stage, no needs</text>
+        <text class="b8cS" x="132" y="96">fourteen stages, one job each,</text>
+        <text class="b8cS" x="132" y="112">every job waits for the one above</text>
+        <text class="b8cV" x="164" y="146">66:18 = 66:18</text>
+        <text class="b8cL" x="164" y="166">wall clock equals serial</text>
+        <text class="b8cL" x="132" y="206">39.93 min lost per run vs needs</text>
+        <text class="b8cL" x="132" y="224">479.2 min a month at 12 pushes</text>
+        <text class="b8cS" x="132" y="244">compute minutes unchanged: 66.3</text>
+        <text class="b8cS" x="48" y="266">the team's time, not the quota</text>
+
+        <text class="b8cL" x="468" y="72">The rules typo, in a merge request</text>
+        <text class="b8cS" x="484" y="103">lint-yaml</text>
+        <text class="b8cS" x="604" y="103">build-image</text>
+        <text class="b8cS" x="724" y="103">integration-tests</text>
+        <text class="b8cS" x="484" y="139">compile-models</text>
+        <text class="b8cR" x="604" y="139">unit-tests</text>
+        <text class="b8cS" x="724" y="139">data-quality-tests</text>
+        <text class="b8cS" x="484" y="175">lint-sql</text>
+        <text class="b8cS" x="604" y="175">scan-dependencies</text>
+        <text class="b8cR" x="722" y="175">7 of 8 ran · passed</text>
+        <text class="b8cL" x="486" y="228" style="fill:#FFFFFF">"merge_request" never equals merge_request_event</text>
+        <text class="b8cS" x="486" y="246" style="fill:#FFFFFF">no rule matched, so the job was never added, so it could not fail</text>
+
+        <text class="b8cN" x="30" y="300">Ask two questions of every green pipeline: how long, and which jobs were never added. Only the second catches the right panel.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the left trap is visible on the clock; the right one is invisible unless you count the jobs</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Why the typo is silent <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The job rules page: "If no rules match, the job is not added to the pipeline". Not skipped, not failed, not shown: not added. The predefined variable's value for merge request pipelines is <code>merge_request_event</code>, and nothing checks that the string you compare it with is one of the documented values. The bench reports the exclusion with the rule text because it keeps every job's evaluation trace; GitLab's pipeline page shows the jobs that exist. The defence is the one the merge request pipelines page implies: know how many jobs a merge request pipeline should have, and look when the count changes.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Why the anti-lever is "one job per stage" and not "one stage" <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The reference says "Jobs in the same stage run in parallel". So a file with one stage and no needs runs all fourteen jobs at once, which is fast and wrong: tests run on an image that is still building. The serial trap is the opposite habit, a stage per job, which teams fall into when they use stages as an ordering list. The bench's anti-lever is that layout, and its wall clock equals its serial time exactly, 66:18. The fix is not more stages or fewer; it is <code>needs</code>, which names the real inputs and lets the rest run.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The job control page describes what a blocking manual job does: with <code>when: manual</code> inside <code>rules</code>, <code>allow_failure</code> is false by default and "The pipeline stops at the stage where the job is defined", status blocked. Penwood's deploy-production is written that way, so on every push to main the bench reports it as waiting for a click rather than run, and the scorecard never bills its 183 seconds. The gate is free; what it protects is the production environment in session 6.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers reading the scorecard as a budget</span>
+      <h2>The scorecard</h2>
+      <span class="tag concept">3 min live</span>
+    </div>
+    <p class="lede">Three run types, three per-run costs, one monthly total against one quota. The scorecard is the leader's number; the rungs are the builder's. Read it as a budget: which line is largest, which lever moves it, and what the lever costs.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn bar chart of Penwood's constructed month in compute minutes. Merge requests: 24 runs at 41.17 equals 988.1. Pushes to main: 12 at 49.25 equals 591.0. Schedules: 4 at 56.18 equals 224.7. Total 1,803.8. A vertical line marks the Free tier quota of 400 as of 29 October 2026; the total bar passes it by 450.95 percent. A note lists the levers: rules changes, fewer schedules, runners the quota page does not measure, or Premium's 10,000.">
+        <defs>
+          <filter id="b8dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b8dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b8dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b8dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b8dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b8dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b8dV { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b8dR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b8dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b8dH" x="30" y="26">PENWOOD'S MONTH IN COMPUTE MINUTES (CONSTRUCTED RUN MIX, BENCH CANON)</text>
+        <text class="b8dS" x="560" y="26">bars scaled so 1,803.8 = full width · quota as of 2026-10-29</text>
+
+        <g filter="url(#b8dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="250" y="56" width="263" height="28" rx="6" transform="rotate(-0.3 381 70)" fill="#6B4FBB"/>
+          <rect x="250" y="100" width="157" height="28" rx="6" transform="rotate(0.3 328 114)" fill="#6B4FBB"/>
+          <rect x="250" y="144" width="60" height="28" rx="6" transform="rotate(-0.4 280 158)" fill="#6B4FBB"/>
+          <rect x="250" y="196" width="480" height="30" rx="6" transform="rotate(0.2 490 211)" fill="#FC6D26"/>
+          <path d="M356 46 L356 236" stroke="#991B1B" stroke-width="2.5" stroke-dasharray="6 4"/>
+        </g>
+
+        <text class="b8dL" x="60" y="75">24 merge requests x 41.17</text>
+        <text class="b8dV" x="262" y="75">988.1</text>
+        <text class="b8dL" x="60" y="119">12 pushes to main x 49.25</text>
+        <text class="b8dV" x="262" y="119">591.0</text>
+        <text class="b8dL" x="60" y="163">4 schedules x 56.18</text>
+        <text class="b8dS" x="318" y="163">224.7</text>
+        <text class="b8dH" x="60" y="216">total, 40 runs</text>
+        <text class="b8dH" x="372" y="216">1,803.8 compute minutes = 450.95% of 400</text>
+        <text class="b8dR" x="364" y="248">Free quota: 400 a month</text>
+
+        <text class="b8dN" x="30" y="278">Levers, cheapest first: rules:changes on the test jobs, fewer schedules, runners the quota page does not measure (re-verify), then Premium's 10,000.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the merge-request line is the largest, so the cheapest lever is a rule that keeps a test job out of merge requests that did not touch its inputs</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Which lever, and what it costs <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The merge-request line is 988.1 of 1,803.8. Inside each merge-request run, integration-tests is 730 of 2,470 seconds and runs on every merge request; a <code>rules:changes</code> on it would skip it when only <code>docs/</code> or <code>models/</code> changed, and the "only docs/ changed" context on the bench shows what that run looks like. The schedule line is small but each run is the dearest, 56.18 minutes, because the 894-second backfill runs; four a month is a choice. The compute-minutes page says the meter counts instance runners and suggests "Use private runners for some jobs" to reduce usage, without stating that your own runners are exempt, so the bench prints that lever with "re-verify" and nothing more. The last lever is Premium's 10,000 minutes at $29 per user a month as of 2026-10-29; for five people that is a number a leader can compare with the team's hours.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>After the bench</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Add <code>rules: - changes: [pipelines/**/*, tests/integration/**/*]</code> to integration-tests in a copy of penwood.yml and reason out the new rung 3 wall clock and compute minutes before checking your reasoning against the job table.</li>
+      <li>Set the runner cap to 1 and read the job order. Then write down which single <code>needs</code> edge, if removed, would change the order, and why.</li>
+      <li>Take your own team's pipeline durations (or an estimate, labelled) and fill the scorecard: runs per type, minutes per run, total against the tier's quota as of today's date.</li>
+      <li>Find every <code>rules: - if:</code> line in your own <code>.gitlab-ci.yml</code> that compares <code>CI_PIPELINE_SOURCE</code> with a string, and check each string against the predefined variables reference.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 8 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">1 · Rung 1 and rung 2 both cost 66.30 compute minutes, yet rung 2 finishes at 26:22 instead of 30:08. What did <code>needs</code> change?</p>
+      <button class="qopt" type="button">A · Jobs got shorter because they ran on bigger runners</button>
+      <button class="qopt" type="button">B · Jobs started when their named inputs finished instead of when the whole previous stage did; the same seconds ran, in less wall-clock time</button>
+      <button class="qopt" type="button">C · Six jobs were never added, so less work ran</button>
+      <button class="qopt" type="button">D · The backfill was skipped</button>
+      <p class="qwhy">Serial time is the sum of job seconds and did not move; the DAG only changes when each job may start. Rung 3, not rung 2, is where jobs stop being added, and the backfill ran on both rungs because neither file has rules.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · After the break button, the pipeline runs 7 jobs instead of 8 and is green. Where did unit-tests go?</p>
+      <button class="qopt" type="button">A · It failed and was hidden by allow_failure</button>
+      <button class="qopt" type="button">B · It was skipped because a needed job was missing</button>
+      <button class="qopt" type="button">C · It ran but its result was not recorded</button>
+      <button class="qopt" type="button">D · Its first rule compared CI_PIPELINE_SOURCE with "merge_request", which never equals merge_request_event; no rule matched, so the job was never added and could not fail</button>
+      <p class="qwhy">"If no rules match, the job is not added to the pipeline." A missing needs target would have been an error at pipeline creation, not a silent pass; that is the other planted fault the self-test checks.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · The scorecard reads 1,803.8 compute minutes a month against 400. Slide the runner cap from 2 to 6. What happens to the scorecard?</p>
+      <button class="qopt" type="button">A · The wall clocks fall; the minutes and the 450.95% do not move, because compute minutes count job seconds, not elapsed time</button>
+      <button class="qopt" type="button">B · The minutes fall roughly in proportion to the extra runners</button>
+      <button class="qopt" type="button">C · The minutes rise, because more runners bill at once</button>
+      <button class="qopt" type="button">D · Nothing changes at all</button>
+      <p class="qwhy">Compute minutes are job duration times the cost factor, summed; runners change when jobs run, not how long they run. The wall clock per run type does fall, which is why the scorecard prints both.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">The whole ladder, the anti-lever, the break button, the scorecard</span><span class="note">Computed in the browser from Penwood's constructed YAML and matched by a Python reference over 488 values; Penwood, its durations and run mix are constructed</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Stages, needs, rules, when, workflow, include, extends semantics</span><span class="note">GitLab Docs: CI/CD YAML syntax reference, needs, job rules, job control, includes; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Compute minutes: quota, cost factors, what is measured</span><span class="note">GitLab Docs: Compute minutes; pricing page; read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Predefined variables and the merge_request_event value</span><span class="note">GitLab Docs: Predefined CI/CD variables reference, Specify when jobs run with rules; read at source</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Queue order under a runner cap; needs into a later stage; manual gates</span><span class="note">Not fixed by the pages read; the bench's conventions, labelled on the widget</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Whether your own runners are exempt from the quota</span><span class="note">Not stated on the compute minutes page; printed as "re-verify", never claimed</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 8 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Two clocks, one bill</b><span>Wall clock is the critical path; serial is the sum; the bill is serial / 60 x cost factor.</span></div>
+      <div class="cheat-item"><b>The ladder</b><span>Stages 30:08, needs 26:22, rules in a merge request 19:17, two runners 21:53. Minutes 66.3, 66.3, 41.17, 41.17.</span></div>
+      <div class="cheat-item"><b>Needs move the clock</b><span>Rules move the bill. Runners move neither bill nor jobs, only the clock.</span></div>
+      <div class="cheat-item"><b>Stage per job</b><span>Wall clock equals serial: 66:18. 39.93 minutes lost per run, 479.2 a month at 12 pushes.</span></div>
+      <div class="cheat-item"><b>Not added is not failed</b><span>A rule that never matches removes the job silently. Count the jobs, not the colour.</span></div>
+      <div class="cheat-item"><b>The scorecard</b><span>1,803.8 compute minutes a month vs 400 (as of 2026-10-29). The merge-request line is the lever.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>The builder track ends here with every keyword measured. The leader track's session 4 reads the same ladder without a line of YAML, and session 6 turns the scorecard into the 90-day plan's quota decision.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 8 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="b7-registry-and-templates.html">← Prev: Container registry and templates</a> &nbsp;·&nbsp; <a href="../index.html">Course home</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/gtl-data.js?v=1"></script>
+<script src="../assets/gtl-live.js?v=2"></script>
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

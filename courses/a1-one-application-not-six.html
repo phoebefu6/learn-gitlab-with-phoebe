@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Leader session 1 of 6. What GitLab adds over git plus a host: planning, CI/CD, a registry, variables and security scanning under one permission tree, and the trade-offs that come with one application. Penwood, a constructed analytics team, maps its six tools onto GitLab.com Free.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="One application, not six - learn gitlab with phoebe">
+<meta property="og:description" content="Leader session 1 of 6. Six tools, one permission tree, one quota. What you gain and what you give up.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/a1-one-application-not-six.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="One application, not six - learn gitlab with phoebe">
+<meta name="twitter:description" content="Leader session 1 of 6. What GitLab adds over git plus a host, and what it costs you in return.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Leader session 1 · One application, not six - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Leader session 1 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Leader session 1 of 6</div>
+    <h1>One application, <span class="accent">not six</span></h1>
+    <p class="sub">A git host keeps code. Everything a data team does around that code lives somewhere else: a board for the work, a service that runs the tests, a registry for the images, a vault for the secrets, a scanner, a chat tool. Penwood, a constructed five-person logistics-analytics team, pays for six of those today and is moving onto GitLab.com's Free tier. Tonight is about what GitLab actually adds when it folds those into one application, in GitLab's own words and in yours, and what you hand over in return: one vendor's model of the work, one bill measured in compute minutes, one permission tree that a mistake travels down.</p>
+    <div class="chip-row">
+      <span class="chip level">🟢 Foundational</span>
+      <span class="chip audience">Data and analytics leads choosing a platform</span>
+      <span class="chip audience">Anyone who pays for CI minutes</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · What GitLab adds</span>
+      <span class="a3" style="flex:4">20-40 · Build-along: Penwood's surface map</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>How the leader track works</h2>
+    </div>
+    <p class="lede">Six sessions, no code. The artifact you build across them is a <strong>one-page platform decision and a 90-day plan</strong> for moving a data team onto GitLab: which hosting, which tier, who may do what, how to read a pipeline without running one, which controls you need and which you can skip, and the migration in three blocks. Tonight is the first question: what does one application give you that six tools do not, and what does it take away. Session 2 is SaaS or self-managed. Session 3 is groups, projects and permissions. Session 4 is reading a pipeline like a manager. Session 5 is governance without friction. Session 6 is the 90-day plan. The running example is <strong>Penwood</strong>, constructed for these pages: five people, one group, one project, fourteen pipeline jobs, and a Free tier with limits you will meet by name.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Penwood's surface map: the six tool classes you pay for today, each mapped onto the GitLab surface that replaces it, with the tier it needs (Free or paid) and the one number the Free tier measures you by, compute minutes. Plus a sentence you can defend: "we move these five surfaces, we keep this one outside, and here is the quota arithmetic that says whether Free is enough".</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers what a git host leaves out and what GitLab folds in</span>
+      <h2>What a host leaves out</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The repository is the smallest part of a data team's day. Around it sit the board that says what to do, the runner that proves the change works, the registry that holds the image the pipeline runs in, the variables that hold the credentials, and the scan that says the dependencies are safe. GitLab's claim is that these are one application with one login, one URL tree and one permission model. Read the claim as a claim, then check each surface against the tier page.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn stack. The base bar is a git repository on a host. Above it, inside one application outline, five surfaces GitLab adds: plan with issues and boards, CI/CD from a .gitlab-ci.yml file, a container registry at the project's path, variables that can be protected and masked, and security scanning with SAST included on Free. One permission tree on the right, highlighted, applies to all five.">
+        <defs>
+          <filter id="a1aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a1aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a1aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a1aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a1aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a1aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a1aV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .a1aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a1aH" x="30" y="26">ONE APPLICATION: WHAT SITS ON TOP OF THE REPOSITORY</text>
+        <text class="a1aS" x="430" y="26">surfaces as the GitLab Docs name them · tiers as the pricing page read on 2026-10-29</text>
+
+        <g filter="url(#a1aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="30" y="52" width="600" height="190" rx="14" transform="rotate(-0.3 330 147)" fill="#FFFFFF" stroke="#6B4FBB" stroke-dasharray="7 5"/>
+          <rect x="52" y="178" width="556" height="48" rx="10" transform="rotate(0.3 330 202)" fill="url(#a1aHc)"/>
+          <rect x="52" y="72" width="100" height="84" rx="10" transform="rotate(-1 102 114)" fill="#F4F0FC"/>
+          <rect x="166" y="72" width="100" height="84" rx="10" transform="rotate(0.8 216 114)" fill="#F4F0FC"/>
+          <rect x="280" y="72" width="100" height="84" rx="10" transform="rotate(-0.6 330 114)" fill="#F4F0FC"/>
+          <rect x="394" y="72" width="100" height="84" rx="10" transform="rotate(0.7 444 114)" fill="#F4F0FC"/>
+          <rect x="508" y="72" width="100" height="84" rx="10" transform="rotate(-0.9 558 114)" fill="#F4F0FC"/>
+          <path d="M636 147 L690 147" marker-end="url(#a1aAr)"/>
+          <rect x="696" y="92" width="154" height="110" rx="12" transform="rotate(0.8 773 147)" fill="#FC6D26"/>
+          <path d="M728 132 L728 176 M728 132 L760 132 M728 154 L760 154 M728 176 L760 176"/>
+        </g>
+
+        <text class="a1aL" x="64" y="98">Plan</text>
+        <text class="a1aS" x="64" y="116">issues, labels,</text>
+        <text class="a1aS" x="64" y="132">label-list boards</text>
+        <text class="a1aS" x="64" y="148">Free</text>
+        <text class="a1aL" x="178" y="98">CI/CD</text>
+        <text class="a1aS" x="178" y="116">.gitlab-ci.yml,</text>
+        <text class="a1aS" x="178" y="132">hosted runners</text>
+        <text class="a1aS" x="178" y="148">Free, 400 min</text>
+        <text class="a1aL" x="292" y="98">Registry</text>
+        <text class="a1aS" x="292" y="116">images at the</text>
+        <text class="a1aS" x="292" y="132">project's path</text>
+        <text class="a1aS" x="292" y="148">Free</text>
+        <text class="a1aL" x="406" y="98">Variables</text>
+        <text class="a1aS" x="406" y="116">protected,</text>
+        <text class="a1aS" x="406" y="132">masked</text>
+        <text class="a1aS" x="406" y="148">Free</text>
+        <text class="a1aL" x="520" y="98">Security</text>
+        <text class="a1aS" x="520" y="116">SAST on Free,</text>
+        <text class="a1aS" x="520" y="132">more on paid</text>
+        <text class="a1aS" x="520" y="148">Free / Ultimate</text>
+
+        <text class="a1aL" x="70" y="208">the git repository on a host: commits, branches, merge requests</text>
+        <text class="a1aV" x="712" y="120">one tree</text>
+        <text class="a1aL" x="770" y="140">group</text>
+        <text class="a1aL" x="770" y="162">subgroup</text>
+        <text class="a1aL" x="770" y="184">project</text>
+        <text class="a1aS" x="662" y="228">roles inherit downward</text>
+
+        <text class="a1aN" x="30" y="268">What you gain is not five features. It is one permission tree and one URL path that all five obey.</text>
+        <text class="a1aN" x="30" y="288">Tier figures are the pricing page's on 2026-10-29; re-verify the tier page before relying on them.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the five surfaces are available on Free; the thing that makes them one application is the shared tree on the right</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> GitLab's own words, read as a claim <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>GitLab describes itself on its platform page as a place to "Plan, build, secure, and orchestrate on one platform you can trust", calls itself "the intelligent orchestration platform for DevSecOps", and says it will "Unify SDLC stages as a single shared source of truth". Those are the vendor's sentences, quoted as the vendor's claim. The useful move is to turn each into a question you can check on the docs: plan means issues and boards, and the boards page says label lists are on every tier. Build means a pipeline from a <code>.gitlab-ci.yml</code> file and runners GitLab hosts, which the compute-minutes page meters. Secure means scanners, and the pricing page lists Static Application Security Testing under Free and the rest under Ultimate. A claim you can map to a tier badge is a claim you can budget.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> What the Free tier includes, as of 2026-10-29 <span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The pricing page on 2026-10-29: Free is "$0 per user/month, No credit card required" (the FAQ adds that a card is required to use GitLab.com's shared runners), with 400 compute minutes a month, "10 GiB adjustable storage" and "5 users per top-level group", which the FAQ limits to private top-level groups. Free includes "Source Code Management &amp; CI/CD" and "Static Application Security Testing". Premium is $29 per user a month billed annually with 10,000 compute minutes and 500 GiB; Ultimate is custom pricing with 50,000 compute minutes. Tiers change: re-verify the tier page before relying on any of these.</p>
+        <p>Three of those numbers bite a data team in a specific order. Five users is the first wall if the team grows. Ten GiB per project counts only the repository and LFS, so images and artifacts do not eat it. Four hundred compute minutes is the one Penwood hits first, and Builder session 8 computes exactly how hard.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Where the seams are <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>What a repository, an issue and a pull request are, for people who do not code, lives in <a href="https://phoebefu6.github.io/learn-github-with-phoebe/">the GitHub course</a>; git itself, branching, conflicts and workflow files live in <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/">GitHub for builders</a>. These sessions take the other side of that seam: only what GitLab does differently, starting with the merge request in Builder session 2 and <code>.gitlab-ci.yml</code> in Builder session 3. What to test in a data pipeline belongs to <a href="https://phoebefu6.github.io/learn-dataops-with-phoebe/courses/b3-data-testing-contracts.html">DataOps</a>; where the pipeline runs those tests is ours.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The GitLab Docs describe what happens when a private top-level group on Free goes past five people: the namespace is "placed in a read-only state", and it can no longer write to repositories, LFS, packages or registries. Penwood, constructed, is exactly five. The day a contractor is added, every surface in the figure above stops accepting writes at once. That is the other face of one tree: one limit reaches everything.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers the shared tree: groups, projects and inherited roles</span>
+      <h2>One tree, one set of roles</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">In six separate tools you grant access six times and revoke it five. In GitLab you grant it once, at the group, and it flows down: "Users always retain the permissions for their highest role", and a subgroup cannot give someone less than the parent gave. That is the mechanism behind "one application", and it cuts both ways.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn tree for the constructed Penwood team. The top-level group penwood holds the data lead as Owner. A subgroup data inherits that membership. The project pipelines inside it inherits again. Two analytics engineers are added at the group as Maintainer and Developer, an analyst as Developer, a finance partner as Reporter. An arrow down the tree says roles flow down and cannot be lowered. A counter at the right shows five unique users of five allowed on a private top-level group on Free.">
+        <defs>
+          <filter id="a1bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a1bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a1bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a1bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a1bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a1bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a1bV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .a1bW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .a1bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a1bH" x="30" y="26">PENWOOD'S TREE: GRANT ONCE, INHERIT DOWN</text>
+        <text class="a1bS" x="330" y="26">constructed team · roles and inheritance as the permissions and subgroups pages describe them</text>
+
+        <g filter="url(#a1bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="52" width="250" height="56" rx="10" transform="rotate(-0.5 165 80)" fill="#483698"/>
+          <rect x="80" y="142" width="250" height="56" rx="10" transform="rotate(0.5 205 170)" fill="#F4F0FC"/>
+          <rect x="120" y="232" width="250" height="56" rx="10" transform="rotate(-0.4 245 260)" fill="#FFFFFF"/>
+          <path d="M165 110 L165 128 L205 128 L205 140" marker-end="url(#a1bAr)"/>
+          <path d="M205 200 L205 218 L245 218 L245 230" marker-end="url(#a1bAr)"/>
+          <path d="M420 70 L420 282" stroke="#6B4FBB" stroke-dasharray="6 4" marker-end="url(#a1bAr)"/>
+          <rect x="506" y="58" width="190" height="34" rx="8" transform="rotate(-0.8 601 75)" fill="#FFFFFF"/>
+          <rect x="506" y="102" width="190" height="34" rx="8" transform="rotate(0.6 601 119)" fill="#FFFFFF"/>
+          <rect x="506" y="146" width="190" height="34" rx="8" transform="rotate(-0.5 601 163)" fill="#FFFFFF"/>
+          <rect x="506" y="190" width="190" height="34" rx="8" transform="rotate(0.7 601 207)" fill="#FFFFFF"/>
+          <rect x="506" y="234" width="190" height="34" rx="8" transform="rotate(-0.6 601 251)" fill="#FFFFFF"/>
+          <rect x="708" y="96" width="142" height="112" rx="12" transform="rotate(0.9 779 152)" fill="#FC6D26"/>
+        </g>
+
+        <text class="a1bW" x="56" y="76">group · penwood</text>
+        <text class="a1bW" x="56" y="94">top level, private</text>
+        <text class="a1bL" x="96" y="166">subgroup · data</text>
+        <text class="a1bS" x="96" y="184">inherits every member above</text>
+        <text class="a1bL" x="136" y="256">project · pipelines</text>
+        <text class="a1bS" x="136" y="274">inherits again; URL mirrors the tree</text>
+
+        <text class="a1bS" x="430" y="176">flow down</text>
+        <text class="a1bS" x="430" y="192">never lower</text>
+
+        <text class="a1bL" x="518" y="80">data lead · Owner</text>
+        <text class="a1bL" x="518" y="124">analytics eng · Maintainer</text>
+        <text class="a1bL" x="518" y="168">analytics eng · Developer</text>
+        <text class="a1bL" x="518" y="212">analyst · Developer</text>
+        <text class="a1bL" x="518" y="256">finance partner · Reporter</text>
+
+        <text class="a1bV" x="726" y="136">5 of 5</text>
+        <text class="a1bL" x="726" y="158">unique users</text>
+        <text class="a1bL" x="726" y="176">on a private</text>
+        <text class="a1bL" x="726" y="194">top-level group</text>
+
+        <text class="a1bN" x="30" y="318">The sixth person makes the whole tree read-only on Free (as of 2026-10-29). Session 3 takes the three ways out.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - one grant at the top reaches the project three levels down, and so does one limit</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Eight roles in one line each <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The permissions page lists them from fewest to most. Minimal Access grants none of the table's permissions. Guest can "View and comment on issues and epics. Cannot push code". Planner creates and manages issues, epics, milestones and iterations. Reporter can "View code, create issues, and generate reports". Security Manager manages vulnerabilities and compliance settings. Developer can "Push code to non-protected branches, create merge requests, and run CI/CD pipelines". Maintainer can "Manage branches, merge requests, CI/CD settings, and project members. Cannot delete the project". Owner has "Full control over the project or group, including deletion". For a data team the three that matter daily are Reporter for people who read dashboards and file issues, Developer for people who change pipelines through merge requests, and Maintainer for the one or two who settle what is protected.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Why a tree is also a blast radius <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Inheritance is the feature. The subgroups page says you "can't give a user a role in a subgroup that is lower than the roles the user has in parent groups". So a Maintainer granted at <code>penwood</code> is a Maintainer in every project under it, present and future, including the one someone creates next quarter for salary data. In six tools that mistake stays in one tool. In one application it travels. The leader's answer is not to avoid groups; it is to grant the high roles low in the tree and the low roles high, which Session 3 turns into Penwood's access matrix.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's finance partner only needs to read the quality report and open issues when a number looks wrong. Reporter at the group does exactly that and nothing more; the permissions page says Reporter "Cannot push code or manage protected branches". Had the lead granted Developer "to be safe", the partner could push to any unprotected branch in every project under the group. The right role is the smallest one that does the job, granted once.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers what one application costs you: one model, one bill, one radius</span>
+      <h2>The trade-offs</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Six tools cost six logins, six invoices and the glue between them. One application costs three things that are harder to see: it decides how work is modelled (issues, merge requests, stages), it meters you in one unit (compute minutes), and it makes every limit a shared one. None of these is a reason to say no. All of them belong on the decision page.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn panels. Left, six tools: six logins, six invoices, glue scripts between them, and a permission mistake stays inside one tool. Right, one application: one login and one tree, one bill measured in compute minutes where the constructed Penwood month needs 1,803.8 minutes against a Free quota of 400, a vendor's model of the work with stages and merge requests, and a permission mistake that travels down the tree. The compute minutes line is highlighted as the first wall Penwood hits.">
+        <defs>
+          <filter id="a1cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="19" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a1cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a1cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a1cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a1cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a1cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a1cV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .a1cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a1cH" x="30" y="26">SIX TOOLS OR ONE APPLICATION: THE COSTS THAT DO NOT APPEAR ON THE INVOICE</text>
+
+        <g filter="url(#a1cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="48" width="390" height="208" rx="12" transform="rotate(-0.3 235 152)" fill="#FFFFFF"/>
+          <rect x="450" y="48" width="390" height="208" rx="12" transform="rotate(0.3 645 152)" fill="#F4F0FC" stroke="#6B4FBB"/>
+          <rect x="62" y="102" width="34" height="24" rx="5" transform="rotate(-3 79 114)" fill="url(#a1cHc)"/>
+          <rect x="104" y="102" width="34" height="24" rx="5" transform="rotate(2 121 114)" fill="url(#a1cHc)"/>
+          <rect x="146" y="102" width="34" height="24" rx="5" transform="rotate(-2 163 114)" fill="url(#a1cHc)"/>
+          <rect x="188" y="102" width="34" height="24" rx="5" transform="rotate(3 205 114)" fill="url(#a1cHc)"/>
+          <rect x="230" y="102" width="34" height="24" rx="5" transform="rotate(-3 247 114)" fill="url(#a1cHc)"/>
+          <rect x="272" y="102" width="34" height="24" rx="5" transform="rotate(2 289 114)" fill="url(#a1cHc)"/>
+          <path d="M96 114 L104 114 M138 114 L146 114 M180 114 L188 114 M222 114 L230 114 M264 114 L272 114" stroke-dasharray="2 3"/>
+          <rect x="472" y="96" width="346" height="36" rx="8" transform="rotate(-0.4 645 114)" fill="#FC6D26"/>
+        </g>
+
+        <text class="a1cL" x="58" y="78">Six tools</text>
+        <text class="a1cS" x="58" y="94">six logins, six invoices, glue scripts between every pair</text>
+        <text class="a1cS" x="58" y="150">a permission mistake stays inside one tool</text>
+        <text class="a1cS" x="58" y="172">each tool models the work its own way; you translate</text>
+        <text class="a1cS" x="58" y="194">six vendors can each raise one price</text>
+        <text class="a1cS" x="58" y="216">no single quota: you run out of six things separately</text>
+
+        <text class="a1cL" x="468" y="78">One application</text>
+        <text class="a1cS" x="468" y="94">one login, one tree, one URL path</text>
+        <text class="a1cH" x="486" y="112">one bill, one unit: compute minutes</text>
+        <text class="a1cL" x="486" y="128">Penwood's constructed month 1,803.8 min vs 400 on Free</text>
+        <text class="a1cS" x="468" y="158">a permission mistake travels down the tree</text>
+        <text class="a1cS" x="468" y="180">one vendor's model: issues, merge requests, stages, jobs</text>
+        <text class="a1cS" x="468" y="202">one vendor can raise one price, or change one tier</text>
+        <text class="a1cS" x="468" y="224">one quota: when it is exhausted, every pipeline waits</text>
+
+        <text class="a1cN" x="30" y="284">The compute-minutes line is the first wall Penwood hits; Builder session 8 computes it from the pipeline, and Session 6 budgets it.</text>
+        <text class="a1cN" x="30" y="304">Quota and minutes as the pricing and compute-minutes pages read on 2026-10-29; re-verify before relying on them.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the invoice gets simpler; the dependencies get deeper, and one of them has a number on it already</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> One unit: the compute minute <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The compute-minutes page defines the meter: "The usage of instance runners by projects running CI/CD jobs is measured in compute minutes", with a cost factor of 1 for Linux small hosted runners, 2 for medium, 3 for large. Free namespaces receive 400 a month and usage "resets to 0 for all namespaces on the first day of each month". Penwood's constructed pipeline, measured on the bench in Builder session 8, needs 41.17 minutes per merge-request run, 49.25 per push to main and 56.18 per nightly schedule. At 24, 12 and 4 runs that is 1,803.8 minutes, 450.95% of the quota. The lesson for a leader is not "Free is too small"; it is that the unit you are metered in is the one you must learn to read. Session 4 does that without running anything.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> One model of the work <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Every platform decides what a unit of work is. GitLab's units are the issue, the merge request, the pipeline with stages and jobs, the environment. A team that thinks in tickets and nightly batch windows will find most of that natural and one or two things foreign, usually that a deployment is a job with an <code>environment:</code> name and that a review is a merge request with a pipeline attached. Translating your team's vocabulary into the platform's is a real cost, paid once, and the Builder track is where it gets paid. The honest leader question is whether the team will adopt the platform's model or keep translating forever; the second is the expensive one.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The job-rules page documents a trap that only exists because planning and CI live in one place: a job whose last rule is a bare <code>when</code> can start twice on one push, once as a branch pipeline and once as a merge request pipeline, "every push to an open merge request's source branch causes duplicated pipelines". Two pipelines means two bills in the same unit. The documented fix is a <code>workflow:rules</code> block, which Penwood's file carries from Builder session 5 onward. A leader does not write it; a leader asks whether it is there.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's surface map</h2>
+      <span class="tag demo">★ 20 min · everyone builds</span>
+    </div>
+    <p class="lede">One page, four columns: the tool class you pay for today, the GitLab surface that would replace it, the tier it needs as of the date you checked, and the limit you would hit first. Penwood's is filled below as a constructed example; yours uses your own tools. No GitLab account is needed tonight.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn mapping. Six tool classes on the left, a work board, a CI service, an image registry, a secrets vault, a dependency scanner and a chat tool, each with an arrow into one GitLab box on the right listing the surface and tier: issues and boards on Free, pipelines and hosted runners on Free with 400 minutes, container registry on Free, protected and masked variables on Free, SAST on Free and more scanners on Ultimate. The chat tool's arrow stops outside the box, labelled keep outside, with a note that GitLab is not recommended as a chat tool.">
+        <defs>
+          <filter id="a1dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="23" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a1dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a1dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a1dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a1dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a1dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a1dB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a1dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a1dH" x="30" y="26">PENWOOD'S SURFACE MAP (CONSTRUCTED): SIX TOOL CLASSES, FIVE MOVE, ONE STAYS</text>
+
+        <g filter="url(#a1dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="52" width="190" height="30" rx="7" transform="rotate(-0.8 135 67)" fill="url(#a1dHc)"/>
+          <rect x="40" y="92" width="190" height="30" rx="7" transform="rotate(0.6 135 107)" fill="url(#a1dHc)"/>
+          <rect x="40" y="132" width="190" height="30" rx="7" transform="rotate(-0.5 135 147)" fill="url(#a1dHc)"/>
+          <rect x="40" y="172" width="190" height="30" rx="7" transform="rotate(0.7 135 187)" fill="url(#a1dHc)"/>
+          <rect x="40" y="212" width="190" height="30" rx="7" transform="rotate(-0.6 135 227)" fill="url(#a1dHc)"/>
+          <rect x="40" y="252" width="190" height="30" rx="7" transform="rotate(0.8 135 267)" fill="#FFFFFF" stroke-dasharray="5 4"/>
+          <path d="M234 67 L344 67" marker-end="url(#a1dAr)"/>
+          <path d="M234 107 L344 107" marker-end="url(#a1dAr)"/>
+          <path d="M234 147 L344 147" marker-end="url(#a1dAr)"/>
+          <path d="M234 187 L344 187" marker-end="url(#a1dAr)"/>
+          <path d="M234 227 L344 227" marker-end="url(#a1dAr)"/>
+          <path d="M234 267 L290 267" stroke-dasharray="4 4"/>
+          <path d="M292 258 L304 276 M304 258 L292 276" stroke="#991B1B"/>
+          <rect x="350" y="44" width="500" height="202" rx="12" transform="rotate(0.2 600 145)" fill="#F4F0FC" stroke="#6B4FBB"/>
+          <rect x="690" y="92" width="148" height="30" rx="7" transform="rotate(-0.6 764 107)" fill="#FC6D26"/>
+        </g>
+
+        <text class="a1dL" x="52" y="71">a work board</text>
+        <text class="a1dL" x="52" y="111">a CI service</text>
+        <text class="a1dL" x="52" y="151">an image registry</text>
+        <text class="a1dL" x="52" y="191">a secrets vault</text>
+        <text class="a1dL" x="52" y="231">a dependency scanner</text>
+        <text class="a1dL" x="52" y="271">a chat tool</text>
+        <text class="a1dS" x="310" y="284">keep outside</text>
+
+        <text class="a1dL" x="366" y="71">issues, labels, boards</text>
+        <text class="a1dS" x="560" y="71">Free · label lists; milestone lists paid</text>
+        <text class="a1dL" x="366" y="111">pipelines, hosted runners</text>
+        <text class="a1dS" x="560" y="111">Free ·</text>
+        <text class="a1dH" x="702" y="111">400 min a month</text>
+        <text class="a1dL" x="366" y="151">container registry</text>
+        <text class="a1dS" x="560" y="151">Free · path mirrors the project</text>
+        <text class="a1dL" x="366" y="191">CI/CD variables</text>
+        <text class="a1dS" x="560" y="191">Free · protected, masked, not secret</text>
+        <text class="a1dL" x="366" y="231">SAST and scanners</text>
+        <text class="a1dS" x="560" y="231">Free · SAST only; the rest Ultimate</text>
+
+        <text class="a1dB" x="30" y="304">First wall: compute minutes. Second: five users. Third: 10 GiB per project. Tiers as of 2026-10-29, re-verify.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - five surfaces move; the sixth stays because nothing on the docs covers it, and that is an honest row too</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>List what you pay for today.</strong> Tool classes, not product names: a work board, a CI service, an image registry, a secrets vault, a scanner, a chat tool, a wiki. One row each. If you cannot name who pays for one, write "unknown owner" in the row; that is a finding.</p>
+      </div>
+      <div class="step">
+        <p><strong>Map each row to a GitLab surface and a tier.</strong> Open the docs page for the surface and copy the tier badge, with today's date. Penwood's constructed map is below. A row with no surface is kept outside; do not force it.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's surface map (constructed) · tiers as of 2026-10-29</span>tool class            -> GitLab surface                 tier (dated)        first limit
+a work board         -> issues, labels, boards         Free                 milestone/assignee lists are Premium
+a CI service         -> pipelines + hosted runners     Free                 400 compute minutes a month
+an image registry    -> container registry            Free                 storage counted separately
+a secrets vault      -> CI/CD variables               Free                 masked is not a guarantee
+a dependency scanner -> SAST (Free), others Ultimate  Free / Ultimate      scanner coverage
+a chat tool          -> none                          keep outside         no row, no claim</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the quota arithmetic.</strong> Runs per month times minutes per run, by run type, against the tier's quota. Penwood's numbers come from the bench in Builder session 8; yours come from your current CI service's own duration reports, or from an estimate you label as one.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's quota line (bench canon, constructed run mix)</span>24 merge requests x 41.17 min = 988.08
+12 pushes to main  x 49.25 min = 591.00
+ 4 schedules       x 56.18 min = 224.72
+total                          = 1,803.8 compute minutes a month
+Free quota (as of 2026-10-29)  =   400          -> 450.95%, does not fit</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the sentence.</strong> "We move these surfaces, we keep this one outside, and the quota arithmetic says Free covers N% of our month, so the decision on tier is due by day 30." Put the date of the tier check in the sentence.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's decision sentence (constructed)</span>Penwood moves planning, pipelines, the registry, variables and SAST onto one GitLab project
+under the penwood group, keeps the chat tool outside, and at the current run mix needs
+1,803.8 compute minutes against the Free tier's 400 (checked 2026-10-29), so the tier
+decision is due by day 30 of the migration, with rules:changes and fewer schedules tried first.</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The sentence to avoid</span>We are moving everything to GitLab because it is free and does everything.
+(Two claims, neither checked: "free" has three limits with numbers, and "everything" has a tier badge per surface.)</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 2</h2>
+      <span class="tag exercise">25 min</span>
+    </div>
+    <ol>
+      <li>Finish your surface map with a tier badge and a date on every row. Mark any row whose tier you could not find on a docs page as "unverified".</li>
+      <li>Ask your current CI service for last month's total job minutes, or estimate it and label the estimate. Compare it with 400 and with 10,000.</li>
+      <li>Count the unique people who would need access to the group, including contractors and the finance partner. Write the number next to "5".</li>
+      <li>Find the last platform decision your organisation made and underline the trade-off it named. If it named none, write the one it should have.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Leader session 1 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · Penwood grants an analytics engineer Maintainer at the top-level group. What does that mean for a project created under the group next quarter?</p>
+      <button class="qopt" type="button">A · Nothing until someone adds them to the new project</button>
+      <button class="qopt" type="button">B · They become Developer there, one step down, by default</button>
+      <button class="qopt" type="button">C · They are Maintainer there too, because roles inherit down and cannot be lowered in a subgroup or project</button>
+      <button class="qopt" type="button">D · They are Owner there, because they were there first</button>
+      <p class="qwhy">Membership and permissions are inherited from the parent group, and a subgroup role cannot be lower than the parent's. That is the convenience and the blast radius in one sentence. Grant high roles low in the tree.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · The Free tier's three limits as of 2026-10-29 are 400 compute minutes, 5 users on a private top-level group and 10 GiB per project. Which one does Penwood's constructed month hit first, and why?</p>
+      <button class="qopt" type="button">A · Compute minutes: 1,803.8 needed against 400, because every run of the pipeline is metered</button>
+      <button class="qopt" type="button">B · Users: the team is six</button>
+      <button class="qopt" type="button">C · Storage: the container images fill 10 GiB</button>
+      <button class="qopt" type="button">D · None: the Free tier has no limits for private groups</button>
+      <p class="qwhy">Penwood is exactly five people, and the storage limit counts only the repository and LFS, not images. The bench's scorecard puts the month at 450.95% of the compute quota. Re-verify the tier page before relying on any of the three numbers.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · GitLab's platform page says it lets teams "Plan, build, secure, and orchestrate on one platform you can trust". How should that sentence appear on your decision page?</p>
+      <button class="qopt" type="button">A · As a fact, since it is on the official site</button>
+      <button class="qopt" type="button">B · Not at all; vendor text has no place on a decision page</button>
+      <button class="qopt" type="button">C · Rewritten in your own words as your conclusion</button>
+      <button class="qopt" type="button">D · Quoted as the vendor's claim, next to the tier badge you found for each surface it names</button>
+      <p class="qwhy">A claim with a tier badge beside it is a claim you can budget. Quoting it as the vendor's words keeps the two apart; rewriting it as your own conclusion hides where it came from.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">GitLab's single-platform framing</span><span class="note">about.gitlab.com/platform, read at source 2026-10-29, quoted as GitLab's claim; the Handbook strategy page redirected to a login and was not read</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Free tier: price, compute minutes, storage, users</span><span class="note">GitLab pricing page, free user limit, storage quotas and compute minutes pages, read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Groups, subgroups, roles and inheritance</span><span class="note">GitLab Docs: Groups, Subgroups, Roles and permissions, read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Duplicate pipelines and workflow:rules</span><span class="note">GitLab Docs: Specify when jobs run with rules, read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Penwood's quota arithmetic</span><span class="note">Computed by the bench in Builder session 8 from a constructed pipeline and run mix; Penwood is constructed</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Self-managed and Dedicated</span><span class="note">Session 2</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What a repository, issue or pull request is</span><span class="note">Linked to the two GitHub courses, not retaught</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Leader session 1 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Five surfaces on Free</b><span>Boards, pipelines, registry, variables, SAST. Each has a tier badge; copy it with the date.</span></div>
+      <div class="cheat-item"><b>One tree</b><span>Group, subgroup, project. Roles inherit down and cannot be lowered below the parent's.</span></div>
+      <div class="cheat-item"><b>Three limits, in order</b><span>400 compute minutes, 5 users on a private top-level group, 10 GiB per project (as of 2026-10-29).</span></div>
+      <div class="cheat-item"><b>One unit</b><span>Compute minutes: job seconds / 60 x cost factor. Penwood: 1,803.8 a month vs 400.</span></div>
+      <div class="cheat-item"><b>Claims get badges</b><span>Quote the vendor as the vendor; put the tier badge next to each surface it names.</span></div>
+      <div class="cheat-item"><b>Keep outside is a row</b><span>A tool with no GitLab surface stays. No surface, no claim, no forced fit.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have the surface map and the first wall. Session 2 asks where the application itself should run: GitLab.com, self-managed or Dedicated, whose runners do the work, and what each choice does to the quota line you just wrote.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Leader session 1 of 6 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="../index.html">← Course home</a> &nbsp;·&nbsp; <a href="a2-saas-or-self-managed.html">Next: SaaS or self-managed →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

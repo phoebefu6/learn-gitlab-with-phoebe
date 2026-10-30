@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 1 of 8. Create the group, subgroup and project on GitLab.com Free, add five people with the smallest role that does the job, make labels and a label-list board, and see what dragging a card actually changes. Penwood is a constructed analytics team.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Project, issues, boards - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 1 of 8. The tree you create first, the labels a board reads, and the five seats on Free.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b1-project-issues-boards.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Project, issues, boards - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 1 of 8. Group, subgroup, project, five roles, one board that swaps labels.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 1 · Project, issues, boards - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 1 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 1 of 8</div>
+    <h1>Project, issues, <span class="accent">boards</span></h1>
+    <p class="sub">Before a single pipeline runs, a team needs a place for the code, a place for the work and a way to tell who may touch which. In GitLab those are one tree: a top-level group, a subgroup, a project, with roles granted once and inherited down. Penwood, a constructed five-person logistics-analytics team, builds that tree tonight on a GitLab.com Free account: the group <code>penwood</code>, the subgroup <code>data</code>, the project <code>pipelines</code>, five members with the smallest role that does their job, six labels, a board with three label lists, and the first six issues. Then you drag a card and watch what the board actually changes.</p>
+    <div class="chip-row">
+      <span class="chip level">🟢 Foundational</span>
+      <span class="chip audience">Analytics engineers and data builders</span>
+      <span class="chip audience">Anyone setting up a team on Free</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Group, project, issue, board</span>
+      <span class="a3" style="flex:4">20-42 · Build-along: Penwood's tree</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>How the builder track works</h2>
+    </div>
+    <p class="lede">Eight sessions, each one adds a piece to the same thing: <strong>Penwood's data pipeline running on GitLab.com Free</strong>, measured at the end by a bench that parses the real <code>.gitlab-ci.yml</code> in your browser. Tonight is the tree and the board. Session 2 is the merge request. Session 3 is the first <code>.gitlab-ci.yml</code>. Session 4 is variables, artifacts and cache. Session 5 is rules, needs and the DAG. Session 6 is environments and deployments. Session 7 is the container registry and templates. Session 8 is the pipeline DAG bench. Everything here runs on a free account; where a paid feature appears it is shown with its tier and a Free way around it. Penwood is constructed: its people, issues and pipeline are invented for these pages.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> A private top-level group with one subgroup and one project, five members at the right roles, six labels, a board whose three lists are those labels, six issues on it, and the exact sentence from the docs about what happens when you add the sixth person. Every later session commits into this project.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers group, subgroup, project and the URL that mirrors them</span>
+      <h2>The tree you create first</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The groups page says it plainly: "you use groups to manage one or more related projects at the same time". A top-level group is "created at the root"; subgroups nest below it, up to 20 levels with five or fewer recommended; projects hang off any of them. The URL is the tree: <code>gitlab.com/penwood/data/pipelines</code>. Visibility can only narrow as you go down, and on Free a new account gets three top-level groups.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn tree with its URL beside it. The top-level group penwood, private, becomes the first path segment. The subgroup data becomes the second. The project pipelines becomes the third, and its container registry path and its pipelines page both hang off that same path. A note says visibility can only narrow going down, and that an account created after 27 January 2026 on Free gets three top-level groups.">
+        <defs>
+          <filter id="b1aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="31" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b1aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b1aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b1aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b1aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b1aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b1aV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .b1aW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b1aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b1aH" x="30" y="26">THE TREE IS THE URL: PENWOOD (CONSTRUCTED)</text>
+        <text class="b1aS" x="360" y="26">groups and subgroups pages, read 2026-10-29 · the project path is also the registry path</text>
+
+        <g filter="url(#b1aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="56" width="220" height="54" rx="10" transform="rotate(-0.5 150 83)" fill="#483698"/>
+          <rect x="90" y="138" width="220" height="54" rx="10" transform="rotate(0.5 200 165)" fill="#F4F0FC"/>
+          <rect x="140" y="220" width="220" height="54" rx="10" transform="rotate(-0.4 250 247)" fill="#FFFFFF"/>
+          <path d="M150 112 L150 126 L200 126 L200 136" marker-end="url(#b1aAr)"/>
+          <path d="M200 194 L200 208 L250 208 L250 218" marker-end="url(#b1aAr)"/>
+          <rect x="420" y="60" width="430" height="46" rx="10" transform="rotate(0.3 635 83)" fill="#FFFFFF"/>
+          <rect x="530" y="68" width="96" height="30" rx="6" fill="#FC6D26"/>
+          <path d="M260 83 L414 83" stroke-dasharray="5 4" marker-end="url(#b1aAr)"/>
+          <rect x="420" y="136" width="430" height="58" rx="10" transform="rotate(-0.3 635 165)" fill="url(#b1aHc)"/>
+          <rect x="420" y="218" width="430" height="58" rx="10" transform="rotate(0.3 635 247)" fill="#F4F0FC"/>
+        </g>
+
+        <text class="b1aW" x="56" y="79">group · penwood</text>
+        <text class="b1aW" x="56" y="97">private, top level</text>
+        <text class="b1aL" x="106" y="161">subgroup · data</text>
+        <text class="b1aS" x="106" y="179">visibility: private or narrower</text>
+        <text class="b1aL" x="156" y="243">project · pipelines</text>
+        <text class="b1aS" x="156" y="261">code, issues, board, registry</text>
+
+        <text class="b1aL" x="432" y="89">gitlab.com /</text>
+        <text class="b1aW" x="540" y="89">penwood</text>
+        <text class="b1aL" x="636" y="89">/ data / pipelines</text>
+
+        <text class="b1aL" x="436" y="160">the same path names the container registry</text>
+        <text class="b1aS" x="436" y="178">registry.gitlab.com/penwood/data/pipelines (Builder session 7)</text>
+        <text class="b1aL" x="436" y="242">and the pipelines, issues and board pages</text>
+        <text class="b1aS" x="436" y="260">.../pipelines/-/pipelines · .../-/issues · .../-/boards</text>
+
+        <text class="b1aN" x="30" y="302">Visibility only narrows going down. New Free accounts (after 2026-01-27) get three top-level groups; Penwood needs one.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - decide the tree once and every URL, registry path and permission follows from it</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> Why one subgroup and not zero <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Penwood could put <code>pipelines</code> straight under <code>penwood</code>. It adds the <code>data</code> subgroup for one reason the subgroups page gives: a subgroup inherits the parent's members and lets you grant a higher role below without touching the parent. Next year a <code>finance</code> subgroup can exist beside <code>data</code> with the same five people inheriting Reporter from the top and only two of them raised to Maintainer inside it. The page also says you "can't give a user a role in a subgroup that is lower than the roles the user has in parent groups", so the top of the tree is where the lowest roles belong. The recommendation to stay within five levels is about performance; Penwood uses two.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Visibility: private, internal, public <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A group can be visible to anonymous users, to all signed-in users, or only to its members, and "Users cannot create a subgroup or project with a higher visibility level than that of the immediate parent group". Penwood's group is private, so everything under it is private or narrower. The free user limit page notes the trade: the five-user limit applies to private top-level groups, and public top-level groups are exempt. Making a data team's group public to escape the limit is a decision about data, not about GitLab; Leader session 3 takes it.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The container registry page says "The path of a container repository always matches the related project's repository path". Rename or move the project later and the image path moves with it. Penwood, constructed, picks <code>penwood/data/pipelines</code> once tonight knowing that Builder session 7 will push images to exactly that path. The tree is not a folder structure you tidy later; it is a set of addresses other systems will hold.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers issues, labels and what a board does when you drag a card</span>
+      <h2>Boards read labels</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">A board in GitLab is not a separate store of state. Each list is a query over issues with a label, and the issue boards page says exactly what a drag does: "Moving an issue between lists removes the label from the list it came from and adds the label from the list it goes to". Understand that one sentence and you understand why a board can never disagree with the issue list.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn board with three label lists, todo, doing and review. A card for the constructed issue dedupe orders feed is being dragged from todo to doing. Below the board the same issue is shown as a record: its labels change from todo to doing, nothing else is stored. A side note says label lists are on Free while assignee and milestone lists need Premium or Ultimate.">
+        <defs>
+          <filter id="b1bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="37" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b1bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b1bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b1bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b1bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b1bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b1bB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b1bR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b1bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b1bH" x="30" y="26">A LIST IS A LABEL: WHAT THE DRAG CHANGES</text>
+        <text class="b1bS" x="330" y="26">issue boards page, read 2026-10-29 · Penwood's issues are constructed</text>
+
+        <g filter="url(#b1bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="48" width="190" height="150" rx="10" transform="rotate(-0.4 135 123)" fill="#F4F0FC"/>
+          <rect x="250" y="48" width="190" height="150" rx="10" transform="rotate(0.4 345 123)" fill="#F4F0FC"/>
+          <rect x="460" y="48" width="190" height="150" rx="10" transform="rotate(-0.3 555 123)" fill="#F4F0FC"/>
+          <rect x="56" y="86" width="158" height="30" rx="6" transform="rotate(-0.8 135 101)" fill="#FFFFFF"/>
+          <rect x="56" y="126" width="158" height="30" rx="6" transform="rotate(0.6 135 141)" fill="#FFFFFF"/>
+          <rect x="266" y="86" width="158" height="30" rx="6" transform="rotate(-1.5 345 101)" fill="#FC6D26"/>
+          <rect x="476" y="86" width="158" height="30" rx="6" transform="rotate(0.5 555 101)" fill="#FFFFFF"/>
+          <path d="M218 101 L260 101" stroke-dasharray="5 4" marker-end="url(#b1bAr)"/>
+          <rect x="680" y="60" width="170" height="130" rx="10" transform="rotate(0.6 765 125)" fill="#FFFFFF"/>
+          <rect x="40" y="222" width="610" height="56" rx="10" transform="rotate(0.2 345 250)" fill="url(#b1bHc)"/>
+        </g>
+
+        <text class="b1bL" x="54" y="70">todo · 2</text>
+        <text class="b1bL" x="264" y="70">doing · 1</text>
+        <text class="b1bL" x="474" y="70">review · 1</text>
+        <text class="b1bS" x="66" y="106">#3 quality thresholds</text>
+        <text class="b1bS" x="66" y="146">#5 nightly backfill job</text>
+        <text class="b1bL" x="276" y="106">#2 dedupe orders feed</text>
+        <text class="b1bS" x="486" y="106">#1 lint rules for SQL</text>
+
+        <text class="b1bL" x="694" y="86">lists on Free</text>
+        <text class="b1bS" x="694" y="104">label lists: yes</text>
+        <text class="b1bS" x="694" y="122">multiple boards: yes</text>
+        <text class="b1bB" x="694" y="150">Premium and Ultimate</text>
+        <text class="b1bS" x="694" y="168">assignee and milestone lists</text>
+
+        <text class="b1bL" x="56" y="246">issue #2 as stored: title, description, assignee, labels [</text>
+        <text class="b1bR" x="398" y="246">todo</text>
+        <text class="b1bL" x="430" y="246">removed,</text>
+        <text class="b1bH" x="492" y="246">doing</text>
+        <text class="b1bL" x="534" y="246">added ]</text>
+        <text class="b1bS" x="56" y="266">nothing else changes; the board is a view over the labels, so it cannot disagree with the issue list</text>
+
+        <text class="b1bN" x="30" y="306">The drag is a label edit. A label edit anywhere else moves the card too.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the card moves because the label changed, not the other way round</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Labels first, board second <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Because a list is a label, the labels are the design. Penwood's constructed set is six: three for state (<code>todo</code>, <code>doing</code>, <code>review</code>) and three for area (<code>pipeline</code>, <code>quality</code>, <code>docs</code>). The state labels become the board's lists; the area labels filter it. The boards page says label lists are on every tier, that a project can have multiple boards on Free, and that a group gets one board on Free. Assignee lists and milestone lists are Premium and Ultimate; the Free way to see "what is Mei doing" is the issue list filtered by assignee.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Epics are Premium; the Free way is a label and a parent issue <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The epics page carries a Premium and Ultimate badge and defines epics as a way to "coordinate and track large initiatives by organizing work items into a work hierarchy". On Free, Penwood groups its migration work with the area labels and one issue per block that links the others in its description. It is less elegant and entirely sufficient for five people and fourteen jobs. When the hierarchy itself becomes the problem, that is a signal for Leader session 5, not a reason to fake it with labels.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's analyst edits issue #2 from the issue page and replaces <code>todo</code> with <code>review</code> by hand, skipping <code>doing</code>. On the board the card jumps two lists. Nobody dragged anything. That is the mechanism working, not a bug: there is one record, and the board is one of its views. Teams coming from tools where the board is the record expect the reverse and spend a week confused.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers the names GitLab uses for things you already know</span>
+      <h2>What GitLab calls it</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">What a repository, an issue and a pull request are is taught in <a href="https://phoebefu6.github.io/learn-github-with-phoebe/">the GitHub course</a> and <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/">GitHub for builders</a>; nothing here reteaches them. What changes when you arrive at GitLab is mostly vocabulary, and one or two mechanisms behind the vocabulary.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn two-column translation. Left column, what you already know from your previous git host: an organisation, a repository, a pull request, a project board, a workflow file, a team. Right column, what GitLab calls it: a top-level group, a project, a merge request, an issue board of label lists, a .gitlab-ci.yml file, a group or subgroup. Arrows connect each pair. The merge request row is highlighted because Builder session 2 is about it.">
+        <defs>
+          <filter id="b1cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="41" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b1cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b1cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b1cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b1cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b1cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b1cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b1cH" x="30" y="26">SAME THING, GITLAB'S NAME FOR IT</text>
+        <text class="b1cS" x="300" y="26">the mechanisms behind the names are in the sessions noted on the right</text>
+
+        <g filter="url(#b1cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="48" width="260" height="30" rx="7" transform="rotate(-0.5 170 63)" fill="url(#b1cHc)"/>
+          <rect x="40" y="88" width="260" height="30" rx="7" transform="rotate(0.4 170 103)" fill="url(#b1cHc)"/>
+          <rect x="40" y="128" width="260" height="30" rx="7" transform="rotate(-0.4 170 143)" fill="url(#b1cHc)"/>
+          <rect x="40" y="168" width="260" height="30" rx="7" transform="rotate(0.5 170 183)" fill="url(#b1cHc)"/>
+          <rect x="40" y="208" width="260" height="30" rx="7" transform="rotate(-0.6 170 223)" fill="url(#b1cHc)"/>
+          <path d="M304 63 L366 63" marker-end="url(#b1cAr)"/>
+          <path d="M304 103 L366 103" marker-end="url(#b1cAr)"/>
+          <path d="M304 143 L366 143" marker-end="url(#b1cAr)"/>
+          <path d="M304 183 L366 183" marker-end="url(#b1cAr)"/>
+          <path d="M304 223 L366 223" marker-end="url(#b1cAr)"/>
+          <rect x="372" y="48" width="470" height="30" rx="7" transform="rotate(0.3 607 63)" fill="#F4F0FC"/>
+          <rect x="372" y="88" width="470" height="30" rx="7" transform="rotate(-0.3 607 103)" fill="#F4F0FC"/>
+          <rect x="372" y="128" width="470" height="30" rx="7" transform="rotate(0.4 607 143)" fill="#FC6D26"/>
+          <rect x="372" y="168" width="470" height="30" rx="7" transform="rotate(-0.4 607 183)" fill="#F4F0FC"/>
+          <rect x="372" y="208" width="470" height="30" rx="7" transform="rotate(0.5 607 223)" fill="#F4F0FC"/>
+        </g>
+
+        <text class="b1cL" x="54" y="67">an organisation and its teams</text>
+        <text class="b1cL" x="54" y="107">a repository</text>
+        <text class="b1cL" x="54" y="147">a pull request</text>
+        <text class="b1cL" x="54" y="187">a project board</text>
+        <text class="b1cL" x="54" y="227">a workflow file that runs CI</text>
+
+        <text class="b1cL" x="386" y="67">a top-level group with subgroups</text>
+        <text class="b1cS" x="640" y="67">roles inherit down · session 1</text>
+        <text class="b1cL" x="386" y="107">a project</text>
+        <text class="b1cS" x="640" y="107">code, issues, board, registry</text>
+        <text class="b1cH" x="386" y="147">a merge request</text>
+        <text class="b1cS" x="640" y="147">approvals optional on Free · session 2</text>
+        <text class="b1cL" x="386" y="187">an issue board of label lists</text>
+        <text class="b1cS" x="640" y="187">the drag is a label edit</text>
+        <text class="b1cL" x="386" y="227">.gitlab-ci.yml, stages and jobs</text>
+        <text class="b1cS" x="640" y="227">one file, merged includes · session 3</text>
+
+        <text class="b1cN" x="30" y="276">The names are the easy part. The two mechanisms worth relearning are inheritance down the tree and the label-list board.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - five names to relearn, and the one in orange gets a whole session because its mechanics differ</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> The one rename that hides a mechanism <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A merge request is the same idea as a pull request: a proposed change, a diff, a conversation, a pipeline result, a merge button. The merge requests page describes it as "a central location for your team to review code, have discussions, and track code changes". What differs is underneath: on Free, approvals exist but "are optional and don't prevent merging without approval", and a merge request can have its own pipeline type, which runs on the source branch and carries a <code>merge request</code> label. Both change how Penwood's pipeline is written. Session 2 takes them.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The protected branches page says "The default branch for your repository is protected by default", and that a new branch rule selects Maintainers for "Allowed to push and merge". Constructed: Penwood's Developer-role analyst clones the new project, commits straight to <code>main</code> and is refused. Nothing is misconfigured; the default is doing its job. The analyst opens a branch and a merge request instead, which is the loop every later session assumes.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's tree, members, labels and board</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">A free GitLab.com account is all you need. Every step below is a click path in the web UI as of 2026-10-29; menus move between releases, so if a name differs, search the settings page for the word. Penwood's values are constructed; use your own group name, since <code>penwood</code> is taken by whoever read this first.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Five hand-drawn seats in a row, each filled with a constructed Penwood member and role: data lead Owner, analytics engineer Maintainer, analytics engineer Developer, analyst Developer, finance partner Reporter. A sixth dashed seat on the right carries a red cross and the docs' consequence: top-level private namespaces with more than five users are placed in a read-only state. A counter reads 5 of 5 as of 2026-10-29.">
+        <defs>
+          <filter id="b1dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="43" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b1dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b1dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b1dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b1dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b1dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b1dV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b1dR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b1dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b1dH" x="30" y="26">FIVE SEATS ON A PRIVATE TOP-LEVEL GROUP (FREE, AS OF 2026-10-29)</text>
+
+        <g filter="url(#b1dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="60" width="124" height="96" rx="10" transform="rotate(-0.8 102 108)" fill="#483698"/>
+          <rect x="176" y="60" width="124" height="96" rx="10" transform="rotate(0.6 238 108)" fill="#F4F0FC"/>
+          <rect x="312" y="60" width="124" height="96" rx="10" transform="rotate(-0.5 374 108)" fill="#F4F0FC"/>
+          <rect x="448" y="60" width="124" height="96" rx="10" transform="rotate(0.7 510 108)" fill="#F4F0FC"/>
+          <rect x="584" y="60" width="124" height="96" rx="10" transform="rotate(-0.6 646 108)" fill="#F4F0FC"/>
+          <rect x="730" y="60" width="120" height="96" rx="10" transform="rotate(0.9 790 108)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="6 4"/>
+          <path d="M770 86 L810 126 M810 86 L770 126" stroke="#991B1B"/>
+          <rect x="40" y="190" width="300" height="52" rx="10" transform="rotate(0.3 190 216)" fill="#FC6D26"/>
+          <rect x="360" y="190" width="490" height="52" rx="10" transform="rotate(-0.2 605 216)" fill="url(#b1dHc)"/>
+        </g>
+
+        <text class="b1dL" x="54" y="86" style="fill:#FFFFFF">data lead</text>
+        <text class="b1dS" x="54" y="104" style="fill:#FFFFFF">Owner</text>
+        <text class="b1dS" x="54" y="140" style="fill:#FFFFFF">at the group</text>
+        <text class="b1dL" x="190" y="86">analytics eng</text>
+        <text class="b1dS" x="190" y="104">Maintainer</text>
+        <text class="b1dS" x="190" y="140">at the subgroup</text>
+        <text class="b1dL" x="326" y="86">analytics eng</text>
+        <text class="b1dS" x="326" y="104">Developer</text>
+        <text class="b1dS" x="326" y="140">at the group</text>
+        <text class="b1dL" x="462" y="86">analyst</text>
+        <text class="b1dS" x="462" y="104">Developer</text>
+        <text class="b1dS" x="462" y="140">at the group</text>
+        <text class="b1dL" x="598" y="86">finance partner</text>
+        <text class="b1dS" x="598" y="104">Reporter</text>
+        <text class="b1dS" x="598" y="140">at the group</text>
+        <text class="b1dR" x="742" y="146">the sixth person</text>
+
+        <text class="b1dV" x="56" y="214">5 of 5</text>
+        <text class="b1dL" x="130" y="214">unique users counted</text>
+        <text class="b1dS" x="130" y="232">across group, subgroups and projects</text>
+        <text class="b1dL" x="376" y="214">over five: "placed in a read-only state"</text>
+        <text class="b1dS" x="376" y="232">no writes to repositories, LFS, packages or registries; the limit cannot be raised on Free</text>
+
+        <text class="b1dN" x="30" y="278">Count people, not memberships: the same person in three projects is one seat. Re-verify the free user limit page before relying on this.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - Penwood fits exactly, and the figure shows what the sixth seat does to all five</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Create the tree.</strong> New group, private visibility, name it (not <code>penwood</code>). Inside it, new subgroup <code>data</code>. Inside that, new project <code>pipelines</code>, blank, with a README so <code>main</code> exists. Check the URL in the address bar: it is the tree. Note that "Allowed to push and merge" on <code>main</code> already reads Maintainers; you did not set that.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's tree (constructed)</span>group     penwood            private   top level     -> gitlab.com/penwood
+subgroup  penwood/data       private   inherits      -> gitlab.com/penwood/data
+project   penwood/data/pipelines       README on main -> gitlab.com/penwood/data/pipelines</div>
+      </div>
+      <div class="step">
+        <p><strong>Add the five people at the smallest role that does the job.</strong> Group members page: invite by username or email. Grant the low roles at the top and raise one person in the subgroup. Then open the group's usage or billing page and read the seat count.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's members (constructed) · roles as the permissions page defines them</span>where             who                 role        why this role and not a higher one
+group penwood     data lead           Owner       someone must be able to delete and change visibility
+group penwood     analytics eng (Mei) Developer   pushes to branches, opens merge requests, runs pipelines
+group penwood     analyst             Developer   same loop; cannot change CI/CD settings
+group penwood     finance partner     Reporter    reads code and reports, files issues; cannot push
+subgroup data     analytics eng (Raj) Maintainer  manages branch rules and CI/CD settings for data only
+seat count: 5 unique users of 5 (private top-level group, Free, as of 2026-10-29)</div>
+      </div>
+      <div class="step">
+        <p><strong>Create six labels.</strong> Project labels page. Three for state, three for area. Keep the names lower case and short; they will appear on every card and in every filter.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's labels (constructed)</span>state:  todo   doing   review
+area:   pipeline   quality   docs</div>
+      </div>
+      <div class="step">
+        <p><strong>Make the board.</strong> Project boards page: create a board, add three lists, one per state label, in order. The open and closed lists come for free. Create the six issues below with their labels, and watch them land in the right list without being placed.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's first six issues (constructed)</span>#1  lint rules for SQL models                  review   pipeline
+#2  dedupe the orders feed                     todo     pipeline
+#3  quality thresholds for the daily totals    todo     quality
+#4  first .gitlab-ci.yml with lint and build   doing    pipeline
+#5  nightly backfill job on a schedule         todo     pipeline
+#6  runbook for the staging deploy             todo     docs</div>
+      </div>
+      <div class="step">
+        <p><strong>Drag #2 from todo to doing, then open the issue.</strong> Its labels now read <code>doing</code> and <code>pipeline</code>; <code>todo</code> is gone. Now edit #3 on its issue page and swap <code>todo</code> for <code>review</code>, then look at the board. The card moved without a drag. Say out loud what the board stores: nothing.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly</span>board after the drag:   todo 2 (#3 #5 #6 -> 3)   doing 2 (#2 #4)   review 1 (#1)
+issue #2 labels:        doing, pipeline
+after editing #3:       todo 2 (#5 #6)   doing 2   review 2 (#1 #3)
+your numbers will differ if you created different issues</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The step to skip</span>Inviting a sixth person "just to look".
+The free user limit page: "Top-level private namespaces with more than five users are placed in a read-only state."
+Every surface under the group stops accepting writes, and the limit cannot be raised on Free. Give them a link to a public project, or decide the tier first.</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 2</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Add a second board to the project with the three area labels as lists. Move one issue between area lists and confirm the state label did not change.</li>
+      <li>Write your team's real member list with the smallest role per person and where in the tree it is granted. Count unique users against five.</li>
+      <li>Try to push a commit straight to <code>main</code> as a Developer. Read the refusal, then open a branch and a merge request instead; session 2 starts from it.</li>
+      <li>Find the project's container registry page and copy its path. Compare it with the project URL.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 1 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">1 · An issue carries <code>todo</code> and <code>pipeline</code>. You drag its card from the todo list to the doing list. What is stored afterwards?</p>
+      <button class="qopt" type="button">A · A board position for the card; the labels are unchanged</button>
+      <button class="qopt" type="button">B · Labels <code>doing</code> and <code>pipeline</code>; <code>todo</code> was removed, nothing else changed</button>
+      <button class="qopt" type="button">C · Labels <code>todo</code>, <code>doing</code> and <code>pipeline</code>, all three</button>
+      <button class="qopt" type="button">D · A new issue in the doing list; the old one is closed</button>
+      <p class="qwhy">"Moving an issue between lists removes the label from the list it came from and adds the label from the list it goes to." The board is a view over labels; the area label is untouched because no list is defined by it.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · Penwood's finance partner needs to read the quality report and open issues when a number looks wrong. Which role, granted where?</p>
+      <button class="qopt" type="button">A · Developer at the project, so they can fix the number</button>
+      <button class="qopt" type="button">B · Guest at the group, since they only look</button>
+      <button class="qopt" type="button">C · Maintainer at the subgroup, to be safe</button>
+      <button class="qopt" type="button">D · Reporter at the group: view code and reports, create issues, cannot push</button>
+      <p class="qwhy">Guest cannot access the repository, so no report. Developer and Maintainer can push, which the partner does not need and the tree would inherit downward. Reporter is the smallest role that does the job, granted once at the top.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · The same contractor is a member of three projects under Penwood's private top-level group and of nothing else. How many of the five Free seats do they use, and what happens at six unique users?</p>
+      <button class="qopt" type="button">A · One seat; at six the namespace is placed in a read-only state</button>
+      <button class="qopt" type="button">B · Three seats; at six you are billed for the extra</button>
+      <button class="qopt" type="button">C · One seat; at six new members are refused but existing work continues</button>
+      <button class="qopt" type="button">D · Zero seats, because project members do not count</button>
+      <p class="qwhy">The limit counts unique users across the group, its subgroups and its projects. Over five, the docs say the namespace is "placed in a read-only state", and the limit cannot be raised on Free. Re-verify the page before relying on it.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Groups, subgroups, visibility, top-level group count</span><span class="note">GitLab Docs: Groups, Subgroups, Free user limit; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Roles and inheritance</span><span class="note">GitLab Docs: Roles and permissions, Subgroups; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Issue boards: label lists, the drag, tiers of list types</span><span class="note">GitLab Docs: Issue boards; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">The five-user limit and the read-only state</span><span class="note">GitLab Docs: Free user limit; read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Default branch protection, registry path</span><span class="note">GitLab Docs: Protected branches, Container registry; read at source</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Epics</span><span class="note">Shown as Premium and Ultimate; not used</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What a repository, issue or pull request is</span><span class="note">Linked to the two GitHub courses, not retaught</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 1 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>The tree is the URL</b><span>group / subgroup / project. The registry path and every page hang off it. Pick it once.</span></div>
+      <div class="cheat-item"><b>Low roles high, high roles low</b><span>Reporter and Developer at the group; Maintainer in the subgroup that needs it. Roles cannot be lowered below the parent's.</span></div>
+      <div class="cheat-item"><b>A list is a label</b><span>Dragging a card removes one label and adds another. Nothing else is stored.</span></div>
+      <div class="cheat-item"><b>Free board facts</b><span>Label lists and multiple project boards on Free. Assignee and milestone lists are Premium and Ultimate.</span></div>
+      <div class="cheat-item"><b>Five seats</b><span>Unique users across the whole private top-level group. Six makes it read-only (as of 2026-10-29).</span></div>
+      <div class="cheat-item"><b>main is protected already</b><span>Maintainers push and merge by default. Developers branch and open a merge request.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have a project, five people and a board. Session 2 opens Penwood's first merge request from a branch and reads what GitLab does differently: approvals that are optional on Free, and a pipeline that belongs to the merge request itself.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 1 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="../index.html">← Course home</a> &nbsp;·&nbsp; <a href="b2-the-merge-request.html">Next: The merge request →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Leader session 6 of 6. Moving a data team onto GitLab.com Free in three 30-day blocks: repository, issues and board first; the pipeline with the compute quota in view; then the registry, environments and the exit criteria. Penwood, a constructed analytics team, gets a go/no-go per block and a dated decision on when to pay.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="The 90-day migration plan - learn gitlab with phoebe">
+<meta property="og:description" content="Leader session 6 of 6. Three blocks, three gates, one quota line, and the day the tier decision is due.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/a6-the-90-day-migration.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The 90-day migration plan - learn gitlab with phoebe">
+<meta name="twitter:description" content="Leader session 6 of 6. What to move first, what to leave behind, and when the quota forces a tier decision.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Leader session 6 · The 90-day migration plan - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Leader session 6 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Leader session 6 of 6</div>
+    <h1>The 90-day <span class="accent">migration plan</span></h1>
+    <p class="sub">Five sessions of decisions become one page with three dates on it. Penwood, the constructed five-person logistics-analytics team, moves from a git host, a work board, a CI service, an image registry and a deploy script onto one GitLab.com project on the Free tier, in three blocks of thirty days. Block one moves the repository, the issues and one board, and leaves the old history where it is. Block two moves the pipeline and meets the only number that can stop the plan: 1,803.8 compute minutes a month against a quota of 400. Block three moves the images and the deployments and writes the exit criteria. Each block ends in a go/no-go with a number, a date and a name on it. Nothing here runs GitLab for real; the figures are the bench's, the durations and run mix are constructed.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Advanced</span>
+      <span class="chip audience">Data and analytics leads sponsoring a platform move</span>
+      <span class="chip audience">Anyone who signs the tier decision</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Three blocks, three gates</span>
+      <span class="a3" style="flex:4">20-40 · Build-along: the plan on one page</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where the five sessions land</h2>
+    </div>
+    <p class="lede">Session 1 gave you the surface map and the first wall, compute minutes. Session 2 chose GitLab.com over self-managed and hosted runners over your own. Session 3 drew the tree and counted the five seats. Session 4 taught you to read a pipeline's three clocks without running one. Session 5 named the controls Free gives you and the ones Premium sells. Tonight those become a <strong>90-day plan with a go/no-go at day 30, day 60 and day 90</strong>. The order is deliberate: move the things that cannot fail first (a repository and a board), meet the quota in the middle when you can still change course, and leave the deployments for last because they are the only step a customer notices. Penwood is constructed; the plan shape is the one worth stealing.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Penwood's 90-day plan on one page: three blocks, each with what moves, what stays behind, the gate question and the number that answers it. The quota line from Builder session 8 sits in block two with the four levers ranked, so the tier decision has a date, day 60, rather than a mood. And the exit criteria for day 90 written as things you can count: an image at the project's path, a staging deploy that ran on its own, a production deploy that waited for a click, and three old invoices cancelled.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers the first block: the tree, the repository, the issues and one board</span>
+      <h2>Days 1-30: repo, issues, board</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The first block moves nothing that can break production. It creates the group tree, pushes the repository, opens the issues the team is actually working on, and puts one label-list board in front of them. It also decides what stays behind: closed tickets, old board columns, the chat history and the old CI service's run log. A migration that tries to carry history is a migration that is still importing at day 90.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn timeline of three thirty-day blocks with a gate diamond between each. Block one, highlighted, lists the group tree penwood, data, pipelines, the repository with main protected by default, open issues with labels, and one label-list board, with five of five seats counted. Block two lists the pipeline in the stages, needs, rules order and the quota line of 1,803.8 minutes against 400. Block three lists the registry at the project path, staging and production environments, and the exit criteria. Below, a hatched pile marked left behind: closed tickets, old board columns, chat history, the old CI run log. Beside it a dashed box marked kept outside: the chat tool.">
+        <defs>
+          <filter id="a6aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="31" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a6aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a6aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a6aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a6aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a6aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a6aB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a6aV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .a6aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a6aH" x="30" y="26">THREE BLOCKS, THREE GATES: WHAT MOVES WHEN (PENWOOD, CONSTRUCTED)</text>
+        <text class="a6aS" x="620" y="26">the diamonds are go/no-go days</text>
+
+        <g filter="url(#a6aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="48" width="240" height="150" rx="12" transform="rotate(-0.5 160 123)" fill="#FC6D26"/>
+          <path d="M296 108 L312 124 L296 140 L280 124 Z" fill="#FFFFFF"/>
+          <rect x="320" y="48" width="240" height="150" rx="12" transform="rotate(0.4 440 123)" fill="#F4F0FC"/>
+          <path d="M576 108 L592 124 L576 140 L560 124 Z" fill="#FFFFFF"/>
+          <rect x="600" y="48" width="240" height="150" rx="12" transform="rotate(-0.4 720 123)" fill="#F4F0FC"/>
+          <path d="M856 108 L872 124 L856 140 L840 124 Z" fill="#FFFFFF"/>
+          <path d="M160 206 L160 230" marker-end="url(#a6aAr)"/>
+          <rect x="40" y="236" width="400" height="50" rx="9" transform="rotate(0.3 240 261)" fill="url(#a6aHc)"/>
+          <rect x="470" y="236" width="370" height="50" rx="9" transform="rotate(-0.4 655 261)" fill="#FFFFFF" stroke-dasharray="5 4"/>
+        </g>
+
+        <text class="a6aH" x="56" y="70">Days 1-30 · repo, issues, board</text>
+        <text class="a6aL" x="56" y="92">group penwood / data / pipelines</text>
+        <text class="a6aL" x="56" y="110">repository pushed, main protected</text>
+        <text class="a6aL" x="56" y="128">open issues only, with labels</text>
+        <text class="a6aL" x="56" y="146">one label-list board</text>
+        <text class="a6aL" x="56" y="170">5 of 5 seats used</text>
+        <text class="a6aL" x="176" y="170">private, Free</text>
+
+        <text class="a6aH" x="336" y="70">Days 31-60 · the pipeline</text>
+        <text class="a6aS" x="336" y="92">stages first, then needs, then rules</text>
+        <text class="a6aS" x="336" y="110">read on the bench: 30:08 to 19:17</text>
+        <text class="a6aS" x="336" y="128">quota line: 1,803.8 min vs 400</text>
+        <text class="a6aS" x="336" y="146">four levers, ranked, tried in order</text>
+        <text class="a6aS" x="336" y="170">tier decision due at the gate</text>
+
+        <text class="a6aH" x="616" y="70">Days 61-90 · registry, deploys</text>
+        <text class="a6aS" x="616" y="92">image at the project's own path</text>
+        <text class="a6aS" x="616" y="110">staging deploys on its own</text>
+        <text class="a6aS" x="616" y="128">production waits for a click</text>
+        <text class="a6aS" x="616" y="146">exit criteria counted, not felt</text>
+        <text class="a6aS" x="616" y="170">old invoices cancelled</text>
+
+        <text class="a6aB" x="276" y="216">day 30</text>
+        <text class="a6aB" x="556" y="216">day 60</text>
+        <text class="a6aB" x="836" y="216">day 90</text>
+
+        <text class="a6aL" x="56" y="257">left behind, on purpose</text>
+        <text class="a6aS" x="56" y="275">closed tickets · old board columns · chat history · the old CI service's run log</text>
+        <text class="a6aL" x="486" y="257">kept outside</text>
+        <text class="a6aS" x="486" y="275">the chat tool: no GitLab surface, no row, no claim</text>
+
+        <text class="a6aN" x="30" y="316">A diamond is a go/no-go with a number, a date and a name. The quota gate in block two can send the plan back a block.</text>
+        <text class="a6aN" x="30" y="336">Seat count as the free-user-limit page read on 2026-10-29; re-verify the tier page before relying on it.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - block one is the only block that cannot break anything a customer sees, which is why it goes first and why history stays behind</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> The order inside the block: tree, repository, issues, board <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Create the tree before anything else, because every URL below it mirrors it: the top-level group <code>penwood</code>, the subgroup <code>data</code>, the project <code>pipelines</code>. The groups page says a top-level group is "created at the root", and the free user limit page says an account created after 2026-01-27 on Free is limited to three top-level groups, so one well-named group beats three. Push the repository next. The protected branches page says "The default branch for your repository is protected by default", so <code>main</code> is already behind the merge request the day it arrives; session 5 covered what that does and does not control. Then the issues: only the ones with a person on them. Give each a label that names its state, and build one board whose lists are those labels, because the boards page says label lists are on every tier and that "Moving an issue between lists removes the label from the list it came from and adds the label from the list it goes to". Assignee and milestone lists are Premium and Ultimate; the Free way is a label per state, and it is enough for five people.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> What to leave behind, and what nobody checked yet <span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Three things stay where they are. Closed tickets: the people who need them know where the old board is, and a read-only export is cheaper than an import that misattributes a thousand comments. Old board columns: a column that was never emptied is a column nobody used; the new board starts with three labels and earns the fourth. Chat history: there is no GitLab surface for it, so it is not a migration row at all; session 1 called this "keep outside", and it still is.</p>
+        <p>One thing nobody has checked yet. GitLab documents importers for several hosts and file formats, and what crosses on each route, whether issues keep their authors, their labels, their comments and their dates, depends on the route. The import pages were not among the GitLab Docs read for these sessions, so no field-by-field promise appears here. Treat it as a day-1 task with a name on it: open the import page for your current host, list what it says crosses and what it says does not, and put that list in the plan as a fact with a date, not an assumption. If the route drops something the team needs, that thing joins the "left behind, on purpose" pile with a reason beside it.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> The day-30 gate <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A gate is a question with a countable answer. For block one there are four. Is the tree one top-level group with the subgroup and project under it, and does the project URL read <code>penwood/data/pipelines</code>? Is <code>main</code> protected, and did the first change land through a merge request rather than a push? Are the open issues on the board, each with exactly one state label? Are the unique users five or fewer, counting every person across the group, its subgroup and its project, as the free user limit page counts them? Five of five is a pass. Six is a stop, not a warning: the page says a private top-level group over the limit is "placed in a read-only state", and session 3 gave the three ways out (a public group, Premium, or a personal namespace) with the trade-offs of each. The gate is the place to choose one of them, not day 45 when the pipeline is half moved.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's lead invites the five team members on day 3 and, being helpful, the contractor who maintains the old deploy script, so the contractor can read the repository. Six unique users on a private top-level group on Free. The free user limit page describes what follows: the namespace is placed in a read-only state and stops accepting writes to repositories, LFS, packages and registries. The repository that arrived on day 2 cannot take a merge request on day 4. The fix is small, remove one member or change the group's model, and it costs a morning. The lesson is in the gate: count the users before the invitations go out, not after.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers the second block: moving the pipeline and meeting the compute quota</span>
+      <h2>Days 31-60: the pipeline, with the quota in view</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">Block two moves the pipeline in the order the Builder track writes it: stages first, so the team sees a green run; then <code>needs</code>, so the wall clock drops; then <code>rules</code>, so a merge request stops running the jobs that belong to <code>main</code>. The bench's ladder reads 30:08, then 26:22, then 19:17. None of that matters to the bill. The bill counts compute minutes, and Penwood's constructed month needs 1,803.8 of them against the Free tier's 400 as of 2026-10-29. That is the number this block exists to meet, with four levers and a date.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn quota bar. A dark box at the left marks the Free tier's 400 compute minutes a month. Below it, a longer bar is the constructed Penwood month: a hatched segment of 24 merge request runs at 41.17 minutes making 988.08, a pale segment of 12 pushes to main at 49.25 making 591.00, and a soft segment of 4 schedules at 56.18 making 224.72, total 1,803.8. A dashed line marks where 400 ends; the bar runs far past it. An orange box reads 450.95 percent of the quota, does not fit. Under the bar, four lever boxes: rules changes, fewer scheduled runs, runners the quota page does not measure, and Premium with 10,000 minutes.">
+        <defs>
+          <filter id="a6bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="37" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a6bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a6bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a6bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a6bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a6bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a6bW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .a6bV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .a6bA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .a6bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a6bH" x="30" y="26">THE QUOTA LINE: PENWOOD'S CONSTRUCTED MONTH AGAINST THE FREE TIER'S 400 MINUTES</text>
+        <text class="a6bS" x="30" y="44">scale 0.4 px per compute minute · run minutes are the bench's scorecard (r5) · the run mix is constructed</text>
+
+        <g filter="url(#a6bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="60" y="66" width="160" height="40" rx="8" transform="rotate(-0.4 140 86)" fill="#483698"/>
+          <path d="M220 60 L220 124 M220 168 L220 174" stroke="#6B4FBB" stroke-dasharray="6 4"/>
+          <rect x="60" y="126" width="395" height="40" rx="8" transform="rotate(0.2 257 146)" fill="url(#a6bHc)"/>
+          <rect x="455" y="126" width="236" height="40" rx="8" transform="rotate(-0.2 573 146)" fill="#F4F0FC"/>
+          <rect x="691" y="126" width="90" height="40" rx="8" transform="rotate(0.3 736 146)" fill="#C9BEEF"/>
+          <path d="M781 146 L800 146" marker-end="url(#a6bAr)"/>
+          <rect x="560" y="66" width="250" height="40" rx="8" transform="rotate(0.5 685 86)" fill="#FC6D26"/>
+          <rect x="40" y="236" width="190" height="50" rx="9" transform="rotate(-0.6 135 261)" fill="#FFFFFF"/>
+          <rect x="250" y="236" width="190" height="50" rx="9" transform="rotate(0.5 345 261)" fill="#FFFFFF"/>
+          <rect x="460" y="236" width="190" height="50" rx="9" transform="rotate(-0.5 555 261)" fill="#FFFFFF"/>
+          <rect x="670" y="236" width="180" height="50" rx="9" transform="rotate(0.6 760 261)" fill="#FFFFFF"/>
+        </g>
+
+        <text class="a6bW" x="76" y="91">400 · Free quota</text>
+        <text class="a6bA" x="228" y="78">400 ends here</text>
+        <text class="a6bH" x="578" y="91">450.95% of 400 · does not fit</text>
+
+        <text class="a6bL" x="76" y="151">24 merge requests x 41.17 = 988.08</text>
+        <text class="a6bL" x="470" y="151">12 pushes to main x 49.25 = 591.00</text>
+        <text class="a6bL" x="700" y="151">4 x 56.18</text>
+        <text class="a6bS" x="696" y="186">schedules = 224.72</text>
+        <text class="a6bV" x="60" y="192">1,803.8 compute minutes a month</text>
+
+        <text class="a6bA" x="40" y="226">lever 1</text>
+        <text class="a6bA" x="250" y="226">lever 2</text>
+        <text class="a6bA" x="460" y="226">lever 3</text>
+        <text class="a6bA" x="670" y="226">lever 4</text>
+        <text class="a6bL" x="54" y="257">rules:changes</text>
+        <text class="a6bS" x="54" y="275">skip jobs: files unchanged</text>
+        <text class="a6bL" x="264" y="257">fewer scheduled runs</text>
+        <text class="a6bS" x="264" y="275">nightlies: 56.18 each</text>
+        <text class="a6bL" x="474" y="257">your own runners</text>
+        <text class="a6bS" x="474" y="275">measures instance runners</text>
+        <text class="a6bL" x="684" y="257">Premium, $29 a seat</text>
+        <text class="a6bS" x="684" y="275">10,000 min a month, annual</text>
+
+        <text class="a6bN" x="30" y="316">Levers 1 and 2 cost engineering hours and change the run mix; lever 3 adds a machine you operate; lever 4 is the invoice. Try them in that order.</text>
+        <text class="a6bN" x="30" y="336">Quota, cost factor and Premium figures as the pricing and compute-minutes pages read on 2026-10-29; re-verify before relying on them.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the bar is four and a half times the quota box; the levers under it are ranked by what they cost, and the cheapest two change the mix before anyone pays</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Move the pipeline in the order the ladder reads <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Builder sessions 3 to 5 write Penwood's file in three steps, and the bench in Builder session 8 reads each one. Stages only: 13 jobs run on a push to <code>main</code>, wall clock 30:08, because the YAML reference says "Jobs in the same stage run in parallel" and the next stage waits, so the 894-second backfill in <code>test</code> holds <code>publish</code>. Add <code>needs</code>: the same 13 jobs, wall clock 26:22, because the architectures page says needs lets jobs "run as fast as possible, even starting earlier than other jobs in the same stage". Add <code>rules</code> and run it as a merge request: 8 jobs, wall clock 19:17, six jobs never added because their rule needs <code>CI_COMMIT_BRANCH</code> to equal the default branch and that variable is not set in a merge request pipeline. The leader's job in block two is not to write any of it. It is to ask for the three numbers at day 45 and to notice that the compute minutes for all three steps on <code>main</code>, 66.30 then 66.30 then 49.25, barely moved while the wall clock fell by a third. Session 4 said it: the clock the team feels and the clock the bill counts are different clocks.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The four levers, ranked, with their cost <span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Lever 1, <code>rules:changes</code>. The job rules page says it compares against the merge request's target branch in merge request pipelines and against the previous commit in branch pipelines, and is always true on a new branch or without a push. Penwood's <code>docs-build</code> already uses it: in the bench's r3, docs-build is never added when <code>docs/</code> is unchanged. Extending the same idea to the test jobs when only documentation changed is engineering hours, not money, and it shrinks the 24 merge-request runs that make up 988.08 of the 1,803.8 minutes.</p>
+        <p>Lever 2, fewer scheduled runs. The four nightlies cost 56.18 minutes each, the dearest run type, because the schedule is the only context that runs the 894-second backfill. Whether the backfill needs to run nightly is a question for the data owner, not the platform; two schedules a week instead of seven is a conversation, not a ticket.</p>
+        <p>Lever 3, runners you operate. The compute-minutes page says "The usage of instance runners by projects running CI/CD jobs is measured in compute minutes" and suggests "Use private runners for some jobs" to reduce usage. It does not say your own runners are exempt, so the honest sentence is "the quota page measures instance runners", and the honest cost is a machine somebody patches, which session 2 weighed. Re-verify the page before relying on it.</p>
+        <p>Lever 4, Premium. As of 2026-10-29 the pricing page lists $29 per user a month billed annually with 10,000 compute minutes. Five seats, five times $29, every month, for a quota 25 times the Free one. It is the simplest lever and the only one with an invoice, which is why it comes last in the order and first in most meetings. The gate at day 60 is where it gets decided, with the other three tried or declined in writing.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> The day-60 gate <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Three questions. Did the pipeline go green on <code>main</code> with the rules in place, and does a merge request run fewer jobs than a push to <code>main</code>? Did the team read the month's compute minutes off the project's usage page and write the number next to 400, or next to 10,000 if Premium is on the table? Is the tier decision signed, with the levers tried or declined listed under it? The quota resets, as the compute-minutes page says, "to <code>0</code> for all namespaces on the first day of each month", so block two should straddle a month boundary on purpose: one full month of real usage is the only number that beats the bench's constructed one. A gate that passes on an estimate is a gate that was not held.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The job rules page documents the cheapest way to double a bill: a job whose last rule is a bare <code>when</code> starts twice on one push, once in a branch pipeline and once in a merge request pipeline, because "every push to an open merge request's source branch causes duplicated pipelines". Every duplicated pipeline is paid in the same unit the quota counts. The documented fix is a <code>workflow:rules</code> block at the top of the file, and the bench confirms what it does for Penwood: a push to a feature branch with an open merge request creates no pipeline at all, 0 compute minutes. A leader asks one question at day 45: "is the workflow block there?" If the answer is no, the quota line is wrong by an amount nobody has measured.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers the last block: the image, the two environments and the criteria that end the migration</span>
+      <h2>Days 61-90: registry, environments, the exit criteria</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">The last block is the only one a customer can notice, which is why it is last. The image Penwood's pipeline builds moves to the project's own container registry, whose path mirrors the project path. The deploys become two jobs with an <code>environment:</code> name each: staging runs on its own on <code>main</code>, production waits for a click. Then the plan ends, and a plan that ends must say how you will know. Exit criteria are counted, not felt.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn block three. Left: the project path penwood, data, pipelines with an arrow down to the registry address, which repeats the same path under the registry's base address, labelled the registry path mirrors the project path. Middle: two environment boxes, staging, deploy-staging running on its own on main, and production, highlighted, deploy-production with when manual inside rules, blocking, waiting for a click. Right: an exit criteria list of five countable items. Below, a hatched pile labelled left behind: the old registry host and its images, the old deploy script, the old CI service, with cancel invoices written beside it.">
+        <defs>
+          <filter id="a6cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="41" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a6cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a6cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a6cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a6cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a6cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a6cB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a6cW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .a6cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a6cH" x="30" y="26">DAYS 61-90: ONE IMAGE PATH, TWO ENVIRONMENTS, FIVE THINGS TO COUNT (PENWOOD, CONSTRUCTED)</text>
+
+        <g filter="url(#a6cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="52" width="290" height="40" rx="8" transform="rotate(-0.4 185 72)" fill="#483698"/>
+          <path d="M185 94 L185 122" marker-end="url(#a6cAr)"/>
+          <rect x="40" y="126" width="290" height="58" rx="8" transform="rotate(0.3 185 155)" fill="#F4F0FC"/>
+          <rect x="372" y="52" width="230" height="56" rx="10" transform="rotate(0.5 487 80)" fill="#FFFFFF"/>
+          <path d="M487 110 L487 134" marker-end="url(#a6cAr)"/>
+          <rect x="372" y="138" width="230" height="62" rx="10" transform="rotate(-0.6 487 169)" fill="#FC6D26"/>
+          <circle cx="584" cy="176" r="9"/>
+          <path d="M584 176 L584 170 M584 176 L589 178"/>
+          <rect x="640" y="52" width="210" height="148" rx="10" transform="rotate(-0.4 745 126)" fill="#FFFFFF"/>
+          <rect x="40" y="230" width="560" height="54" rx="9" transform="rotate(0.3 320 257)" fill="url(#a6cHc)"/>
+          <path d="M606 257 L632 257" marker-end="url(#a6cAr)"/>
+        </g>
+
+        <text class="a6cW" x="56" y="77">project · penwood / data / pipelines</text>
+        <text class="a6cL" x="56" y="150">$CI_REGISTRY_IMAGE</text>
+        <text class="a6cS" x="56" y="170">registry base address / penwood / data / pipelines</text>
+        <text class="a6cS" x="196" y="112">the path mirrors the project</text>
+
+        <text class="a6cL" x="388" y="74">staging · deploy-staging</text>
+        <text class="a6cS" x="388" y="94">runs on its own on every push to main</text>
+        <text class="a6cH" x="388" y="160">production · deploy-production</text>
+        <text class="a6cL" x="388" y="178">when: manual inside rules</text>
+        <text class="a6cL" x="388" y="194">blocking · waits for a click</text>
+
+        <text class="a6cH" x="656" y="74">exit criteria, counted</text>
+        <text class="a6cL" x="656" y="98">1 · image at the project path</text>
+        <text class="a6cL" x="656" y="118">2 · staging deployed by itself</text>
+        <text class="a6cL" x="656" y="138">3 · production waited, then went</text>
+        <text class="a6cL" x="656" y="158">4 · month's minutes vs quota</text>
+        <text class="a6cL" x="656" y="178">5 · three old invoices cancelled</text>
+
+        <text class="a6cL" x="56" y="251">left behind: the old registry host and its images, the old deploy script, the old CI service</text>
+        <text class="a6cS" x="56" y="271">each one switched off only after its replacement has run for real, not after it was written</text>
+        <text class="a6cB" x="640" y="261">cancel invoices</text>
+
+        <text class="a6cN" x="30" y="314">Protected environments, which restrict who may deploy, are Premium and Ultimate; the Free way is the blocking manual job plus a protected main.</text>
+        <text class="a6cN" x="30" y="334">Registry path, environment names and manual-job behaviour as the GitLab Docs read on 2026-10-29. Penwood's jobs are constructed.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the production job is the one orange thing because it is the one step that waits for a human, and the exit list is five counts, not a feeling</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> The image lives at the project's path <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The container registry page says the registry is on all tiers and that an image's path "always matches the related project's repository path", with up to two optional name levels under it. The predefined variables page gives the job its address as <code>CI_REGISTRY_IMAGE</code>, the "Base address for the container registry", set only when the registry is enabled. The job logs in with its own credentials: the authentication page shows <code>docker login</code> fed with <code>$CI_REGISTRY_PASSWORD</code>, and says the job token "has read (pull) and write (push) access to the container registry of the project that runs the job". For the plan, that means the registry row has no separate login, no separate invoice and no separate permission list: the project's tree is the registry's tree. What a container or an image is belongs to a later course; this page takes only where the image is stored and who may write there.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Two environments, one of them waits <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The environments page says a job declares <code>environment:</code> with a <code>name</code> and an optional <code>url</code>, the environment is created on first use, and its deployment tier is guessed from the name (development, testing, staging, production, other) or set with <code>deployment_tier</code>. Penwood's <code>deploy-staging</code> runs on every push to <code>main</code>; in the bench's r2 it is the last job on the critical path, finishing at 26:22. Penwood's <code>deploy-production</code> carries <code>when: manual</code> inside its rules, and the job control page says that makes <code>allow_failure</code> default to <code>false</code>, so the pipeline is blocked: "The pipeline stops at the stage where the job is defined", status blocked, until someone clicks. The bench never schedules it; its convention is that a manual job "waits for a click" and anything downstream is reported as waiting, which is the bench's rule, not GitLab's documented duration.</p>
+        <p>Who may click is the governance question from session 5. Protected environments, which the page describes as letting "only people with the appropriate privileges" deploy, are Premium and Ultimate. On Free the control is the protected <code>main</code> branch: the production job only exists in pipelines on <code>main</code>, and only Maintainers push and merge there by default. It is a coarser control, and for five people it is the right size.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> The day-90 gate is the exit <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Five counts, each a yes or a no. An image exists at the project's registry path, pushed by the pipeline, not by hand. Staging deployed at least once from a push to <code>main</code> with no human in the loop. Production waited in a blocked pipeline and then went when the right person clicked. The first full calendar month's compute minutes are written next to the quota of the tier you chose at day 60. And the old work board, the old CI service and the old registry host have been switched off and their invoices cancelled, each one only after its replacement ran for real. Three cancelled invoices is the number a sponsor hears; the other four are what make it safe to say.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The YAML reference documents a status that fools day-90 reviews: a job with <code>allow_failure: true</code> that fails shows an orange warning and the pipeline still passes. Constructed: Penwood's scan job, were it marked that way, could fail every run in block three while the pipeline list stayed green with a warning triangle nobody opened. Session 4 said green is not proof; the migration version is that "passed with warnings" is a sentence to read, not a colour to glance at. The exit criterion is not "the pipeline is green". It is "the production job waited and then went, and every job that ran, passed".</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>The plan on one page</h2>
+      <span class="tag demo">★ 20 min · everyone builds</span>
+    </div>
+    <p class="lede">Three columns, one per block. Each column has four rows: what moves, what stays behind, the gate question, and the go/no-go with its number, date and owner. Penwood's is filled below as a constructed example; your numbers will differ, and the only ones you may copy are the tier figures, dated. No GitLab account is needed tonight.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 406" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn one-page plan in three columns headed Days 1-30, Days 31-60 and Days 61-90. Each column lists what moves, what stays behind and the gate question. Under each column an orange go/no-go box: day 30, five of five users and main protected; day 60, month minutes against 400 and the tier signed; day 90, five exit counts and three invoices cancelled. A note says every gate has a number, a date and an owner, and that the quota gate can send block two back to the levers.">
+        <defs>
+          <filter id="a6dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="43" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a6dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a6dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a6dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a6dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a6dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a6dW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .a6dB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a6dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a6dH" x="30" y="26">PENWOOD'S 90-DAY PLAN ON ONE PAGE (CONSTRUCTED): THREE COLUMNS, THREE GATES</text>
+
+        <g filter="url(#a6dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="46" width="250" height="34" rx="8" transform="rotate(-0.4 165 63)" fill="#483698"/>
+          <rect x="320" y="46" width="250" height="34" rx="8" transform="rotate(0.3 445 63)" fill="#483698"/>
+          <rect x="600" y="46" width="250" height="34" rx="8" transform="rotate(-0.3 725 63)" fill="#483698"/>
+          <rect x="40" y="90" width="250" height="176" rx="10" transform="rotate(0.3 165 178)" fill="#FFFFFF"/>
+          <rect x="320" y="90" width="250" height="176" rx="10" transform="rotate(-0.3 445 178)" fill="#FFFFFF"/>
+          <rect x="600" y="90" width="250" height="176" rx="10" transform="rotate(0.4 725 178)" fill="#FFFFFF"/>
+          <path d="M165 270 L165 286" marker-end="url(#a6dAr)"/>
+          <path d="M445 270 L445 286" marker-end="url(#a6dAr)"/>
+          <path d="M725 270 L725 286" marker-end="url(#a6dAr)"/>
+          <rect x="40" y="290" width="250" height="44" rx="8" transform="rotate(-0.5 165 312)" fill="#FC6D26"/>
+          <rect x="320" y="290" width="250" height="44" rx="8" transform="rotate(0.5 445 312)" fill="#FC6D26"/>
+          <rect x="600" y="290" width="250" height="44" rx="8" transform="rotate(-0.4 725 312)" fill="#FC6D26"/>
+        </g>
+
+        <text class="a6dW" x="56" y="68">Days 1-30 · repo, issues, board</text>
+        <text class="a6dW" x="336" y="68">Days 31-60 · pipeline, quota</text>
+        <text class="a6dW" x="616" y="68">Days 61-90 · registry, deploys</text>
+
+        <text class="a6dB" x="56" y="112">moves</text>
+        <text class="a6dS" x="56" y="130">tree, repository, open issues, one board</text>
+        <text class="a6dB" x="56" y="156">stays</text>
+        <text class="a6dS" x="56" y="174">closed tickets, chat history, old columns</text>
+        <text class="a6dB" x="56" y="200">gate question</text>
+        <text class="a6dS" x="56" y="218">how many unique users across the tree?</text>
+        <text class="a6dS" x="56" y="236">did the first change land by merge request?</text>
+        <text class="a6dS" x="56" y="254">owner: the data lead</text>
+
+        <text class="a6dB" x="336" y="112">moves</text>
+        <text class="a6dS" x="336" y="130">stages, then needs, then rules; workflow block</text>
+        <text class="a6dB" x="336" y="156">stays</text>
+        <text class="a6dS" x="336" y="174">the old CI service's run log</text>
+        <text class="a6dB" x="336" y="200">gate question</text>
+        <text class="a6dS" x="336" y="218">one real month of minutes: how many vs 400?</text>
+        <text class="a6dS" x="336" y="236">which levers tried, which declined, signed?</text>
+        <text class="a6dS" x="336" y="254">owner: the analytics engineer (Maintainer)</text>
+
+        <text class="a6dB" x="616" y="112">moves</text>
+        <text class="a6dS" x="616" y="130">image to the project path; two environments</text>
+        <text class="a6dB" x="616" y="156">stays</text>
+        <text class="a6dS" x="616" y="174">old registry host, old deploy script</text>
+        <text class="a6dB" x="616" y="200">gate question</text>
+        <text class="a6dS" x="616" y="218">did staging go alone, did production wait?</text>
+        <text class="a6dS" x="616" y="236">which invoices are cancelled, which not yet?</text>
+        <text class="a6dS" x="616" y="254">owner: the data lead, with finance</text>
+
+        <text class="a6dH" x="56" y="308">day 30 go/no-go</text>
+        <text class="a6dL" x="56" y="326">5 of 5 users · main protected · board live</text>
+        <text class="a6dH" x="336" y="308">day 60 go/no-go</text>
+        <text class="a6dL" x="336" y="326">minutes vs 400 written · tier signed</text>
+        <text class="a6dH" x="616" y="308">day 90 go/no-go</text>
+        <text class="a6dL" x="616" y="326">5 exit counts · 3 invoices cancelled</text>
+
+        <text class="a6dN" x="30" y="362">Every gate has a number, a date and an owner. Only the day-60 gate can send a block backwards.</text>
+        <text class="a6dN" x="30" y="380">A no on the quota means the levers, then Premium, before block three starts.</text>
+        <text class="a6dN" x="30" y="398">Penwood's run mix and durations are constructed; the 400 is the Free quota as of 2026-10-29, re-verify.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - three columns of the same four rows; the orange gates are the only part a sponsor needs to read</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Write the three columns.</strong> For each block: what moves, what stays behind, and one person who owns the block. Tool classes, not product names. If a row has no owner, that is the first finding of the plan.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's three columns (constructed)</span>block         moves                                          stays behind                              owner
+days 1-30     group tree, repository, open issues, 1 board    closed tickets, chat history, old columns  data lead
+days 31-60    pipeline: stages -> needs -> rules, workflow    the old CI service's run log              analytics eng (Maintainer)
+days 61-90    image to project path, staging + production     old registry host, old deploy script      data lead + finance</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the quota line and rank the levers.</strong> Runs per month times minutes per run, by run type, against the tier quota, dated. Penwood's run minutes are the bench's scorecard and its run mix is constructed; yours come from your current CI service's duration reports, or from an estimate you label as one. Then list the four levers in the order you will try them.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's quota line and lever order (bench canon, constructed run mix)</span>24 merge requests x 41.17 min = 988.08
+12 pushes to main  x 49.25 min = 591.00
+ 4 schedules       x 56.18 min = 224.72
+total                          = 1,803.8 compute minutes a month
+Free quota (as of 2026-10-29)  =   400          -> 450.95%, does not fit
+
+levers, in order:  1 rules:changes on the test jobs       (hours, no invoice)
+                   2 fewer schedules: ask the data owner   (a conversation)
+                   3 own runners for the backfill          (a machine to patch; quota page measures instance runners, re-verify)
+                   4 Premium: $29 a seat, 10,000 minutes   (as of 2026-10-29; the invoice)</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the three gates.</strong> Each gate is a question with a countable answer, a date and the owner's name. A gate without a number is a status meeting.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's gates (constructed)</span>day 30   unique users across penwood/data/pipelines  <= 5      first change landed via merge request: yes/no     owner: data lead
+day 60   one real month of compute minutes          vs 400    levers 1-3 tried or declined in writing; tier signed  owner: analytics eng
+day 90   image at project path · staging went alone · production waited then went · minutes vs chosen quota · 3 invoices cancelled   owner: data lead</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the pay decision as a sentence with a date.</strong> Not "we will see". Say what has to be true on day 60 for Free to hold, and what you do if it is not.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's pay decision (constructed)</span>Free holds if the first real month, after rules:changes and the schedule change, reads 400 compute minutes
+or fewer (quota as of 2026-10-29). If it reads more, Penwood moves the five seats to Premium at $29 each
+on day 60 rather than running its own runner, because five people have no one to patch a machine.
+Decision owner: the data lead. Re-verify the tier page the week before.</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The plan to avoid</span>Phase 1: migrate everything. Phase 2: optimise. Phase 3: decommission. Timeline: Q1.
+(No gate has a number, nothing is left behind on purpose, the quota is met by surprise in phase 2, and "Q1" is not a date anyone owns.)</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before the Builder track</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Fill the three columns for your own team: what moves, what stays, who owns each block. Put a name in every owner cell or write "no owner" and bring it to the sponsor.</li>
+      <li>Open the GitLab Docs import page for your current host and list, with the date, which fields it says cross (issues, labels, comments, authors) and which it does not. Add the ones that do not to the "stays behind" row with a reason.</li>
+      <li>Write your quota line from last month's real job minutes, or from an estimate labelled as one, against 400 and against 10,000 (both as of 2026-10-29; re-verify). Rank the four levers for your team in the order you would actually try them.</li>
+      <li>Write the day-60 pay decision as one sentence with a condition, a date and an owner. Read it aloud to someone who signs invoices and keep only the words they understood.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Leader session 6 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">1 · Penwood's constructed month reads 1,803.8 compute minutes against the Free tier's 400 as of 2026-10-29. Which lever does the plan try first, and why?</p>
+      <button class="qopt" type="button">A · Premium, because $29 a seat is the fastest fix</button>
+      <button class="qopt" type="button">B · rules:changes on the test jobs, because it costs engineering hours and no invoice, and the 24 merge-request runs are 988.08 of the total</button>
+      <button class="qopt" type="button">C · Your own runners, because the docs say they are exempt from the quota</button>
+      <button class="qopt" type="button">D · Deleting the nightly backfill, because scheduled runs are never worth paying for</button>
+      <p class="qwhy">The levers are ranked by cost: hours, then a conversation, then a machine, then an invoice. The compute-minutes page says the quota measures instance runners and suggests private runners for some jobs; it does not say your own runners are exempt, so C claims more than the page does. Whether the backfill runs nightly is the data owner's call, not the platform's.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · On day 3 the lead invites the five team members and the contractor who keeps the old deploy script, into a private top-level group on Free. What does the free user limit page say happens?</p>
+      <button class="qopt" type="button">A · Nothing; contractors are not counted</button>
+      <button class="qopt" type="button">B · The sixth person is added as Guest automatically</button>
+      <button class="qopt" type="button">C · GitLab bills the sixth seat at the Premium rate</button>
+      <button class="qopt" type="button">D · The namespace is placed in a read-only state; writes to repositories, LFS, packages and registries stop until the count is five or the group's model changes</button>
+      <p class="qwhy">Every unique user across the group, its subgroups and projects counts, and over five on a private top-level group the namespace becomes read-only (as of 2026-10-29; re-verify). That is why the day-30 gate counts users before invitations go out. Session 3 gave the three ways out: a public group, Premium, or a personal namespace.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · Which of these is a day-90 exit criterion written the way the plan requires?</p>
+      <button class="qopt" type="button">A · "Production waited in a blocked pipeline and then deployed when a Maintainer clicked, and the old registry host's invoice is cancelled"</button>
+      <button class="qopt" type="button">B · "The team feels confident on GitLab"</button>
+      <button class="qopt" type="button">C · "The pipeline is green"</button>
+      <button class="qopt" type="button">D · "Most things have been moved over"</button>
+      <p class="qwhy">An exit criterion is a count or a yes/no with an owner. "Green" is not proof: a job with allow_failure: true can fail under an orange warning while the pipeline passes, and session 4 showed a job that was never added cannot fail. The production job that waited and then went, plus a cancelled invoice, are both things you can point at.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Penwood's scorecard: 1,803.8 minutes, 450.95% of 400</span><span class="note">Computed by the bench in Builder session 8 (scorecard r5) from a constructed pipeline and run mix; Penwood is constructed</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Free quota, cost factor, monthly reset, private runners suggestion</span><span class="note">GitLab Docs, "Compute minutes" and GitLab, "Pricing", read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Five users, read-only over the limit, three top-level groups</span><span class="note">GitLab Docs, "Free user limit", read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Default branch protected, label-list boards on Free</span><span class="note">GitLab Docs, "Protected branches" and "Issue boards", read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Registry path mirrors the project, job-token login</span><span class="note">GitLab Docs, "Container registry" and "Authenticate with the container registry", read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Environments, blocking manual jobs, protected environments as Premium</span><span class="note">GitLab Docs, "Environments and deployments", "Control how jobs run", "Protected environments", read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Duplicate pipelines and workflow:rules; allow_failure warning</span><span class="note">GitLab Docs, "Specify when jobs run with rules" and "CI/CD YAML syntax reference", read at source</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Import routes and which fields cross</span><span class="note">Not read for these sessions; taught as a day-1 verification task, no field-by-field claim made</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Enforcement when over the compute quota</span><span class="note">The compute-minutes page says only that enforcement measures apply; not described here</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Writing the YAML the blocks describe</span><span class="note">Builder sessions 3 to 7; this page reads the numbers, it does not write the file</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Leader session 6 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Three blocks, one order</b><span>Repo, issues, board; then the pipeline with the quota in view; then registry, environments, exit. Customer-visible steps go last.</span></div>
+      <div class="cheat-item"><b>A gate is a number, a date, an owner</b><span>Day 30: 5 of 5 users, main protected. Day 60: a real month's minutes vs 400, tier signed. Day 90: five counts, three invoices cancelled.</span></div>
+      <div class="cheat-item"><b>The quota line</b><span>24 x 41.17 + 12 x 49.25 + 4 x 56.18 = 1,803.8 min vs 400 (as of 2026-10-29) = 450.95%. Constructed mix, bench minutes.</span></div>
+      <div class="cheat-item"><b>Four levers, ranked by cost</b><span>rules:changes (hours) · fewer schedules (a conversation) · own runners (a machine; quota page measures instance runners) · Premium $29 a seat, 10,000 min.</span></div>
+      <div class="cheat-item"><b>Leave history behind, on purpose</b><span>Closed tickets, old columns, chat, the old run log. Verify the import route on the docs before promising any field crosses.</span></div>
+      <div class="cheat-item"><b>Exit is counted, not felt</b><span>Image at the project path · staging went alone · production waited then went · minutes vs quota written · old invoices cancelled.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>The Leader track ends with the plan on one page. The Builder track starts where block one starts: Builder session 1 creates the group and the project on Free, opens the issues and builds the label-list board that the day-30 gate counts, so the people who write the YAML see the same three dates you do.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Leader session 6 of 6 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="a5-governance-without-friction.html">← Prev: Governance without friction</a> &nbsp;·&nbsp; <a href="b1-project-issues-boards.html">Next track: Builder session 1 →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

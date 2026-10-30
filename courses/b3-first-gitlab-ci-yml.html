@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 3 of 8. Write Penwood's first .gitlab-ci.yml by hand: stages, jobs and script, the shared runner that picks it up on GitLab.com Free, the first green pipeline the bench measures at 30:08, and what one run costs in compute minutes. Penwood is a constructed analytics team.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Your first .gitlab-ci.yml - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 3 of 8. Stages, jobs, script; the first green; what a minute costs.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b3-first-gitlab-ci-yml.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Your first .gitlab-ci.yml - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 3 of 8. One file, five stages, thirteen jobs, 30:08 on the clock and 66.30 on the bill.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 3 · Your first .gitlab-ci.yml - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 3 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 3 of 8</div>
+    <h1>Your first <span class="accent">.gitlab-ci.yml</span></h1>
+    <p class="sub">A pipeline in GitLab is one file at the root of the project. It names stages, puts jobs in them, and gives every job a <code>script</code>. Commit it and GitLab.com's instance runners pick it up without any setup on Free. Tonight Penwood, a constructed five-person logistics-analytics team, writes that file by hand for its data pipelines: five stages, fourteen jobs, no shortcuts yet. The bench in session 8 parses exactly this stages-only version and reports the first green run at 30:08 on the clock and 66.30 compute minutes on the bill. Both numbers are canon; the job durations behind them are constructed.</p>
+    <div class="chip-row">
+      <span class="chip level">🟡 Core</span>
+      <span class="chip audience">Analytics engineers and data builders</span>
+      <span class="chip audience">Anyone writing their first pipeline file</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Stages, jobs, the first green, the cost</span>
+      <span class="a3" style="flex:4">20-42 · Build-along: Penwood's file by hand</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where session 3 sits</h2>
+    </div>
+    <p class="lede">Session 1 built Penwood's tree and board. Session 2 opened the first merge request from <code>feature/orders-dedupe</code> and read its pipeline tab; that tab was empty, because there was no pipeline file yet. Tonight there is one. The whole builder track adds to the same <code>.gitlab-ci.yml</code>: session 4 gives it variables, artifacts and a cache, session 5 gives it rules and <code>needs</code>, session 6 gives it environments, session 7 gives it the registry and an included template, and session 8 puts every version on a bench that parses the YAML in your browser and schedules it. Nothing on these pages runs GitLab for real; the bench parses and schedules, and GitLab.com Free runs the file when you commit it. Penwood is constructed: its people, jobs and durations are invented for these pages.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> A <code>.gitlab-ci.yml</code> you wrote by hand with the <code>lint</code> and <code>build</code> stages of Penwood's pipeline, compared line by line with the stages-only file the bench parses; the three keywords a job cannot live without and the one default that catches people (a job with no stage runs in <code>test</code>); the reason the first green takes 30:08 when the longest job is 894 s; and the arithmetic that turns one run into 66.30 compute minutes against 400 a month.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers stages, stage, script, image and default, and where a stage-less job lands</span>
+      <h2>Stages, jobs, script</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The YAML reference gives the shape in three keywords. <code>stages</code> is a list at the top of the file that fixes the order. A job is any top-level key that is not a reserved word, and it carries <code>stage</code> to say where it runs and <code>script</code> to say what. The reference is blunt about the last one: <code>script</code> is required for every job except trigger jobs. Everything else, <code>image</code>, <code>default</code>, <code>variables</code>, <code>needs</code>, <code>rules</code>, is optional and arrives in later sessions.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn .gitlab-ci.yml on the left: a stages line listing lint, build, test, publish, deploy, then a job lint-yaml with stage lint and a script line, then a note that script is required and stage, image, needs and rules are optional, and that a job's own image overrides default image. On the right, the five stages drawn as boxes in order. An orange job called docs-check with no stage written drops by arrow into the test box. Below it, the five default stages GitLab uses when no stages line is written: .pre, build, test, deploy, .post.">
+        <defs>
+          <filter id="b3aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="53" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b3aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b3aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b3aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b3aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b3aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b3aB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b3aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b3aH" x="30" y="26">ONE FILE: STAGES FIX THE ORDER, EVERY JOB NAMES ONE AND CARRIES A SCRIPT</text>
+        <text class="b3aS" x="560" y="26">YAML reference, read 2026-10-29 · Penwood is constructed</text>
+
+        <g filter="url(#b3aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="330" height="230" rx="10" transform="rotate(-0.4 205 165)" fill="#F4F0FC"/>
+          <rect x="400" y="60" width="82" height="44" rx="8" transform="rotate(-0.8 441 82)" fill="#FFFFFF"/>
+          <rect x="490" y="60" width="82" height="44" rx="8" transform="rotate(0.6 531 82)" fill="#FFFFFF"/>
+          <rect x="580" y="60" width="82" height="44" rx="8" transform="rotate(-0.5 621 82)" fill="#FFFFFF"/>
+          <rect x="670" y="60" width="82" height="44" rx="8" transform="rotate(0.7 711 82)" fill="#FFFFFF"/>
+          <rect x="760" y="60" width="82" height="44" rx="8" transform="rotate(-0.6 801 82)" fill="#FFFFFF"/>
+          <path d="M482 82 L488 82 M572 82 L578 82 M662 82 L668 82 M752 82 L758 82"/>
+          <rect x="400" y="160" width="200" height="40" rx="8" transform="rotate(-1.2 500 180)" fill="#FC6D26"/>
+          <path d="M602 180 L621 180 L621 112" stroke-dasharray="5 4" marker-end="url(#b3aAr)"/>
+          <rect x="400" y="250" width="78" height="30" rx="6" transform="rotate(0.5 439 265)" fill="url(#b3aHc)"/>
+          <rect x="484" y="250" width="78" height="30" rx="6" transform="rotate(-0.5 523 265)" fill="url(#b3aHc)"/>
+          <rect x="568" y="250" width="78" height="30" rx="6" transform="rotate(0.6 607 265)" fill="url(#b3aHc)"/>
+          <rect x="652" y="250" width="78" height="30" rx="6" transform="rotate(-0.4 691 265)" fill="url(#b3aHc)"/>
+          <rect x="736" y="250" width="78" height="30" rx="6" transform="rotate(0.5 775 265)" fill="url(#b3aHc)"/>
+          <path d="M348 186 q4 8 10 2 q6 -10 12 -4" stroke="#6B4FBB"/>
+        </g>
+
+        <text class="b3aL" x="56" y="76">stages: lint build test publish deploy</text>
+        <text class="b3aH" x="56" y="100">lint-yaml:</text>
+        <text class="b3aL" x="56" y="118">  stage: lint</text>
+        <text class="b3aL" x="56" y="136">  script:</text>
+        <text class="b3aS" x="56" y="154">    - python -m yamllint pipelines/</text>
+        <text class="b3aB" x="56" y="186">required: script</text>
+        <text class="b3aS" x="56" y="204">optional: stage, image, needs, rules</text>
+        <text class="b3aS" x="56" y="236">default: image: python:3.12-slim</text>
+        <text class="b3aS" x="56" y="254">a job's own image overrides default:image</text>
+
+        <text class="b3aL" x="412" y="86">lint</text>
+        <text class="b3aL" x="502" y="86">build</text>
+        <text class="b3aL" x="592" y="86">test</text>
+        <text class="b3aL" x="682" y="86">publish</text>
+        <text class="b3aL" x="772" y="86">deploy</text>
+
+        <text class="b3aH" x="412" y="178">docs-check</text>
+        <text class="b3aL" x="412" y="194">stage: not written</text>
+        <text class="b3aS" x="640" y="180">no stage means test</text>
+
+        <text class="b3aL" x="400" y="240">the defaults when you write no stages line</text>
+        <text class="b3aS" x="408" y="270">.pre</text>
+        <text class="b3aS" x="492" y="270">build</text>
+        <text class="b3aS" x="576" y="270">test</text>
+        <text class="b3aS" x="660" y="270">deploy</text>
+        <text class="b3aS" x="744" y="270">.post</text>
+
+        <text class="b3aN" x="30" y="318">A job with no stage runs in test. Jobs in one stage run together; the next stage waits for all of them.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - three keywords make a pipeline, and the one you forget has a default that puts your job in test</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> What a stage promises <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The reference says "Jobs in the same stage run in parallel", and the next stage starts only after the previous stage's jobs succeed. That is the whole contract of a stage: everything inside it may run at once, nothing after it starts until all of it is done. Penwood writes five stages because its work has five kinds: <code>lint</code> the YAML and SQL, <code>build</code> an image, the compiled models and the docs, <code>test</code> five ways, <code>publish</code> the image and docs, <code>deploy</code> to staging and production. The pipeline architectures page calls this basic shape "easier to maintain" and also "not the most efficient"; session 5 earns the efficiency with <code>needs</code>. Tonight you take the simple contract on purpose, because a file you can read beats a file that is fast.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The defaults you did not write <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>If you write no <code>stages</code> line, GitLab uses <code>.pre</code>, <code>build</code>, <code>test</code>, <code>deploy</code>, <code>.post</code>. If a job has no <code>stage</code>, it uses <code>test</code>. A pipeline whose only jobs sit in <code>.pre</code> and <code>.post</code> does not run at all. The <code>default</code> block holds values every job inherits unless it sets its own; Penwood puts <code>image: python:3.12-slim</code> there once, and the reference says a job's own <code>image</code> overrides it. The job's <code>script</code> runs inside that image on whichever runner picks the job up. What an image is belongs to a later course on containers; here it is the environment your script runs in, named once.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Who runs the script: the instance runner on Free <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The runner docs describe a runner as "an application that works with GitLab CI/CD to run jobs in a pipeline", and the scope page says "On GitLab.com, instance runners are enabled in all projects by default". So Penwood commits the file and a runner it never installed picks the jobs up. The runner asks GitLab for jobs with its own token; each job then runs with a job token of its own, which session 7 uses to log in to the registry. Group runners and project runners exist for when you want your own machines; the Leader track's session 2 weighs that. One practical note from the pricing FAQ, read 2026-10-29: a credit card is required to use GitLab.com's shared runners even on the $0 tier; re-verify the tier page before relying on it.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's analyst adds a quick <code>docs-check</code> job to the file, copies <code>script</code> from <code>docs-build</code> and forgets <code>stage</code>. She expects it beside the linters. It appears in the pipeline graph under <code>test</code>, after the 382 s image build, exactly as the reference says: a job without <code>stage</code> uses <code>test</code>. Nothing failed, so nobody noticed for a week that a 10-second check was waiting eight minutes for a stage it had nothing to do with. The fix is one line. The habit is to read the graph after every commit to the file, not only when it goes red.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers the first green run, what the graph shows and why it takes as long as it does</span>
+      <h2>The first green</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">Penwood's complete stages-only file has fourteen jobs. The bench parses it as a push to <code>main</code> with no runner cap and reports the canon for rung r1: thirteen jobs ran, one (<code>deploy-production</code>, <code>when: manual</code>) waits for a click, wall clock <strong>30:08</strong>, serial time <strong>66:18</strong>, <strong>66.30</strong> compute minutes. The longest single job is 894 s, under fifteen minutes. The other fifteen minutes are the stage contract doing what it promised.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 450" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn timeline of bench rung r1, the stages-only file pushed to main with unlimited runners. Fourteen job rows against a clock from 0 to 30:08. Dashed vertical lines mark stage boundaries at 1:47, 8:09, 23:03 and 27:08. Both lint jobs start at 0. The three build jobs start at 1:47 when lint-sql, the longer linter, finishes. The five test jobs start at 8:09 when build-image finishes. The orange bar is nightly-backfill, 894 seconds, which ends at 23:03; publish-image and publish-docs cannot start before it even though integration-tests finished earlier. deploy-staging runs 27:08 to 30:08. deploy-production is a dashed manual box.">
+        <defs>
+          <filter id="b3bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="59" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b3bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b3bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b3bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b3bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b3bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b3bV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .b3bA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b3bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b3bH" x="30" y="26">R1, STAGES ONLY: 13 JOBS RAN, 1 MANUAL, WALL 30:08 (BENCH CANON)</text>
+        <text class="b3bS" x="560" y="26">push to main, unlimited runners · durations constructed</text>
+
+        <text class="b3bA" x="162" y="62">lint</text>
+        <text class="b3bA" x="205" y="62">build</text>
+        <text class="b3bA" x="351" y="62">test</text>
+        <text class="b3bA" x="692" y="62">publish</text>
+        <text class="b3bA" x="785" y="62">deploy</text>
+
+        <g filter="url(#b3bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M201 68 L201 384 M347 68 L347 384 M688 68 L688 230 M688 250 L688 384 M781 68 L781 384" stroke="#6B4FBB" stroke-dasharray="4 4" stroke-width="1.5"/>
+          <rect x="160" y="78" width="17" height="16" rx="3" transform="rotate(-1 168 86)" fill="#F4F0FC"/>
+          <rect x="160" y="100" width="41" height="16" rx="3" transform="rotate(0.8 180 108)" fill="#F4F0FC"/>
+          <rect x="201" y="122" width="146" height="16" rx="3" transform="rotate(-0.4 274 130)" fill="#F4F0FC"/>
+          <rect x="201" y="144" width="73" height="16" rx="3" transform="rotate(0.6 237 152)" fill="#F4F0FC"/>
+          <rect x="201" y="166" width="49" height="16" rx="3" transform="rotate(-0.7 225 174)" fill="#F4F0FC"/>
+          <rect x="347" y="188" width="115" height="16" rx="3" transform="rotate(0.4 404 196)" fill="#F4F0FC"/>
+          <rect x="347" y="210" width="182" height="16" rx="3" transform="rotate(-0.3 438 218)" fill="#F4F0FC"/>
+          <rect x="347" y="232" width="278" height="16" rx="3" transform="rotate(0.3 486 240)" fill="#F4F0FC"/>
+          <rect x="347" y="254" width="89" height="16" rx="3" transform="rotate(-0.6 391 262)" fill="#F4F0FC"/>
+          <rect x="347" y="276" width="341" height="16" rx="3" transform="rotate(0.2 517 284)" fill="#FC6D26"/>
+          <rect x="688" y="298" width="93" height="16" rx="3" transform="rotate(-0.5 734 306)" fill="#F4F0FC"/>
+          <rect x="688" y="320" width="23" height="16" rx="3" transform="rotate(0.9 699 328)" fill="#F4F0FC"/>
+          <rect x="781" y="342" width="69" height="16" rx="3" transform="rotate(-0.4 815 350)" fill="#F4F0FC"/>
+          <rect x="781" y="364" width="69" height="16" rx="3" transform="rotate(0.5 815 372)" fill="#FFFFFF" stroke-dasharray="5 3"/>
+          <path d="M600 306 q6 -8 12 0 t12 0 t12 0 t12 0" stroke="#6B4FBB"/>
+          <path d="M160 392 L850 392"/>
+        </g>
+
+        <text class="b3bS" x="30" y="90">lint-yaml</text>
+        <text class="b3bS" x="30" y="112">lint-sql</text>
+        <text class="b3bS" x="30" y="134">build-image</text>
+        <text class="b3bS" x="30" y="156">compile-models</text>
+        <text class="b3bS" x="30" y="178">docs-build</text>
+        <text class="b3bS" x="30" y="200">unit-tests</text>
+        <text class="b3bS" x="30" y="222">data-quality-tests</text>
+        <text class="b3bS" x="30" y="244">integration-tests</text>
+        <text class="b3bS" x="30" y="266">scan-dependencies</text>
+        <text class="b3bS" x="30" y="288">nightly-backfill</text>
+        <text class="b3bS" x="30" y="310">publish-image</text>
+        <text class="b3bS" x="30" y="332">publish-docs</text>
+        <text class="b3bS" x="30" y="354">deploy-staging</text>
+        <text class="b3bS" x="30" y="376">deploy-production</text>
+
+        <text class="b3bL" x="356" y="288">nightly-backfill 894 s holds publish</text>
+        <text class="b3bS" x="640" y="244">1219 s, done</text>
+        <text class="b3bS" x="516" y="310">publish waits</text>
+        <text class="b3bS" x="787" y="376">manual</text>
+
+        <text class="b3bS" x="156" y="408">0</text>
+        <text class="b3bS" x="190" y="408">1:47</text>
+        <text class="b3bS" x="336" y="408">8:09</text>
+        <text class="b3bS" x="672" y="408">23:03</text>
+        <text class="b3bS" x="764" y="408">27:08</text>
+        <text class="b3bV" x="812" y="410">30:08</text>
+
+        <text class="b3bN" x="30" y="432">Test starts when build ends (8:09); publish when the 894 s backfill ends (23:03). The wait is the stage rule.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - integration-tests is done at 20:19 and publish still waits until 23:03, because a stage waits for its slowest job</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Read the green pipeline before you celebrate it <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Green answers one question: did every job that ran exit zero. It does not say how many jobs ran, how long they waited, or what they cost. On r1 the bench's critical path is <code>lint-sql</code>, <code>build-image</code>, <code>nightly-backfill</code>, <code>publish-image</code>, <code>deploy-staging</code>: 107 + 382 + 894 + 245 + 180 = 1,808 s, which is 30:08. Note what is on that path: a nightly backfill that has no business running on a push to <code>main</code>, and an image build that every test waited for even though only <code>integration-tests</code> uses the image. Both are the stage contract working exactly as written. Session 5 removes the backfill from pushes with a rule and lets tests start from <code>compile-models</code> with <code>needs</code>; the bench reports that version at 26:22 and then 19:17. Tonight, read the graph, name the path out loud, and leave the file simple.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> One manual job and what blocked would have meant <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><code>deploy-production</code> carries <code>when: manual</code> at the job level, outside any <code>rules</code>. The job control page says that for a manual job written this way <code>allow_failure</code> defaults to <code>true</code>, so the pipeline can finish and show success while the button is unclicked. Write the same <code>when: manual</code> inside a <code>rules</code> entry and the default flips to <code>false</code>: "The pipeline stops at the stage where the job is defined" and the status reads <strong>blocked</strong>. Penwood wants the blocking version for production, and session 6 moves the keyword inside <code>rules</code> for that reason. The bench's convention, not GitLab's documented behaviour, is that a manual job is never scheduled and anything downstream of it is reported as waiting; the reference fixes no duration for a manual gate.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The YAML reference documents a second colour of green. A job with <code>allow_failure: true</code> that fails shows an orange warning and the pipeline still passes. Teams add it to a flaky test "for now", the pipeline reads passed with warnings for months, and the merge button never once refused. Constructed: Penwood's lead sets the rule that <code>allow_failure</code> appears in the file only with a comment naming the issue number that will remove it. The keyword is fine; a green that nobody reads is the problem.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers compute minutes, cost factors and the Free quota one run eats into</span>
+      <h2>What a minute costs</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">The clock the team feels is the wall clock, 30:08. The clock the quota counts is a different one. The compute minutes page says "The usage of instance runners ... is measured in compute minutes", and the bench computes them the way the page describes: add every job's seconds, divide by 60, multiply by the runner's cost factor. On r1 that is 3,978 s of serial time, 66:18, which at cost factor 1 is <strong>66.30 compute minutes</strong> for one green run. Free gives 400 a month, as of 2026-10-29.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn chain of three panels. First, a hachured pile labelled serial: every job's seconds added, 3,978 s, 66:18. An arrow to the second panel: divide by 60 and multiply by the cost factor, with an orange tile reading Linux small, cost factor 1, giving 66.30 compute minutes per run. An arrow to the third panel: the month on Free as of 2026-10-29, 400 minutes, reset to zero on the first day; six runs at 66.30 make 397.8, and a seventh does not fit. Below, the cost factor ladder from the compute minutes page: small 1, medium 2, large 3, xlarge 6, 2xlarge 12.">
+        <defs>
+          <filter id="b3cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b3cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b3cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b3cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b3cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b3cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b3cB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b3cV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b3cR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b3cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b3cH" x="30" y="26">FROM SECONDS TO THE BILL: ONE R1 RUN AGAINST THE FREE MONTH</text>
+        <text class="b3cS" x="500" y="26">compute minutes and pricing pages, read 2026-10-29 · bench canon</text>
+
+        <g filter="url(#b3cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="56" width="250" height="190" rx="10" transform="rotate(-0.4 165 151)" fill="url(#b3cHc)"/>
+          <path d="M292 150 L326 150" marker-end="url(#b3cAr)"/>
+          <rect x="330" y="56" width="200" height="190" rx="10" transform="rotate(0.4 430 151)" fill="#FFFFFF"/>
+          <rect x="350" y="130" width="160" height="34" rx="6" transform="rotate(-1.5 430 147)" fill="#FC6D26"/>
+          <path d="M532 150 L566 150" marker-end="url(#b3cAr)"/>
+          <rect x="570" y="56" width="280" height="190" rx="10" transform="rotate(-0.3 710 151)" fill="#F4F0FC"/>
+          <path d="M796 206 L826 206 M798 214 L828 214 M796 222 L826 222" stroke="#6B4FBB"/>
+          <rect x="40" y="272" width="150" height="30" rx="6" transform="rotate(0.4 115 287)" fill="#FFFFFF"/>
+          <rect x="200" y="272" width="150" height="30" rx="6" transform="rotate(-0.4 275 287)" fill="#FFFFFF"/>
+          <rect x="360" y="272" width="150" height="30" rx="6" transform="rotate(0.5 435 287)" fill="#FFFFFF"/>
+          <rect x="520" y="272" width="150" height="30" rx="6" transform="rotate(-0.5 595 287)" fill="#FFFFFF"/>
+          <rect x="680" y="272" width="150" height="30" rx="6" transform="rotate(0.4 755 287)" fill="#FFFFFF"/>
+        </g>
+
+        <text class="b3cL" x="56" y="82">serial: every job's seconds added</text>
+        <text class="b3cS" x="56" y="100">13 jobs that ran, r1, constructed durations</text>
+        <text class="b3cV" x="56" y="150">3,978 s</text>
+        <text class="b3cL" x="56" y="176">66:18 if run one after another</text>
+        <text class="b3cS" x="56" y="196">the wall clock was 30:08; the bill</text>
+        <text class="b3cS" x="56" y="212">does not care about parallel</text>
+
+        <text class="b3cL" x="346" y="82">divide by 60</text>
+        <text class="b3cL" x="346" y="100">multiply by the cost factor</text>
+        <text class="b3cH" x="362" y="152">Linux small · factor 1</text>
+        <text class="b3cV" x="346" y="200">66.30</text>
+        <text class="b3cS" x="346" y="220">compute minutes per run</text>
+
+        <text class="b3cL" x="586" y="82">the month on Free, as of 2026-10-29</text>
+        <text class="b3cV" x="586" y="122">400</text>
+        <text class="b3cS" x="636" y="122">minutes, reset to 0 on day 1</text>
+        <text class="b3cB" x="586" y="160">6 runs x 66.30 = 397.8 (arithmetic)</text>
+        <text class="b3cR" x="586" y="182">a seventh r1 run does not fit</text>
+        <text class="b3cS" x="586" y="216">enforcement: the page says measures</text>
+        <text class="b3cS" x="586" y="232">apply; it does not say which here</text>
+
+        <text class="b3cS" x="50" y="292">small · factor 1</text>
+        <text class="b3cS" x="210" y="292">medium · factor 2</text>
+        <text class="b3cS" x="370" y="292">large · factor 3</text>
+        <text class="b3cS" x="530" y="292">xlarge · factor 6</text>
+        <text class="b3cS" x="690" y="292">2xlarge · factor 12</text>
+
+        <text class="b3cN" x="30" y="326">The team feels the wall clock (30:08); the quota counts compute minutes (66.30). Same run, two numbers.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - parallel stages make the run feel faster and cost exactly the same</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Six runs a month is not a pipeline <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Divide 400 by 66.30 and you get 6.03: six green runs of the stages-only file fit in Penwood's Free month, the seventh does not. That is the arithmetic, not a bench measurement, and it assumes every job runs on a Linux small runner at cost factor 1. Penwood's constructed month is 24 merge-request pipelines, 12 pushes to <code>main</code> and 4 schedules, forty runs. The stages-only file runs all thirteen jobs every time, so the gap is not close. The bench's scorecard on the final file, with rules and <code>needs</code>, still lands at 1,803.8 compute minutes a month, 450.95% of 400; the stages-only file would cost more, because every run executes every job. The lesson lands tonight so that sessions 4 and 5 are read as cost tools, not only speed tools: <code>rules:changes</code> to skip jobs, fewer scheduled runs, or runners the quota page does not measure (re-verify that page; it suggests private runners for some jobs and does not say your own runners are exempt), or Premium's 10,000 minutes at $29 per user a month billed annually, as of 2026-10-29.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Cost factors and the resets <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The compute minutes page lists the factors for GitLab.com's hosted Linux runners: small 1 (x86-64 and Arm64), medium 2, large 3, xlarge 6, 2xlarge 12. A 382 s image build on a large runner would be counted as 19.10 minutes, not 6.37; that is arithmetic on the page's factors, your numbers will differ with your durations. Usage "resets to <code>0</code> for all namespaces on the first day of each month". The page says "Enforcement measures are applied when you exceed your quota" and sends you elsewhere for what they are; nothing here describes them, because the page read did not. The honest limit on everything in this Part: durations are constructed, the bench parses and schedules rather than running anything, and every tier number is dated 2026-10-29.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: in Penwood's first week on the file, the two analytics engineers push to <code>main</code> eleven times to fix YAML indentation, one line per push, and each push runs all thirteen jobs. By Friday the usage page reads more than the month allows and the team has not yet shipped a model. Nothing was misconfigured. A stages-only file bills every job on every push; that is why the first merge request in session 2 mattered, why <code>rules</code> arrive in session 5, and why the lint stage in tonight's build-along is the one you run by hand before you commit.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's lint and build stages, by hand</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Open the project from session 1 and the <code>feature/orders-dedupe</code> branch from session 2. You will write a <code>.gitlab-ci.yml</code> with two of Penwood's five stages from memory, commit it to the branch, read the pipeline graph, then compare your file with the stages-only file the bench parses. Penwood's scripts call tools that do not exist in your project; the point is the shape, so let them fail or swap in <code>echo</code>. Everything runs on GitLab.com Free as of 2026-10-29; the durations drawn below are constructed and your numbers will differ.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn timeline of just the lint and build stages of bench rung r1. lint-yaml 45 s and lint-sql 107 s both start at 0. A dashed stage boundary at 1:47. build-image 382 s, compile-models 192 s and docs-build 129 s all start at 1:47. The orange bars are lint-sql and build-image, the path that sets the end of build at 8:09, 489 s. A speech bubble says to write lint and build by hand first, then open stages-only.yml and diff.">
+        <defs>
+          <filter id="b3dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b3dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b3dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b3dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b3dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b3dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b3dV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .b3dA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b3dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b3dH" x="30" y="26">TWO STAGES BY HAND: WHAT THE GRAPH SHOULD LOOK LIKE (R1, FIRST 489 S)</text>
+        <text class="b3dS" x="580" y="26">bench canon · constructed durations</text>
+
+        <text class="b3dA" x="132" y="56">lint</text>
+        <text class="b3dA" x="289" y="56">build</text>
+
+        <g filter="url(#b3dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M283 60 L283 214" stroke="#6B4FBB" stroke-dasharray="4 4" stroke-width="1.5"/>
+          <rect x="130" y="70" width="64" height="18" rx="3" transform="rotate(-0.8 162 79)" fill="#F4F0FC"/>
+          <rect x="130" y="96" width="153" height="18" rx="3" transform="rotate(0.5 206 105)" fill="#FC6D26"/>
+          <rect x="283" y="130" width="546" height="18" rx="3" transform="rotate(-0.2 556 139)" fill="#FC6D26"/>
+          <rect x="283" y="156" width="274" height="18" rx="3" transform="rotate(0.4 420 165)" fill="#F4F0FC"/>
+          <rect x="283" y="182" width="184" height="18" rx="3" transform="rotate(-0.5 375 191)" fill="#F4F0FC"/>
+          <rect x="560" y="62" width="280" height="40" rx="8" transform="rotate(-1.2 700 82)" fill="#FFFFFF"/>
+          <path d="M600 102 L590 114 L614 104" fill="#FFFFFF"/>
+          <path d="M130 222 L850 222"/>
+        </g>
+
+        <text class="b3dS" x="30" y="83">lint-yaml</text>
+        <text class="b3dS" x="30" y="109">lint-sql</text>
+        <text class="b3dS" x="30" y="143">build-image</text>
+        <text class="b3dS" x="30" y="169">compile-models</text>
+        <text class="b3dS" x="30" y="195">docs-build</text>
+
+        <text class="b3dL" x="140" y="83">45 s</text>
+        <text class="b3dH" x="140" y="109">107 s</text>
+        <text class="b3dH" x="293" y="143">382 s · build-image sets when build ends</text>
+        <text class="b3dL" x="293" y="169">192 s</text>
+        <text class="b3dL" x="293" y="195">129 s</text>
+        <text class="b3dS" x="300" y="83">both lint jobs start at 0; build waits for the longer one</text>
+        <text class="b3dS" x="480" y="195">three build jobs start together at 1:47</text>
+
+        <text class="b3dL" x="574" y="78">write lint and build by hand first,</text>
+        <text class="b3dS" x="574" y="94">then open stages-only.yml and diff</text>
+
+        <text class="b3dS" x="126" y="240">0</text>
+        <text class="b3dS" x="272" y="240">1:47</text>
+        <text class="b3dV" x="788" y="242">8:09</text>
+        <text class="b3dS" x="700" y="240">489 s</text>
+
+        <text class="b3dN" x="30" y="270">Two stages, five jobs, 8:09: 107 s of lint then 382 s of build. Your hand-written file should give the same shape.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the shape to check for in your own pipeline graph: two jobs, a boundary, three jobs, and the longer one in each stage setting the clock</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Write the skeleton without looking.</strong> On the <code>feature/orders-dedupe</code> branch, create <code>.gitlab-ci.yml</code> at the project root. Type the <code>stages</code> list with all five names, a <code>default</code> block with one image, and nothing else yet. Say what each stage will hold before you write a job.</p>
+        <div class="prompt-box good"><span class="label">★ The skeleton (Penwood, constructed)</span>stages:
+  - lint
+  - build
+  - test
+  - publish
+  - deploy
+
+default:
+  image: python:3.12-slim</div>
+      </div>
+      <div class="step">
+        <p><strong>Add the two lint jobs.</strong> Each job is a top-level key with <code>stage: lint</code> and a <code>script</code> list. Keep the names lower case with hyphens; they appear on every graph and in every <code>needs</code> list later. If your project has no YAML or SQL to lint, keep the shape and swap the command for an <code>echo</code>.</p>
+        <div class="prompt-box good"><span class="label">★ Stage lint, two jobs (excerpt of stages-only.yml)</span>lint-yaml:
+  stage: lint
+  script:
+    - python -m yamllint pipelines/
+
+lint-sql:
+  stage: lint
+  script:
+    - python -m sqlfluff lint models/</div>
+      </div>
+      <div class="step">
+        <p><strong>Add the three build jobs.</strong> Same shape, <code>stage: build</code>. The image build uses two predefined variables, <code>CI_REGISTRY_IMAGE</code> and <code>CI_COMMIT_SHORT_SHA</code>; session 7 explains the first, session 4 the rest. Quote the line because of the colon, as the data file does. Then commit to the branch and open the merge request's pipeline tab from session 2.</p>
+        <div class="prompt-box good"><span class="label">★ Stage build, three jobs (excerpt of stages-only.yml)</span>build-image:
+  stage: build
+  script:
+    - 'docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .'
+
+compile-models:
+  stage: build
+  script:
+    - python pipelines/compile.py --out build/
+
+docs-build:
+  stage: build
+  script:
+    - python docs/build.py</div>
+      </div>
+      <div class="step">
+        <p><strong>Read the graph, not the badge.</strong> Two columns of jobs: two in <code>lint</code>, three in <code>build</code>. Watch that no <code>build</code> job starts until both lint jobs finish, even though <code>lint-yaml</code> finishes first. In the pipeline list, the run from the merge request carries a <code>merge request</code> label when the file has rules for it; tonight's file has none, so you get a branch pipeline, which is fine for now and is session 5's subject.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly (your numbers will differ)</span>stage lint     lint-yaml      passed    lint-sql       passed
+stage build    build-image    passed    compile-models passed    docs-build  passed
+                              (or failed, if the tools are not in your project: the shape is the lesson)
+bench canon for the same two stages of r1:  lint ends 1:47  ·  build ends 8:09  ·  489 s</div>
+      </div>
+      <div class="step">
+        <p><strong>Diff your file against the stages-only file.</strong> Open <code>stages-only.yml</code> from the bench's data file and lay it beside yours. The differences you should find: it has nine more jobs across <code>test</code>, <code>publish</code> and <code>deploy</code>, a <code>variables</code> block with <code>PYTHON_VERSION</code> and <code>PIPELINE_OWNER</code>, an <code>environment</code> on both deploy jobs, and <code>when: manual</code> on <code>deploy-production</code>. The differences you should not find: anything missing from a job other than <code>stage</code> and <code>script</code>. Add the remaining nine jobs from the file, commit once, and read the graph again.</p>
+        <div class="prompt-box good"><span class="label">★ The tail of stages-only.yml (excerpt)</span>deploy-staging:
+  stage: deploy
+  environment:
+    name: staging
+  script:
+    - python deploy/run.py --target staging
+
+deploy-production:
+  stage: deploy
+  when: manual
+  environment:
+    name: production
+  script:
+    - python deploy/run.py --target production</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The step to skip</span>Writing a job without a stage "because it is just a quick check".
+The YAML reference: a job without stage uses test.
+Your quick check now waits for every build job to finish, costs the same compute minutes wherever it sits, and shows up in a column you did not expect. Name the stage, every job, every time.</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 4</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Finish the file: all fourteen jobs from <code>stages-only.yml</code>, committed on the branch. Open the pipeline graph and write down, from the graph alone, which job in each stage finished last.</li>
+      <li>Remove <code>stage</code> from one job on purpose, commit, and find where it landed. Put it back. Then remove <code>script</code> from one job and read the error GitLab gives at pipeline creation.</li>
+      <li>Open the group's usage page and read the compute minutes used by your pushes tonight. Compare with the bench's 66.30 per full r1 run and write one sentence on why yours is lower or higher.</li>
+      <li>Read the <a href="https://docs.gitlab.com/ci/pipelines/compute_minutes/">GitLab Docs, Compute minutes</a> page's cost factor table and re-verify the 400 figure on the <a href="https://about.gitlab.com/pricing/">GitLab, Pricing</a> page. Note the date you read them.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 3 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · A job in Penwood's file has a <code>script</code> but no <code>stage</code>. The file lists five stages. Where does the job run?</p>
+      <button class="qopt" type="button">A · It is not added to the pipeline, since every job must name a stage</button>
+      <button class="qopt" type="button">B · In <code>.pre</code>, before everything else</button>
+      <button class="qopt" type="button">C · In <code>test</code>, together with the other test jobs</button>
+      <button class="qopt" type="button">D · Pipeline creation fails with a syntax error</button>
+      <p class="qwhy">The YAML reference: a job without <code>stage</code> uses <code>test</code>. <code>script</code> is the keyword whose absence breaks the job; <code>stage</code> has a default that quietly places it.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · On bench rung r1, <code>integration-tests</code> finishes at 1,219 s but <code>publish-image</code> does not start until 1,383 s. Which job sets that start, and why?</p>
+      <button class="qopt" type="button">A · <code>nightly-backfill</code>, 894 s in <code>test</code>; the publish stage waits for every test job to finish</button>
+      <button class="qopt" type="button">B · <code>integration-tests</code>, because publish-image depends on its artifacts</button>
+      <button class="qopt" type="button">C · <code>build-image</code>, because the image must be rebuilt before it is pushed</button>
+      <button class="qopt" type="button">D · <code>publish-image</code> itself, queued behind other projects on the shared runner</button>
+      <p class="qwhy">A stage starts only after the previous stage's jobs succeed. With no <code>needs</code> in the file, publish waits for the slowest test job, the 894 s backfill that ends at 23:03. r1 has unlimited runners on the bench, so no queueing is involved.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · One r1 run: wall clock 30:08, serial time 66:18, every job on a Linux small runner. What does the quota count for that run?</p>
+      <button class="qopt" type="button">A · 30.13 compute minutes, the wall clock in minutes</button>
+      <button class="qopt" type="button">B · 13 compute minutes, one per job that ran</button>
+      <button class="qopt" type="button">C · 400 compute minutes, the whole Free allowance</button>
+      <button class="qopt" type="button">D · 66.30 compute minutes, the serial seconds divided by 60 at cost factor 1</button>
+      <p class="qwhy">Compute minutes add every job's time; parallel stages do not reduce them. 3,978 s / 60 = 66.30 at factor 1. Six such runs fit in 400 a month on Free, as of 2026-10-29; re-verify the tier page before relying on it.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">stages, stage, script, image, default; default stages; a stage-less job lands in test</span><span class="note"><a href="https://docs.gitlab.com/ci/yaml/">GitLab Docs, CI/CD YAML syntax reference</a>; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Jobs in a stage run together; the next stage waits; basic pipelines "not the most efficient"</span><span class="note"><a href="https://docs.gitlab.com/ci/pipelines/pipeline_architectures/">GitLab Docs, Pipeline architecture</a>; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Manual jobs, allow_failure defaults, blocked status, the orange warning</span><span class="note"><a href="https://docs.gitlab.com/ci/jobs/job_control/">GitLab Docs, Control how jobs run</a>; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Instance runners enabled by default on GitLab.com; runner and job tokens</span><span class="note"><a href="https://docs.gitlab.com/runner/">GitLab Docs, GitLab Runner</a>; <a href="https://docs.gitlab.com/ci/runners/runners_scope/">GitLab Docs, Runner scope</a>; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Compute minutes, cost factors, monthly reset; 400 a month on Free, $29 Premium</span><span class="note"><a href="https://docs.gitlab.com/ci/pipelines/compute_minutes/">GitLab Docs, Compute minutes</a>; <a href="https://about.gitlab.com/pricing/">GitLab, Pricing</a>; read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">r1 canon: 13 ran, 1 manual, 30:08, 66:18, 66.30; critical path; start table</span><span class="note">Measured by the bench in session 8 on stages-only.yml; durations constructed</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">needs, rules, workflow:rules, variables, artifacts, cache</span><span class="note">Named only; sessions 4 and 5 own them</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Git, branching, and what a workflow file is on the other host</span><span class="note">Linked to <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/courses/05-actions-authoring.html">GitHub for builders, Actions authoring</a>; nothing about git itself is retaught here, only .gitlab-ci.yml</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 3 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Three keywords</b><span>stages fixes the order; every job carries stage and script. script is required; stage defaults to test.</span></div>
+      <div class="cheat-item"><b>The stage contract</b><span>Jobs in one stage run together. The next stage starts when every job in the previous one succeeds.</span></div>
+      <div class="cheat-item"><b>r1 canon</b><span>13 jobs ran, 1 manual, wall 30:08, serial 66:18, 66.30 compute minutes. Critical path runs through the 894 s backfill.</span></div>
+      <div class="cheat-item"><b>Compute minutes</b><span>Serial seconds / 60 x cost factor. Parallel stages change the clock, not the bill. Linux small is factor 1.</span></div>
+      <div class="cheat-item"><b>The Free month</b><span>400 compute minutes, reset on day 1 (as of 2026-10-29). Six r1 runs fit; Penwood's forty do not.</span></div>
+      <div class="cheat-item"><b>Default stages, default runner</b><span>No stages line: .pre build test deploy .post. Instance runners are on by default on GitLab.com; a card is required for them.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have a file that goes green and a bill you can read. Session 4 gives the jobs memory: variables and where they come from, artifacts that carry compile-models' output forward into the tests, and a cache for the dependencies that is a hope, not a promise.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 3 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="b2-the-merge-request.html">← Prev: The merge request</a> &nbsp;·&nbsp; <a href="b4-variables-artifacts-cache.html">Next: Variables, artifacts, cache →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

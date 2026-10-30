@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 6 of 8. Put environment: on a job and watch GitLab create the environment on first use, guess its tier from the name, stop it on purpose with on_stop and auto_stop_in, and gate production with a manual job inside rules so the pipeline blocks instead of going green. Penwood is a constructed analytics team.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Environments and deployments - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 6 of 8. An environment is a name on a job, a stop is a job too, and the manual gate that blocks instead of passing.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b6-environments-deployments.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Environments and deployments - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 6 of 8. environment:name, on_stop, auto_stop_in, and when: manual inside rules.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 6 · Environments and deployments - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 6 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 6 of 8</div>
+    <h1>Environments and <span class="accent">deployments</span></h1>
+    <p class="sub">Up to now Penwood's pipeline has built, tested and published. Tonight it deploys, and GitLab's word for the place a deploy lands is an environment: not a server, not a config file, a record GitLab creates the first time a job names it. Penwood, a constructed five-person logistics-analytics team on GitLab.com Free, gives its <code>deploy-staging</code> job the name <code>staging</code> and its <code>deploy-production</code> job the name <code>production</code>, learns why a stop is also a job, and writes the one line that turns a green pipeline into a blocked one until a person clicks. Everything runs on a free account; the paid version of the gate is shown with its tier. Penwood's durations are constructed; nothing on these pages runs GitLab for real.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Advanced</span>
+      <span class="chip audience">Analytics engineers and data builders</span>
+      <span class="chip audience">Anyone who owns a production deploy</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Environment, stop, gate</span>
+      <span class="a3" style="flex:4">20-42 · Build-along: Penwood's two deploys</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where tonight sits in the pipeline</h2>
+    </div>
+    <p class="lede">Session 5 left Penwood's <code>.gitlab-ci.yml</code> with rules and needs, and the bench reading it as 13 jobs on a push to main and 8 in a merge request. The last stage, <code>deploy</code>, has two jobs that have been waiting since session 3 for this evening: <code>deploy-staging</code> and <code>deploy-production</code>. Both carry an <code>environment:</code> block. One runs on every push to main. The other is written so the pipeline stops and waits for a person. What to test before a deploy belongs to <a href="https://phoebefu6.github.io/learn-dataops-with-phoebe/courses/b3-data-testing-contracts.html">the DataOps course</a>; this page takes only where the deploy sits in the pipeline and what GitLab records when it runs. Penwood is constructed: its people, pipeline and durations are invented for these pages.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Two named environments on the project's Environments page, created by the jobs that deploy to them; a reading of how GitLab guesses an environment's tier from its name; a stop job you can write for any per-branch environment; and the exact position of <code>when: manual</code> that makes a pipeline <strong>blocked</strong> rather than <strong>passed</strong>, with the sentence from the job control page that says so. Session 8's bench already treats Penwood's production gate this way; tonight you see why.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers environment:name, url, first use and the tier guessed from the name</span>
+      <h2>An environment is a name on a job</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The environments page describes the mechanism in one move: a job declares <code>environment:</code> with a <code>name</code> and an optional <code>url</code>, and the environment is created the first time such a job runs. There is no separate "create environment" step a team forgets. The name can be static, like <code>staging</code>, or dynamic, like <code>review/$CI_COMMIT_REF_SLUG</code>, which makes one environment per branch. GitLab then guesses a deployment tier from the name: development, testing, staging, production, or other; <code>deployment_tier</code> overrides the guess. The job also gets <code>CI_ENVIRONMENT_NAME</code> set, so a script can read where it is deploying.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 324" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn job card for deploy-staging with an environment block naming staging and a constructed url. An arrow labelled first use points to an environment record, which is the highlighted item: environment staging, tier staging guessed from the name, state available, CI_ENVIRONMENT_NAME set, one record for many deploys. A side table lists the names GitLab recognises for tiers: development, testing, staging, production, otherwise other, or set deployment_tier. A note says Penwood, constructed, uses two static names and that a dynamic name makes one environment per branch.">
+        <defs>
+          <filter id="b6aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b6aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b6aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b6aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b6aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b6aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b6aB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b6aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b6aH" x="30" y="26">THE JOB NAMES IT, GITLAB CREATES IT ON FIRST USE</text>
+        <text class="b6aS" x="400" y="26">environments page, read 2026-10-29 · Penwood's names and url are constructed</text>
+
+        <g filter="url(#b6aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="52" width="300" height="150" rx="10" transform="rotate(-0.4 190 127)" fill="#FFFFFF"/>
+          <path d="M344 132 L424 132" stroke-dasharray="5 4" marker-end="url(#b6aAr)"/>
+          <rect x="430" y="62" width="210" height="140" rx="10" transform="rotate(0.6 535 132)" fill="#FC6D26"/>
+          <rect x="664" y="52" width="186" height="178" rx="10" transform="rotate(-0.5 757 141)" fill="#F4F0FC"/>
+          <path d="M680 190 L834 190" stroke-dasharray="3 4"/>
+          <rect x="40" y="228" width="600" height="50" rx="10" transform="rotate(0.2 340 253)" fill="url(#b6aHc)"/>
+          <path d="M58 82 L66 82 M58 86 L70 86" stroke="#6B4FBB"/>
+        </g>
+
+        <text class="b6aH" x="80" y="78">deploy-staging:</text>
+        <text class="b6aS" x="56" y="98">stage: deploy</text>
+        <text class="b6aL" x="56" y="118">environment:</text>
+        <text class="b6aL" x="72" y="138">name: staging</text>
+        <text class="b6aS" x="72" y="156">url: https://staging.penwood.example</text>
+        <text class="b6aS" x="56" y="176">script: deploy/run.py --target staging</text>
+        <text class="b6aS" x="350" y="124">first use</text>
+
+        <text class="b6aH" x="444" y="90">environment · staging</text>
+        <text class="b6aL" x="444" y="114">tier staging, from the name</text>
+        <text class="b6aL" x="444" y="138">state: available</text>
+        <text class="b6aL" x="444" y="162">$CI_ENVIRONMENT_NAME set</text>
+        <text class="b6aL" x="444" y="186">one record, many deploys</text>
+
+        <text class="b6aH" x="678" y="76">tier guessed from name</text>
+        <text class="b6aS" x="678" y="100">development</text>
+        <text class="b6aS" x="678" y="120">testing</text>
+        <text class="b6aL" x="678" y="140">staging</text>
+        <text class="b6aL" x="678" y="160">production</text>
+        <text class="b6aS" x="678" y="180">anything else: other</text>
+        <text class="b6aB" x="678" y="212">or set deployment_tier</text>
+
+        <text class="b6aL" x="56" y="250">Penwood (constructed): two static names, staging and production</text>
+        <text class="b6aS" x="56" y="268">created the first time the job runs; $CI_COMMIT_REF_SLUG as a name makes one per branch</text>
+
+        <text class="b6aN" x="30" y="306">The environment is a record GitLab keeps; the job only names it. Rename the job and nothing moves; rename the name and you get a new record.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the orange record did not exist until the job ran once, and the tier was read off its name</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> Static names for the two places that matter <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Penwood has two places a deploy can land, so it uses two static names. <code>staging</code> and <code>production</code> are both in the list the environments page uses to guess a tier, so the Environments page will show them under the right tier without any extra keyword. The optional <code>url</code> turns the environment's row into a link a reviewer can click; the constructed address in the figure stands in for whatever Penwood's staging dashboard is. Both jobs sit in the <code>deploy</code> stage, both carry the rule <code>$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code> from session 5, so neither is added to a merge request pipeline: the bench's r3 lists them among the six never-added jobs, because <code>CI_COMMIT_BRANCH</code> is unset there. An environment that is never deployed to is never created, which is exactly the behaviour you want from a merge request.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Dynamic names: one environment per branch <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The environments page allows the name to contain a variable, and <code>$CI_COMMIT_REF_SLUG</code> is the usual choice: a URL-safe form of the branch name. A job with <code>environment: name: review/$CI_COMMIT_REF_SLUG</code> creates a fresh environment the first time each branch's pipeline runs it, which is the pattern behind per-branch review environments. The cost is obvious once you draw it: every branch that ever ran the job leaves a record, and whatever the job deployed is still running somewhere until something stops it. That something is Part 2. Penwood's constructed file does not do this, by choice: with five people and a Free quota, two static environments are enough, and the per-branch pattern is shown so you recognise it rather than so you copy it tonight.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's analyst renames the job <code>deploy-staging</code> to <code>deploy-stg</code> during a tidy-up and expects a new environment to appear. Nothing changes on the Environments page, because the environment is keyed by <code>environment:name</code>, not by the job name. A week later a colleague does the reverse, changing <code>name: staging</code> to <code>name: stg</code>, and now there are two environments, one of them frozen at its last deployment. The name on the job is the identity; treat changing it like renaming a database table.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers on_stop, action: stop, the three states and auto_stop_in</span>
+      <h2>Stop it on purpose</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">A deploy job can name a second job with <code>on_stop</code>. That second job carries the same <code>environment:name</code> and <code>action: stop</code>, and GitLab runs it when someone presses the stop button on the environment, or when <code>auto_stop_in</code> expires. The environments page gives the environment three states, <code>available</code>, <code>stopping</code> and <code>stopped</code>, and one honesty line worth remembering: the automatic stop runs hourly, so the stop is not exact.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 332" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn deploy job card for a constructed deploy-review job whose environment block names review slash CI_COMMIT_REF_SLUG, with on_stop naming stop-review and auto_stop_in of one day. An arrow labelled names points to the highlighted stop-review job, which carries the same environment name and action stop and runs from the stop button. On the right the three states available, stopping and stopped are stacked with arrows. Below, a timeline with hourly ticks shows the auto_stop_in deadline falling between two ticks and the stop landing at the next hourly pass. A note says the stop is not exact.">
+        <defs>
+          <filter id="b6bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b6bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b6bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b6bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b6bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b6bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b6bW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b6bA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b6bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b6bH" x="30" y="26">A STOP IS A JOB TOO, AND ITS CLOCK TICKS HOURLY</text>
+        <text class="b6bS" x="400" y="26">environments page, read 2026-10-29 · deploy-review is constructed, not in penwood.yml</text>
+
+        <g filter="url(#b6bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="52" width="268" height="124" rx="10" transform="rotate(-0.5 174 114)" fill="#FFFFFF"/>
+          <path d="M312 112 L364 112" stroke-dasharray="5 4" marker-end="url(#b6bAr)"/>
+          <rect x="370" y="62" width="230" height="104" rx="10" transform="rotate(0.7 485 114)" fill="#FC6D26"/>
+          <rect x="650" y="52" width="180" height="34" rx="8" transform="rotate(-0.6 740 69)" fill="#F4F0FC"/>
+          <path d="M740 90 L740 104" marker-end="url(#b6bAr)"/>
+          <rect x="650" y="108" width="180" height="34" rx="8" transform="rotate(0.5 740 125)" fill="#F4F0FC"/>
+          <path d="M740 146 L740 160" marker-end="url(#b6bAr)"/>
+          <rect x="650" y="164" width="180" height="34" rx="8" transform="rotate(-0.4 740 181)" fill="#483698"/>
+          <path d="M60 240 L840 240"/>
+          <path d="M100 234 L100 246 M180 234 L180 246 M260 234 L260 246 M340 234 L340 246 M420 234 L420 246 M500 234 L500 246 M580 234 L580 246 M660 234 L660 246 M740 234 L740 246 M820 234 L820 246"/>
+          <path d="M452 212 L452 262" stroke-dasharray="4 4" stroke="#6B4FBB"/>
+          <circle cx="500" cy="240" r="8" fill="#483698"/>
+          <circle cx="60" cy="206" r="9"/>
+          <path d="M60 206 L60 200 M60 206 L64 208"/>
+        </g>
+
+        <text class="b6bH" x="56" y="78">deploy-review:</text>
+        <text class="b6bL" x="56" y="98">environment:</text>
+        <text class="b6bL" x="72" y="116">name: review/$CI_COMMIT_REF_SLUG</text>
+        <text class="b6bL" x="72" y="134">on_stop: stop-review</text>
+        <text class="b6bL" x="72" y="152">auto_stop_in: 1 day</text>
+        <text class="b6bS" x="320" y="104">names</text>
+
+        <text class="b6bH" x="386" y="88">stop-review:</text>
+        <text class="b6bL" x="386" y="110">the same environment name</text>
+        <text class="b6bL" x="386" y="132">action: stop</text>
+        <text class="b6bL" x="386" y="154">runs from the stop button</text>
+
+        <text class="b6bL" x="664" y="74">available</text>
+        <text class="b6bL" x="664" y="130">stopping</text>
+        <text class="b6bW" x="664" y="186">stopped</text>
+
+        <text class="b6bS" x="78" y="210">each tick: the hourly automatic stop pass</text>
+        <text class="b6bA" x="380" y="206">auto_stop_in deadline</text>
+        <text class="b6bL" x="440" y="282">the next pass stops it</text>
+        <text class="b6bS" x="60" y="282">deploy ran here</text>
+
+        <text class="b6bN" x="30" y="314">Not exact: the deadline is read by an hourly pass, so the environment lives until the next tick after it. Times constructed.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the stop job is orange because without it the per-branch environment outlives the branch</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Why a stop needs a job of its own <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>GitLab does not know what "stop" means for your environment. For Penwood it might be deleting a schema, for someone else tearing down a container, for a third team flipping a flag. So the mechanism is the only honest one: you write the job, you point <code>on_stop</code> at it, and GitLab promises to run it at the right moments. The stop job must declare the same <code>environment:name</code> and <code>action: stop</code>, or GitLab has no way to connect it to the record. Once it exists, the Environments page grows a stop button, the state goes <code>available</code> to <code>stopping</code> to <code>stopped</code>, and <code>auto_stop_in</code> can do the pressing for you.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The constructed stop pair, written out <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>This pair is constructed for the page and is not in <code>penwood.yml</code>; Penwood's two static environments are never stopped automatically, because a staging that disappears overnight helps nobody on a five-person team. The keywords are the ones the environments page documents: <code>environment:name</code>, <code>url</code>, <code>on_stop</code>, <code>auto_stop_in</code>, <code>action: stop</code>. Note that the stop job gets <code>when: manual</code> outside any <code>rules</code> block, so it waits for the button or the clock, and because it is outside rules its <code>allow_failure</code> defaults to true and never blocks the branch pipeline. Part 3 is about the opposite placement.</p>
+        <div class="prompt-box good"><span class="label">★ A review environment and its stop (constructed, not in penwood.yml)</span>deploy-review:
+  stage: deploy
+  script:
+    - python deploy/run.py --target review
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG.review.penwood.example
+    on_stop: stop-review
+    auto_stop_in: 1 day
+
+stop-review:
+  stage: deploy
+  script:
+    - python deploy/teardown.py --target review
+  when: manual
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop</div>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The environments page is explicit that the automatic stop "runs hourly", which is why <code>auto_stop_in</code> is a floor, not a timer. Constructed: Penwood's analyst sets <code>auto_stop_in: 1 day</code> on a review environment at 09:17, tells the finance partner it will be gone by 09:17 tomorrow, and finds it still up at 09:40. Nothing failed; the hourly pass had not come round yet. Say "within the hour after the deadline", never a minute, and the promise holds.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers when: manual inside rules, allow_failure, the blocked status and the Premium gate</span>
+      <h2>The blocking manual gate</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The same two words, <code>when: manual</code>, do two different things depending on where they sit. The job control page gives both: a manual job outside <code>rules</code> has <code>allow_failure</code> true by default, so the pipeline continues and can pass with the job untouched. A manual job defined inside a <code>rules</code> entry has <code>allow_failure</code> false by default, and then "The pipeline stops at the stage where the job is defined", with status <strong>blocked</strong>. Penwood's <code>deploy-production</code> uses the second form on purpose.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn panels. Left, when manual outside rules: the deploy-production job is a plain card, allow_failure defaults to true, the pipeline continues and shows passed. Right, when manual inside rules: the deploy-production job is the highlighted gate, allow_failure defaults to false, the pipeline stops at the deploy stage and shows blocked. A hatched band below reads Penwood on a push to main from bench rung 2: deploy-staging runs from 1402 to 1582 seconds, deploy-production waits for a click; the bench's convention is that a manual job is never scheduled and its 183 seconds are never billed. A note names the job control page read 2026-10-29.">
+        <defs>
+          <filter id="b6cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="71" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b6cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b6cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b6cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b6cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b6cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b6cW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b6cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b6cH" x="30" y="26">SAME KEYWORD, TWO DEFAULTS: WHERE WHEN: MANUAL SITS</text>
+        <text class="b6cS" x="420" y="26">job control page, read 2026-10-29 · Penwood's seconds are constructed, bench r2</text>
+
+        <g filter="url(#b6cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="390" height="200" rx="10" transform="rotate(-0.3 235 150)" fill="#F4F0FC"/>
+          <rect x="56" y="92" width="170" height="30" rx="6" transform="rotate(-0.8 141 107)" fill="#FFFFFF"/>
+          <path d="M232 107 L300 107" marker-end="url(#b6cAr)"/>
+          <rect x="56" y="196" width="160" height="32" rx="8" transform="rotate(0.4 136 212)" fill="#483698"/>
+          <rect x="450" y="50" width="400" height="200" rx="10" transform="rotate(0.3 650 150)" fill="#FFFFFF"/>
+          <rect x="466" y="92" width="170" height="30" rx="6" transform="rotate(0.9 551 107)" fill="#FC6D26"/>
+          <path d="M642 107 L700 107" marker-end="url(#b6cAr)"/>
+          <path d="M706 94 L706 120" stroke="#991B1B" stroke-width="3"/>
+          <rect x="466" y="196" width="160" height="32" rx="8" transform="rotate(-0.5 546 212)" fill="#483698"/>
+          <circle cx="760" cy="150" r="14"/>
+          <path d="M760 136 L760 150 L770 150"/>
+          <rect x="40" y="270" width="810" height="50" rx="10" transform="rotate(0.2 445 295)" fill="url(#b6cHc)"/>
+        </g>
+
+        <text class="b6cH" x="56" y="74">when: manual outside rules</text>
+        <text class="b6cL" x="66" y="112">deploy-production</text>
+        <text class="b6cS" x="306" y="111">next stage continues</text>
+        <text class="b6cS" x="56" y="146">allow_failure defaults to true</text>
+        <text class="b6cS" x="56" y="164">the job waits, the pipeline does not</text>
+        <text class="b6cW" x="70" y="217">pipeline: passed</text>
+        <text class="b6cS" x="232" y="217">production untouched, still green</text>
+
+        <text class="b6cH" x="466" y="74">when: manual inside rules</text>
+        <text class="b6cL" x="476" y="112">deploy-production</text>
+        <text class="b6cS" x="720" y="111">nothing passes</text>
+        <text class="b6cS" x="466" y="146">allow_failure defaults to false</text>
+        <text class="b6cS" x="466" y="164">"stops at the stage where the job is defined"</text>
+        <text class="b6cW" x="480" y="217">pipeline: blocked</text>
+        <text class="b6cS" x="642" y="217">until a person clicks</text>
+        <text class="b6cS" x="742" y="184">waits</text>
+
+        <text class="b6cL" x="56" y="292">Penwood on a push to main (bench r2): deploy-staging 1402-1582 s, deploy-production waits for a click</text>
+        <text class="b6cS" x="56" y="310">the bench's convention: a manual job is never scheduled; its 183 s never reach the scorecard</text>
+
+        <text class="b6cN" x="30" y="340">Job control page, read 2026-10-29: same keyword, two defaults. Where when: manual sits decides if green can happen.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the orange gate is the one Penwood wants: nothing downstream, no green, until someone decides</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Blocked is the status you want on main <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Read Penwood's job as the bench does. <code>deploy-production</code> has one rule: <code>if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code> with <code>when: manual</code> on that same rule. On a push to main the rule matches, the job is added as manual, and because the <code>when</code> lives inside <code>rules</code>, <code>allow_failure</code> is false. The pipeline reaches the <code>deploy</code> stage, runs <code>deploy-staging</code>, and then stops with status blocked. Nobody can mistake it for done. The bench on session 8 reports the same: on r2 deploy-staging runs from 1402 to 1582 seconds and deploy-production is listed as waiting for a click; that is the bench's convention for a manual job, because the YAML reference does not fix a duration for a gate, and the scorecard never bills its constructed 183 seconds.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Protected environments: the Premium version of the same gate <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The manual gate controls <em>whether</em> production deploys. It does not control <em>who</em> may click. <a href="https://docs.gitlab.com/ci/environments/protected_environments/">GitLab Docs, Protected environments</a> adds that control: an environment can be protected so that "only people with the appropriate privileges can deploy to it". The page carries a Premium and Ultimate badge as of 2026-10-29, so Penwood on Free does not have it; re-verify the tier page before relying on it. The Free way is the one this page already built: a blocking manual job on a protected default branch. Since only Maintainers push and merge to <code>main</code> by default (session 1), and the deploy jobs only exist on <code>main</code>, the set of people who can reach the gate is already small. What Free cannot do is stop a Developer who can run pipelines from pressing the button; if that matters to your team, that is the moment Premium earns its price, not before.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The job control page documents the quiet trap: a manual job outside <code>rules</code> has <code>allow_failure</code> true, so the pipeline is green with the job never run. Constructed: Penwood's first draft put <code>when: manual</code> at the job level, next to <code>rules</code>, and for a week every push to main showed passed while production had not changed since the migration. The analyst only noticed when the finance partner asked why the dashboard still showed last month's totals. Moving the two words inside the rule turned every one of those pipelines into blocked, which is what they had been all along.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's deploy-staging and deploy-production jobs</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">You need the project from session 1 and the <code>.gitlab-ci.yml</code> from session 5. The deploy jobs below are quoted verbatim from Penwood's constructed <code>penwood.yml</code>, the file the bench parses in session 8; the two scripts they call do not exist in your project, so swap them for an <code>echo</code> if you want green rather than a lesson in exit codes. Nothing here runs on GitLab for these pages; the pipeline readings are labelled as what you should see, roughly, and your durations will differ.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 342" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three hand-drawn panels showing Penwood's deploy stage in three pipeline contexts from the bench. Merge request, rung 3: both deploy jobs never added because CI_COMMIT_BRANCH is unset, no deployment recorded, drawn as a red dashed excluded panel. Push to main, rung 2: deploy-staging runs from 1402 to 1582 seconds, deploy-production is manual and blocks the stage, the bench's convention is that it is never scheduled. Nightly schedule, scorecard: 11 jobs, 2 never added which are docs-build and unit-tests, deploy-staging runs again, deploy-production is manual, 56.18 compute minutes per run. An orange band says deploy-production is the one job a person starts, and that a protected environment on Premium and Ultimate also limits who may deploy.">
+        <defs>
+          <filter id="b6dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="73" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b6dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b6dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b6dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b6dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b6dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b6dR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b6dV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .b6dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b6dH" x="30" y="26">THE DEPLOY STAGE IN THREE CONTEXTS THE BENCH OFFERS</text>
+        <text class="b6dS" x="420" y="26">penwood.yml parsed by the bench · durations constructed · nothing ran on GitLab</text>
+
+        <g filter="url(#b6dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="250" height="190" rx="10" transform="rotate(-0.4 165 145)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="6 4"/>
+          <rect x="320" y="50" width="250" height="190" rx="10" transform="rotate(0.4 445 145)" fill="#FFFFFF"/>
+          <rect x="600" y="50" width="250" height="190" rx="10" transform="rotate(-0.3 725 145)" fill="#F4F0FC"/>
+          <path d="M336 136 L554 136" stroke-dasharray="3 4" stroke="#CFC8E3"/>
+          <path d="M616 136 L834 136" stroke-dasharray="3 4" stroke="#CFC8E3"/>
+          <rect x="40" y="258" width="810" height="52" rx="10" transform="rotate(0.2 445 284)" fill="#FC6D26"/>
+          <path d="M818 72 L818 92 L826 92 M818 82 L824 82" stroke="#6B4FBB"/>
+        </g>
+
+        <text class="b6dH" x="56" y="74">merge request · bench r3</text>
+        <text class="b6dR" x="56" y="104">deploy-staging: never added</text>
+        <text class="b6dR" x="56" y="124">deploy-production: never added</text>
+        <text class="b6dS" x="56" y="156">CI_COMMIT_BRANCH is unset, so</text>
+        <text class="b6dS" x="56" y="174">the rule cannot match; 8 jobs run</text>
+        <text class="b6dL" x="56" y="206">no deployment recorded</text>
+
+        <text class="b6dH" x="336" y="74">push to main · bench r2</text>
+        <text class="b6dL" x="336" y="104">deploy-staging: 1402-1582 s</text>
+        <text class="b6dS" x="336" y="122">environment staging gets a deployment</text>
+        <text class="b6dL" x="336" y="158">deploy-production: manual</text>
+        <text class="b6dS" x="336" y="176">blocked at deploy, waits for a click</text>
+        <text class="b6dS" x="336" y="194">bench convention: never scheduled</text>
+        <text class="b6dV" x="336" y="226">13 ran</text>
+        <text class="b6dS" x="400" y="226">1 manual, 0 never added</text>
+
+        <text class="b6dH" x="616" y="74">nightly schedule · r5</text>
+        <text class="b6dS" x="616" y="104">11 jobs, 2 never added:</text>
+        <text class="b6dS" x="616" y="122">docs-build, unit-tests</text>
+        <text class="b6dL" x="616" y="158">deploy-staging runs again</text>
+        <text class="b6dL" x="616" y="176">deploy-production: manual</text>
+        <text class="b6dS" x="616" y="194">same gate, every night</text>
+        <text class="b6dV" x="616" y="226">56.18</text>
+        <text class="b6dS" x="672" y="226">compute minutes per run</text>
+
+        <text class="b6dL" x="56" y="280">deploy-production is the one job a person starts. On Free the gate is a click; who may click is not restricted.</text>
+        <text class="b6dL" x="56" y="298">Premium and Ultimate (as of 2026-10-29): a protected environment also limits who may deploy to it.</text>
+
+        <text class="b6dN" x="30" y="332">Nothing here ran on GitLab: the bench parses penwood.yml and schedules it. Penwood and its durations are constructed.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the same two jobs are absent, running, or waiting depending only on what started the pipeline</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Add the environment to deploy-staging.</strong> Open <code>.gitlab-ci.yml</code> on a branch. The job already has its stage, needs and rule from session 5; add the <code>environment:</code> block exactly as Penwood's file has it. The name is the identity, so type it once and never casually again.</p>
+        <div class="prompt-box good"><span class="label">★ deploy-staging, verbatim from penwood.yml (constructed)</span>deploy-staging:
+  stage: deploy
+  needs:
+    - publish-image
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  environment:
+    name: staging
+  script:
+    - python deploy/run.py --target staging</div>
+      </div>
+      <div class="step">
+        <p><strong>Merge to main and open the Environments page.</strong> Operate, then Environments in the project sidebar as of 2026-10-29; if the menu has moved, search the project for the word. Before the pipeline's deploy stage runs the page is empty. After it, one row exists. You did not create it; the job did.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly</span>Environments
+  staging      available     tier: staging     last deployment: pipeline on main, job deploy-staging
+your deployment time will differ; the row appears only after deploy-staging has run once</div>
+      </div>
+      <div class="step">
+        <p><strong>Add deploy-production with the gate inside the rule.</strong> Same stage, needs <code>deploy-staging</code>, same branch rule, and <code>when: manual</code> on that rule, not at the job level. Read the two lines twice; their position is the whole lesson of Part 3.</p>
+        <div class="prompt-box good"><span class="label">★ deploy-production, verbatim from penwood.yml (constructed)</span>deploy-production:
+  stage: deploy
+  needs:
+    - deploy-staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  environment:
+    name: production
+  script:
+    - python deploy/run.py --target production</div>
+      </div>
+      <div class="step">
+        <p><strong>Push to main and read the pipeline before you click anything.</strong> The <code>deploy</code> stage shows one finished job and one with a play button. The pipeline's status is not passed. Say the word on the badge out loud, then compare it with the bench's r2 reading of the same file.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly · bench r2 seconds are constructed</span>pipeline on main:    blocked
+  deploy stage:      deploy-staging   passed   (bench r2: 1402-1582 s, 180 s)
+                     deploy-production  manual   play button, waiting (bench: never scheduled)
+your durations will differ; the status word is the thing to check</div>
+      </div>
+      <div class="step">
+        <p><strong>Click the gate, then open a merge request and look again.</strong> After the click, production appears on the Environments page as a second row and the pipeline finishes. Then open a merge request from any branch: its pipeline has no deploy jobs at all, because <code>CI_COMMIT_BRANCH</code> is unset in a merge request pipeline and the rule cannot match. That is the bench's r3: 8 jobs, 6 never added, the two deploys among them.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly</span>Environments after the click
+  staging      available     tier: staging
+  production   available     tier: production
+
+merge request pipeline from feature/orders-dedupe (bench r3): 8 jobs, deploy stage empty
+  never added: docs-build, nightly-backfill, publish-image, publish-docs, deploy-staging, deploy-production</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The step to skip</span>Putting when: manual at the job level, beside rules, "because it reads cleaner".
+deploy-production:
+  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+Outside rules, allow_failure defaults to true: the pipeline passes with production never deployed, and nobody is told.
+Inside the rule it defaults to false and the pipeline is blocked. Same words, opposite meaning.</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 7</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Add <code>url:</code> to both of Penwood's environments with addresses that exist for your team, merge, and confirm the Environments page shows them as links after the next deploy.</li>
+      <li>Write the constructed <code>deploy-review</code> and <code>stop-review</code> pair into a throwaway branch, run it, press the stop button, and watch the state go available, stopping, stopped. Then delete the branch.</li>
+      <li>Change <code>name: staging</code> to <code>name: stg</code> on a branch, run it, and count the rows on the Environments page. Change it back and write one sentence on what the environment's identity is.</li>
+      <li>Open the <code>deploy-production</code> job's page on a blocked pipeline and list who on your team can see the play button. Decide whether that list is a Free problem or a Premium one.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 6 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · Penwood's <code>deploy-production</code> has <code>when: manual</code> inside its single <code>rules</code> entry. On a push to main, what is the pipeline's status while nobody has clicked?</p>
+      <button class="qopt" type="button">A · Passed, because manual jobs are allowed to fail by default</button>
+      <button class="qopt" type="button">B · Failed, because a manual job that has not run counts as failed</button>
+      <button class="qopt" type="button">C · Blocked, because inside rules <code>allow_failure</code> defaults to false and the pipeline stops at that stage</button>
+      <button class="qopt" type="button">D · Running, until the manual job times out</button>
+      <p class="qwhy">The job control page: with <code>when: manual</code> inside <code>rules</code>, <code>allow_failure</code> is false by default and "The pipeline stops at the stage where the job is defined", status blocked. Outside rules the default flips to true and answer A would be right, which is exactly the trap.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · A review environment has <code>auto_stop_in: 1 day</code> and was deployed at 09:17. When does the stop job run?</p>
+      <button class="qopt" type="button">A · At the first hourly stop pass after 09:17 the next day, so somewhat later than the deadline</button>
+      <button class="qopt" type="button">B · At exactly 09:17 the next day</button>
+      <button class="qopt" type="button">C · Never, unless someone presses the stop button</button>
+      <button class="qopt" type="button">D · At 09:17 the next day, but only if the branch has been deleted</button>
+      <p class="qwhy">The environments page says the automatic stop runs hourly, so stops are not exact: the deadline is read by the next hourly pass. The stop job is the one <code>on_stop</code> names; the button and the clock both run it.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · A merge request pipeline runs on Penwood's file. What happens to <code>deploy-staging</code>, whose only rule is <code>$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code>?</p>
+      <button class="qopt" type="button">A · It runs and deploys the merge request's branch to staging</button>
+      <button class="qopt" type="button">B · It is added as a manual job so a reviewer can deploy on demand</button>
+      <button class="qopt" type="button">C · It fails, because the environment staging belongs to main</button>
+      <button class="qopt" type="button">D · It is never added: <code>CI_COMMIT_BRANCH</code> is unset in merge request pipelines, so no rule matches</button>
+      <p class="qwhy">The predefined variables page says <code>CI_COMMIT_BRANCH</code> is available in branch pipelines and not set in merge request pipelines; the rules page says a job with no matching rule is not added. The bench's r3 lists both deploy jobs among the six never added.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">environment:name and url, creation on first use, dynamic names</span><span class="note">GitLab Docs: Environments and deployments; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Deployment tier guessed from the name, deployment_tier, CI_ENVIRONMENT_NAME</span><span class="note">GitLab Docs: Environments and deployments, Predefined CI/CD variables reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">on_stop, action: stop, the three states, auto_stop_in runs hourly</span><span class="note">GitLab Docs: Environments and deployments; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">when: manual inside and outside rules, allow_failure defaults, blocked status</span><span class="note">GitLab Docs: Control how jobs run, CI/CD YAML syntax reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Penwood's deploy jobs on a merge request, a push to main and a schedule</span><span class="note">Bench r2, r3 and the r5 scorecard; constructed data, measured by the bench, labelled as its convention where the docs did not fix a behaviour</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Protected environments</span><span class="note">GitLab Docs: Protected environments; shown as Premium and Ultimate, as of 2026-10-29; not used</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What to test before a deploy</span><span class="note">Linked to the DataOps course, not retaught</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 6 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>An environment is a name on a job</b><span><code>environment: name:</code> plus an optional <code>url</code>. Created the first time the job runs. The name is the identity, not the job.</span></div>
+      <div class="cheat-item"><b>Tier comes from the name</b><span>development, testing, staging, production, else other. <code>deployment_tier</code> overrides. <code>CI_ENVIRONMENT_NAME</code> is set in the job.</span></div>
+      <div class="cheat-item"><b>A stop is a job</b><span><code>on_stop</code> names it; it carries the same name and <code>action: stop</code>. States: available, stopping, stopped.</span></div>
+      <div class="cheat-item"><b>auto_stop_in is a floor</b><span>The automatic stop runs hourly, so the environment lives until the next pass after the deadline.</span></div>
+      <div class="cheat-item"><b>when: manual inside rules blocks</b><span>allow_failure false, pipeline blocked at that stage. Outside rules it is true and the pipeline passes with nothing deployed.</span></div>
+      <div class="cheat-item"><b>Who may click is Premium</b><span>Protected environments (Premium and Ultimate, as of 2026-10-29) restrict who deploys. Free: a blocking manual job on a protected main.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>Penwood now deploys to two named environments and stops at the production gate. Session 7 goes back one stage to what gets deployed: the image <code>build-image</code> makes and <code>publish-image</code> pushes into the project's own container registry, whose path you chose in session 1, plus the <code>include</code> and <code>extends</code> lines that brought <code>scan-dependencies</code> into the file.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 6 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="b5-rules-needs-dag.html">← Prev: Rules, needs and the DAG</a> &nbsp;·&nbsp; <a href="b7-registry-and-templates.html">Next: Container registry and templates →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

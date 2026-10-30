@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Leader session 5 of 6. The protected default branch and the merge request as the control point on GitLab.com Free; what Premium and Ultimate add (required approvals, Code Owner approval, protected environments, compliance frameworks) and the Free substitute for each; why a masked variable is not a secret. Penwood, a constructed analytics team, writes its one-page control list with the tier of every control.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Governance without friction - learn gitlab with phoebe">
+<meta property="og:description" content="Leader session 5 of 6. Five controls that cost nothing, one that costs a tier, and the variable that only looks hidden.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/a5-governance-without-friction.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Governance without friction - learn gitlab with phoebe">
+<meta name="twitter:description" content="Leader session 5 of 6. The branch is the control point; Premium buys enforcement, not control; masked is not secret.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Leader session 5 · Governance without friction - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Leader session 5 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Leader session 5 of 6</div>
+    <h1>Governance <span class="accent">without friction</span></h1>
+    <p class="sub">Governance has a reputation for slowing teams down because it is usually bolted on afterwards: a sign-off form here, a change-advisory meeting there. GitLab puts the controls at the place the change already has to pass through, the branch and the merge request, and most of them are on the Free tier and switched on before anyone configures them. Penwood, a constructed five-person logistics-analytics team on GitLab.com Free, needs production data pipelines that nobody can change alone and credentials that no feature branch can read. Tonight is which controls are free, which cost a tier, what the free substitute for each paid control is, and the one control that looks stronger than it is.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Advanced</span>
+      <span class="chip audience">Data leads who sign off on production changes</span>
+      <span class="chip audience">Anyone asked for an audit trail</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Three controls</span>
+      <span class="a3" style="flex:4">20-40 · Build-along: Penwood's control list</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where session 5 sits</h2>
+    </div>
+    <p class="lede">Session 3 put five people on a tree with the smallest role that does the job. Session 4 taught you to read a pipeline without running one. Tonight joins the two: the roles decide who may touch the branch, and the pipeline carries the gate in front of production. The artifact is a <strong>one-page control list</strong>: every control Penwood relies on, what it stops, and the tier it needs, dated. Three controls carry the session. The branch is the control point. Premium adds enforcement, and each paid control has a Free substitute. Masked is not secret. Penwood is constructed; the controls and their tier badges are GitLab's own, as the docs read on 2026-10-29.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Penwood's control list: six rows, five of them Free, each with the gap it closes and the tier badge it carries. Plus a sentence for the next audit conversation: "production changes reach <code>main</code> only through a merge request that a Maintainer merges, production deploys only when a named person clicks, and no credential reaches a feature-branch job; here is the tier of each of those statements".</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers protected branches, who may push and merge, and why the merge request is the gate</span>
+      <h2>The branch is the control point</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">Every change to Penwood's pipelines ends as a commit on <code>main</code>. If nothing can reach <code>main</code> except a merge request that a Maintainer merges, then the merge request is where review, the pipeline and the record of who agreed all happen, without a meeting. The protected-branches page says "The default branch for your repository is protected by default"; a new rule selects Maintainers for "Allowed to push and merge", and force push is off by default. The control exists before you configure anything. The leader's job is to leave it on and to keep the Maintainer list short.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn mechanism. A bar across the top is the main branch, protected by default, with push and merge allowed to Maintainers and force push off. Below, a Developer tries to push straight to main and the push is refused. The same Developer pushes to the feature branch feature/orders-dedupe, opens a merge request, and a Maintainer merges it into main. A padlock sits on the main bar.">
+        <defs>
+          <filter id="a5aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="31" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a5aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a5aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a5aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a5aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a5aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a5aR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .a5aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a5aH" x="30" y="26">ONE WAY INTO MAIN: THE PROTECTED DEFAULT BRANCH REFUSES THE SHORTCUT</text>
+        <text class="a5aS" x="560" y="26">as the protected-branches page reads, 2026-10-29</text>
+
+        <g filter="url(#a5aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="60" width="800" height="44" rx="10" transform="rotate(-0.2 440 82)" fill="#FC6D26"/>
+          <rect x="804" y="76" width="22" height="18" rx="3" transform="rotate(2 815 85)" fill="#FFFFFF"/>
+          <path d="M808 76 L808 71 A7 7 0 0 1 822 71 L822 76"/>
+          <rect x="40" y="224" width="200" height="70" rx="10" transform="rotate(-0.8 140 259)" fill="#F4F0FC"/>
+          <rect x="300" y="224" width="200" height="70" rx="10" transform="rotate(0.6 400 259)" fill="#FFFFFF"/>
+          <rect x="560" y="224" width="200" height="70" rx="10" transform="rotate(-0.5 660 259)" fill="#F4F0FC"/>
+          <path d="M125 224 L125 112" marker-end="url(#a5aAr)" stroke-dasharray="5 4"/>
+          <path d="M115 156 L135 176 M135 156 L115 176" stroke="#991B1B"/>
+          <path d="M244 259 L296 259" marker-end="url(#a5aAr)"/>
+          <path d="M504 259 L556 259" marker-end="url(#a5aAr)"/>
+          <path d="M660 224 L660 112" marker-end="url(#a5aAr)"/>
+        </g>
+
+        <text class="a5aL" x="56" y="86">main · the default branch · protected by default</text>
+        <text class="a5aL" x="470" y="86">push and merge: Maintainers · force push: off</text>
+
+        <text class="a5aR" x="145" y="170">push to main refused</text>
+        <text class="a5aS" x="145" y="186">Developer is not in the rule</text>
+
+        <text class="a5aL" x="56" y="248">analyst · Developer</text>
+        <text class="a5aS" x="56" y="266">pushes to non-protected</text>
+        <text class="a5aS" x="56" y="282">branches, opens merge requests</text>
+
+        <text class="a5aL" x="316" y="248">feature/orders-dedupe</text>
+        <text class="a5aS" x="316" y="266">a branch anyone with</text>
+        <text class="a5aS" x="316" y="282">Developer can push to</text>
+
+        <text class="a5aL" x="576" y="248">merge request</text>
+        <text class="a5aS" x="576" y="266">review, pipeline, approvals</text>
+        <text class="a5aS" x="576" y="282">approvals optional on Free</text>
+
+        <text class="a5aL" x="672" y="170">Maintainer merges</text>
+        <text class="a5aS" x="672" y="186">the only way into main</text>
+
+        <text class="a5aN" x="30" y="322">Protected by default means the control exists before anyone configures it; the leader's job is to leave it on.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the shortcut is refused by the branch rule, so the merge request becomes the one place every change passes through</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> What the default rule says, in the docs' words <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Three sentences from the protected-branches page do most of the governance work. "The default branch for your repository is protected by default." When you add a rule, it selects Maintainers for "Allowed to push and merge". Force push is off by default, so history on <code>main</code> cannot be rewritten by anyone the rule allows to push. Put those next to two lines from the permissions page: a Developer can "Push code to non-protected branches, create merge requests, and run CI/CD pipelines"; a Maintainer can "Manage branches, merge requests, CI/CD settings, and project members". Penwood's analyst and its second analytics engineer are Developers, so the figure above is their only route: a feature branch, a merge request, and a Maintainer's merge. The record of who opened, who reviewed, which pipeline ran and who merged is the merge request itself. That is the audit trail, and nobody filled in a form to create it.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Wildcards, the most permissive rule, and the Premium group-level version <span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Rules can match a pattern such as <code>release/*</code>, so every release branch is protected the moment it is created. When two rules match the same branch, the most permissive one wins, which is the trap: a loose wildcard rule added "for convenience" quietly loosens a tighter rule on the same branch. Review the rule list, not just the rule you added. Protected branches set at the group level, so that every project under <code>penwood</code> inherits them, are Premium and Ultimate. On Free, Penwood sets the rule per project; with one project that is one rule, and the control list tonight records that it must be repeated for each project the team creates later.</p>
+        <p>The seam, in one line: what a pull request is for people who do not code lives in <a href="https://phoebefu6.github.io/learn-github-with-phoebe/courses/04-branches-and-prs.html">the GitHub course on branches and pull requests</a>, and branching itself in <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/courses/02-the-daily-loop.html">GitHub for builders</a>; this page takes only what GitLab does with the branch as a control: who may push, who may merge, and what the rule refuses.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Why "Maintainers only" is a governance decision, not an IT setting <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The rule is only as strong as the Maintainer list. Penwood has two people who can merge into <code>main</code>: the data lead as Owner and one analytics engineer as Maintainer. That is the whole production-change authority of the team, written as two names, and it is the leader's list to keep. A third Maintainer added "so releases are not blocked on holiday" is a real decision with a real trade-off, and it belongs on the control list with a date next to it. Governance without friction is not governance without decisions; it is making the decisions where the platform already enforces them.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's analyst fixes a column name in <code>models/orders.sql</code> late on a Thursday and tries to push it straight to <code>main</code> to catch the nightly backfill. The push is refused; the analyst is a Developer and the default rule allows only Maintainers. So the fix goes to <code>feature/orders-dedupe</code>, a merge request opens, the merge request pipeline runs the eight jobs from session 4, and the analytics engineer merges it twenty minutes later. Nothing about that was a process the team designed. It was the default rule, left on, doing the job a change-approval meeting would have done more slowly.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers required approvals, Code Owners, protected environments and compliance frameworks, with the Free way for each</span>
+      <h2>What Premium adds, and the Free substitute</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The paid tiers do not add controls Penwood lacks. They add enforcement of controls Penwood can already run by convention. On Free, anyone with at least Developer can approve a merge request, and the approvals page says "These approvals are optional and don't prevent merging without approval". Required approval rules and Code Owner approval are Premium and Ultimate; so are protected environments and compliance frameworks. For each of the four there is a Free way that does most of the work, and the honest question is how much the gap between convention and enforcement is worth to you.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn two-column mapping. Left, four Premium and Ultimate controls: required approval rules, Code Owner approval, protected environments, compliance frameworks. Right, the Free way for each: optional approvals plus a Maintainer merge, a CODEOWNERS file kept as documentation, a blocking manual job that gates production (highlighted), and a written settings page checked in review. A price tag doodle sits by the left header.">
+        <defs>
+          <filter id="a5bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="37" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a5bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a5bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a5bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a5bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a5bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a5bB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a5bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a5bH" x="30" y="26">FOUR PAID CONTROLS, FOUR FREE SUBSTITUTES: ENFORCEMENT IS WHAT THE TIER BUYS</text>
+
+        <text class="a5bB" x="40" y="58">PREMIUM AND ULTIMATE (as of 2026-10-29)</text>
+        <text class="a5bH" x="480" y="58">THE FREE WAY</text>
+
+        <g filter="url(#a5bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M336 46 L366 46 L376 56 L366 66 L336 66 Z" transform="rotate(-6 356 56)" fill="#FFEBDD"/>
+          <circle cx="344" cy="56" r="2.5"/>
+          <rect x="40" y="72" width="360" height="56" rx="9" transform="rotate(-0.4 220 100)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <rect x="40" y="142" width="360" height="56" rx="9" transform="rotate(0.4 220 170)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <rect x="40" y="212" width="360" height="56" rx="9" transform="rotate(-0.3 220 240)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <rect x="40" y="282" width="360" height="56" rx="9" transform="rotate(0.5 220 310)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <path d="M404 100 L476 100" marker-end="url(#a5bAr)"/>
+          <path d="M404 170 L476 170" marker-end="url(#a5bAr)"/>
+          <path d="M404 240 L476 240" marker-end="url(#a5bAr)"/>
+          <path d="M404 310 L476 310" marker-end="url(#a5bAr)"/>
+          <rect x="480" y="72" width="360" height="56" rx="9" transform="rotate(0.5 660 100)" fill="#F4F0FC"/>
+          <rect x="480" y="142" width="360" height="56" rx="9" transform="rotate(-0.5 660 170)" fill="#F4F0FC"/>
+          <rect x="480" y="212" width="360" height="56" rx="9" transform="rotate(0.4 660 240)" fill="#FC6D26"/>
+          <rect x="480" y="282" width="360" height="56" rx="9" transform="rotate(-0.4 660 310)" fill="#F4F0FC"/>
+        </g>
+
+        <text class="a5bL" x="56" y="96">Required approval rules</text>
+        <text class="a5bS" x="56" y="114">merge blocked until the rule's approvals arrive</text>
+        <text class="a5bL" x="496" y="96">Optional approvals + Maintainer merge</text>
+        <text class="a5bS" x="496" y="114">Developer+ can approve; approvals do not block</text>
+
+        <text class="a5bL" x="56" y="166">Code Owner approval</text>
+        <text class="a5bS" x="56" y="184">the owners of a changed path must approve</text>
+        <text class="a5bL" x="496" y="166">CODEOWNERS kept as documentation</text>
+        <text class="a5bS" x="496" y="184">file at CODEOWNERS or .gitlab/CODEOWNERS</text>
+
+        <text class="a5bL" x="56" y="236">Protected environments</text>
+        <text class="a5bS" x="56" y="254">only people with the privileges can deploy</text>
+        <text class="a5bL" x="496" y="236">A blocking manual job gates production</text>
+        <text class="a5bL" x="496" y="254">when: manual inside rules; pipeline blocked</text>
+
+        <text class="a5bL" x="56" y="306">Compliance frameworks</text>
+        <text class="a5bS" x="56" y="324">a label for projects with requirements</text>
+        <text class="a5bL" x="496" y="306">A written settings page, checked in review</text>
+        <text class="a5bS" x="496" y="324">the control list from tonight's build-along</text>
+
+        <text class="a5bN" x="30" y="368">Premium: $29 per user a month billed annually (as of 2026-10-29). Pay for a control you need, not for a badge.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - each paid control has a convention that does the same job on Free; the orange one is the only substitute the platform itself enforces</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Approvals on Free are a signal, not a lock <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>On Free, anyone with at least Developer can approve a merge request, and the approvals page is explicit that "These approvals are optional and don't prevent merging without approval". So an approval on Free is a recorded statement, "I looked at this", that the merge request keeps forever, and the thing that actually stops an unreviewed merge is the branch rule from Part 1: only a Maintainer can merge. The Free convention, then, is two lines on the control list: "a second person approves before merge" and "the Maintainer does not merge their own merge request". Required approval rules, Premium and Ultimate, turn those two lines into something the merge button checks. Code Owner approval, also Premium and Ultimate, goes further: the people named for a path must approve changes to it. On Free the <code>CODEOWNERS</code> file can still live at <code>CODEOWNERS</code>, <code>docs/CODEOWNERS</code> or <code>.gitlab/CODEOWNERS</code>; it does not block, but it tells every reviewer who should have been asked, and a Maintainer can read it before merging.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The one Free substitute the platform enforces: a blocking manual job <span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Protected environments, Premium and Ultimate, mean that "only people with the appropriate privileges can deploy to it". Penwood's Free version is in the pipeline file: <code>deploy-production</code> has <code>when: manual</code> inside its <code>rules</code>. The job-control page is specific about what that does. For a manual job defined inside <code>rules</code>, <code>allow_failure</code> defaults to <code>false</code>, so the job is blocking: "The pipeline stops at the stage where the job is defined", and the pipeline's status is <strong>blocked</strong> until someone clicks. Nothing deploys to production by accident, and the click is recorded against a name. What this does not do is restrict who may click; anyone who can run the pipeline can. That is exactly the gap protected environments close, and it is the first thing the control list should say about the Premium decision: Penwood is five people who all sit in one room, so the gap is small; a thirty-person group would price it differently.</p>
+        <p>Compliance frameworks, Premium and Ultimate, are "a label to identify that your project has certain compliance requirements". Penwood's Free substitute is the control list itself, kept in the repository and re-read in every merge request that touches a setting. Epics, also Premium and Ultimate, are out of scope here; Builder session 1 covers the Free board.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> How to decide whether a tier is worth it <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Write the convention first, run it for a month on Free, and count the times it was not followed. Zero means the convention holds and the tier buys you nothing yet. A number above zero is the cost of enforcement you are already paying in incidents, and that number, not the feature list, is the argument for Premium. Premium is $29 per user a month billed annually as of 2026-10-29; re-verify the tier page before relying on it. For five people that is a number you can hold next to one production mistake and decide.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The job-control page documents the two faces of a manual job. Outside <code>rules</code>, <code>when: manual</code> defaults <code>allow_failure</code> to <code>true</code>, so the pipeline can pass with the manual job never run; inside <code>rules</code> it defaults to <code>false</code>, the pipeline stops at that stage and shows <strong>blocked</strong>. Same keyword, opposite governance outcome, decided by where it is written. Penwood's file puts <code>when: manual</code> inside the rule on purpose; the bench in Builder session 8 shows <code>deploy-production</code> waiting for a click on every run to <code>main</code>. A leader does not write the YAML; a leader asks which of the two faces the production job has.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers protected and masked variables, where a variable is visible, and what masking does not promise</span>
+      <h2>Masked is not secret</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Credentials are the governance question a data team feels most, because a pipeline that deploys needs them and a feature branch that anyone can push to runs the same pipeline. GitLab offers two switches on a CI/CD variable. Protected sends the variable only to pipelines on protected branches or tags. Masked prints it as <code>[MASKED]</code> in the job log. The variables page is candid about the second: masking "is not a guaranteed way to prevent malicious users from accessing variable values". Read the figure as a variable resolving, not as a vault.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn resolver. Three sources on the left: variables written in .gitlab-ci.yml, visible to everyone with repository access; a project variable marked protected, sent only to protected branches and tags; a project variable marked masked, one line, no spaces, eight or more characters. They feed a diamond that asks whether the ref is protected. Above right, a pipeline on feature/orders-dedupe receives the YAML variables and the masked variable, and the protected variable is withheld. Below right, a pipeline on main receives all three, and its job log, highlighted, prints TOKEN=[MASKED].">
+        <defs>
+          <filter id="a5cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="41" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a5cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a5cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a5cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a5cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a5cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a5cR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .a5cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a5cH" x="30" y="26">WHERE A VARIABLE GOES: PROTECTED DECIDES THE BRANCH, MASKED ONLY EDITS THE LOG</text>
+
+        <g filter="url(#a5cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="60" width="250" height="60" rx="9" transform="rotate(-0.6 165 90)" fill="url(#a5cHc)"/>
+          <rect x="40" y="140" width="250" height="60" rx="9" transform="rotate(0.5 165 170)" fill="#F4F0FC"/>
+          <rect x="40" y="220" width="250" height="60" rx="9" transform="rotate(-0.4 165 250)" fill="#FFFFFF"/>
+          <path d="M290 90 L326 90 L326 170"/>
+          <path d="M290 250 L326 250 L326 170"/>
+          <path d="M290 170 L356 170" marker-end="url(#a5cAr)"/>
+          <path d="M440 110 L520 170 L440 230 L360 170 Z" fill="#F4F0FC"/>
+          <path d="M520 170 L540 170 L540 110 L556 110" marker-end="url(#a5cAr)"/>
+          <path d="M520 170 L540 170 L540 240 L556 240" marker-end="url(#a5cAr)"/>
+          <rect x="560" y="60" width="290" height="100" rx="10" transform="rotate(0.4 705 110)" fill="#FFFFFF"/>
+          <rect x="560" y="190" width="290" height="100" rx="10" transform="rotate(-0.4 705 240)" fill="#FFFFFF"/>
+          <rect x="572" y="246" width="266" height="34" rx="7" transform="rotate(0.6 705 263)" fill="#FC6D26"/>
+        </g>
+
+        <text class="a5cL" x="56" y="84">variables: in .gitlab-ci.yml</text>
+        <text class="a5cS" x="56" y="102">visible to everyone with repo access</text>
+        <text class="a5cL" x="56" y="164">project variable · protected</text>
+        <text class="a5cS" x="56" y="182">sent only to protected branches, tags</text>
+        <text class="a5cL" x="56" y="244">project variable · masked</text>
+        <text class="a5cS" x="56" y="262">one line, no spaces, 8+ characters</text>
+
+        <text class="a5cL" x="408" y="166">is the ref</text>
+        <text class="a5cS" x="408" y="182">protected?</text>
+
+        <text class="a5cL" x="572" y="84">pipeline on feature/orders-dedupe</text>
+        <text class="a5cS" x="572" y="104">gets: the YAML variables</text>
+        <text class="a5cS" x="572" y="120">gets: the masked variable</text>
+        <text class="a5cR" x="572" y="140">protected variable: withheld</text>
+
+        <text class="a5cL" x="572" y="214">pipeline on main · protected branch</text>
+        <text class="a5cS" x="572" y="234">gets: YAML, protected and masked</text>
+        <text class="a5cL" x="584" y="268">job log prints: TOKEN=[MASKED]</text>
+
+        <text class="a5cN" x="30" y="318">Masking edits the log, not the job: a script can still copy the value out. The docs call it not a guaranteed way.</text>
+        <text class="a5cN" x="30" y="338">A protected branch is also a secrets control: a protected variable never reaches a feature-branch job.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the protected switch is the real control because it decides which pipelines ever see the value; masking only changes what the log shows</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Three places a value can live, and who can read each <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A value in the <code>variables:</code> block of <code>.gitlab-ci.yml</code> is in the repository, and the variables page says it plainly: "Variables saved in the <code>.gitlab-ci.yml</code> file are visible to all users with access to the repository." Penwood's file keeps only <code>PYTHON_VERSION</code> and <code>PIPELINE_OWNER</code> there, and nothing else should ever join them. A project variable set in the CI/CD settings is the second place; by default it is sent to every pipeline, including one on a branch a Developer just pushed. Marking it <strong>protected</strong> changes that: it goes only to pipelines on protected branches or tags, which after Part 1 means only pipelines on <code>main</code>. Marking it <strong>masked</strong> changes only the log: a value that is one line, has no spaces and is at least eight characters is printed as <code>[MASKED]</code>. The control list needs one row that says: "every credential is a protected variable; masked as well where the format allows; none in YAML".</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> What masking cannot promise, and what to ask instead <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Masking is a text substitution on the job log. A job script that writes the value to a file, encodes it, splits it across lines or sends it somewhere else is not affected; the page's own words are that masking "is not a guaranteed way to prevent malicious users from accessing variable values". So the question a leader asks is not "is it masked" but "which pipelines can receive it at all", and the answer that holds is "only pipelines on a protected branch, which only Maintainers can merge into". That chains Part 3 back to Part 1: the branch rule is the secrets control too. Where a variable's precedence comes from, job over global over predefined, is Builder session 4's territory and is not retaught here.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The variables page documents both halves. Protected variables are available only to pipelines that run on protected branches or protected tags; masked values must be a single line, contain no spaces, be at least eight characters long, and are shown in job logs as <code>[MASKED]</code>; and the same page says masking "is not a guaranteed way to prevent malicious users from accessing variable values". Constructed: Penwood's warehouse token is both protected and masked. A Developer who opens a merge request from <code>feature/orders-dedupe</code> gets a pipeline that never receives the token at all, which is the sentence the finance partner wanted to hear, and the one the log alone could not have proven.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's one-page control list</h2>
+      <span class="tag demo">★ 20 min · everyone builds</span>
+    </div>
+    <p class="lede">One page, three columns: the control, the gap it closes, and the tier it needs with the date you checked. Penwood's is filled below as a constructed example; yours lists your own controls. Every row is a sentence you can defend in an audit conversation, and every tier badge is something you read on a docs page, not something you remember. No GitLab account is needed tonight.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn table of six controls for the constructed Penwood team. Protected default branch main, highlighted: stops a direct push to the production branch, Free. Merge request before merge: stops an unreviewed change landing on main, Free. Optional approvals with a Maintainer merging: stops a merge nobody else looked at, Free by convention. Blocking manual deploy-production job: stops a production deploy nobody chose, Free. Protected and masked variables: stop a credential inside a feature-branch log, Free. Enforced approvals, owners and environments: the same gaps enforced by the platform, Premium and Ultimate. A pin doodle sits at the top right.">
+        <defs>
+          <filter id="a5dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="43" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a5dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a5dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a5dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a5dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a5dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a5dB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a5dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a5dH" x="30" y="26">PENWOOD'S CONTROL LIST (CONSTRUCTED): SIX ROWS, FIVE FREE, ONE PAID</text>
+
+        <text class="a5dH" x="52" y="58">CONTROL</text>
+        <text class="a5dH" x="390" y="58">WHAT IT STOPS</text>
+        <text class="a5dH" x="690" y="58">TIER (dated)</text>
+
+        <g filter="url(#a5dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="840" cy="40" r="6" fill="#F4F0FC"/>
+          <path d="M840 46 L834 60"/>
+          <rect x="40" y="70" width="810" height="36" rx="8" transform="rotate(-0.2 445 88)" fill="#FC6D26"/>
+          <rect x="40" y="114" width="810" height="36" rx="8" transform="rotate(0.2 445 132)" fill="#FFFFFF"/>
+          <rect x="40" y="158" width="810" height="36" rx="8" transform="rotate(-0.2 445 176)" fill="#F4F0FC"/>
+          <rect x="40" y="202" width="810" height="36" rx="8" transform="rotate(0.2 445 220)" fill="#FFFFFF"/>
+          <rect x="40" y="246" width="810" height="36" rx="8" transform="rotate(-0.2 445 264)" fill="#F4F0FC"/>
+          <rect x="40" y="290" width="810" height="36" rx="8" transform="rotate(0.2 445 308)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+        </g>
+
+        <text class="a5dL" x="52" y="93">Protected default branch: main</text>
+        <text class="a5dL" x="390" y="93">a direct push to the production branch</text>
+        <text class="a5dL" x="690" y="93">Free · on by default</text>
+
+        <text class="a5dL" x="52" y="137">Merge request before every merge</text>
+        <text class="a5dS" x="390" y="137">an unreviewed change landing on main</text>
+        <text class="a5dB" x="690" y="137">Free</text>
+
+        <text class="a5dL" x="52" y="181">Optional approvals, Maintainer merges</text>
+        <text class="a5dS" x="390" y="181">a merge nobody else looked at</text>
+        <text class="a5dB" x="690" y="181">Free · by convention</text>
+
+        <text class="a5dL" x="52" y="225">Blocking manual deploy-production job</text>
+        <text class="a5dS" x="390" y="225">a production deploy nobody chose</text>
+        <text class="a5dB" x="690" y="225">Free</text>
+
+        <text class="a5dL" x="52" y="269">Protected and masked variables</text>
+        <text class="a5dS" x="390" y="269">a credential inside a feature-branch log</text>
+        <text class="a5dB" x="690" y="269">Free</text>
+
+        <text class="a5dL" x="52" y="313">Enforced approvals, owners, environments</text>
+        <text class="a5dS" x="390" y="313">the same gaps, enforced by the platform</text>
+        <text class="a5dB" x="690" y="313">Premium and Ultimate</text>
+
+        <text class="a5dN" x="30" y="348">Five controls are Free; the sixth buys platform enforcement of what the five do by convention.</text>
+        <text class="a5dN" x="30" y="368">Tiers as the docs read on 2026-10-29; re-verify. Penwood is constructed.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the orange row does the most work and costs nothing; the dashed row is the only one with a price</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>List the gaps first, then the controls.</strong> Start from what must never happen: a production change nobody reviewed, a production deploy nobody chose, a credential in a log anyone can read. One row per gap. Then name the GitLab control that closes it and copy its tier badge from the docs page, with today's date. Penwood's constructed list is below.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's control list (constructed) · tiers as of 2026-10-29</span>control                                   stops                                        tier (dated)
+protected default branch: main            a direct push to the production branch       Free, on by default
+merge request before every merge          an unreviewed change landing on main         Free
+optional approvals, Maintainer merges     a merge nobody else looked at                Free, by convention
+blocking manual deploy-production job     a production deploy nobody chose             Free
+protected and masked variables            a credential inside a feature-branch log     Free
+required approvals / Code Owners /        the same gaps, enforced by the platform      Premium and Ultimate
+protected environments</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the branch rule as a checklist a Maintainer can read.</strong> Who may push and merge, whether force push is off, and the names on the Maintainer list with the date each was added. The rule is per project on Free; group-level protected branches are Premium and Ultimate, so note that the checklist is repeated for each project.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's branch rule (constructed)</span>branch: main (default, protected by default)
+allowed to push and merge: Maintainers
+force push: off
+Maintainers who may merge: data lead (Owner), analytics engineer 1 (Maintainer) - added 2026-10-29
+convention: the author never merges their own merge request; one approval before merge
+scope: this project only; repeat for every new project under penwood (group-level rule is Premium)</div>
+      </div>
+      <div class="step">
+        <p><strong>Read the production gate in the pipeline file.</strong> You do not write it; you check that <code>when: manual</code> sits inside <code>rules</code>, so the job is blocking and the pipeline shows <strong>blocked</strong> until someone clicks. This is the job as Penwood's file carries it; the bench in Builder session 8 parses the same text.</p>
+        <div class="prompt-box good"><span class="label">★ deploy-production from penwood.yml (constructed, verbatim)</span>deploy-production:
+  stage: deploy
+  needs:
+    - deploy-staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  environment:
+    name: production
+  script:
+    - python deploy/run.py --target production</div>
+      </div>
+      <div class="step">
+        <p><strong>Decide where every credential lives.</strong> Three places, one rule: nothing secret in YAML, every credential a protected variable, masked as well where the format allows. Write the list of variables with their two switches. Penwood's is constructed; your names will differ.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's variable sheet (constructed)</span>in .gitlab-ci.yml (visible to everyone with repo access):
+  PYTHON_VERSION = 3.12          PIPELINE_OWNER = data-platform
+project variables (CI/CD settings):
+  WAREHOUSE_TOKEN     protected: yes   masked: yes    reaches: pipelines on main only
+  REGISTRY_DEPLOY_KEY protected: yes   masked: yes    reaches: pipelines on main only
+  SLACK_WEBHOOK_URL   protected: yes   masked: no     (has characters masking rejects; protected still holds)
+rule: a credential that is not protected is a finding, whether or not it is masked</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The control list to avoid</span>Secrets are masked, so the logs are safe. Approvals are on, so nothing merges unreviewed. We will tighten things when we move to Premium.
+(Three claims, each wrong on Free: masking is "not a guaranteed way"; approvals "don't prevent merging"; and the controls that matter are already on, today, at no cost.)</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 6</h2>
+      <span class="tag exercise">25 min</span>
+    </div>
+    <ol>
+      <li>Finish your control list with a tier badge and a date on every row. Any row whose badge you could not find on a docs page is marked "unverified", not guessed.</li>
+      <li>Count the people who can merge into your production branch today, in whatever tool you use. Write the number and the names; if you cannot, that is the first row of the list.</li>
+      <li>Find one credential your pipelines use and answer two questions in writing: which branches can receive it, and where it is stored. If the answer to the second is "in the pipeline file", say so.</li>
+      <li>Pick one convention from your list and decide how you would count the times it was not followed in a month. That count is your Premium argument, or the proof you do not need one yet.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Leader session 5 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">1 · A Developer on Penwood's project (constructed) approves a merge request into <code>main</code> on GitLab.com Free. What does that approval do?</p>
+      <button class="qopt" type="button">A · It blocks the merge until a second Developer also approves</button>
+      <button class="qopt" type="button">B · It is recorded on the merge request but is optional and does not prevent merging; the thing that stops an unreviewed merge is that only Maintainers can merge into the protected branch</button>
+      <button class="qopt" type="button">C · It merges the merge request automatically once the pipeline passes</button>
+      <button class="qopt" type="button">D · Nothing; Developers cannot approve on Free</button>
+      <p class="qwhy">The approvals page: users with at least Developer can approve, and "These approvals are optional and don't prevent merging without approval". Required approval rules are Premium and Ultimate. On Free the lock is the branch rule, not the approval.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · Penwood's <code>deploy-production</code> job has <code>when: manual</code> inside its <code>rules</code>. What does the pipeline do when it reaches that job on a push to <code>main</code>?</p>
+      <button class="qopt" type="button">A · It passes; manual jobs are skipped and the pipeline is green</button>
+      <button class="qopt" type="button">B · It fails, because a manual job cannot be inside rules</button>
+      <button class="qopt" type="button">C · It deploys to production, because the rule matched</button>
+      <button class="qopt" type="button">D · It stops at the deploy stage and shows blocked until someone clicks, because inside rules a manual job's allow_failure defaults to false</button>
+      <p class="qwhy">The job-control page: inside <code>rules</code>, <code>when: manual</code> defaults <code>allow_failure</code> to <code>false</code>, "The pipeline stops at the stage where the job is defined", status blocked. Outside <code>rules</code> the default flips to <code>true</code> and the pipeline can pass without it. Where the keyword sits decides the governance outcome.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · Penwood's warehouse token is a project variable marked masked but not protected. A Developer pushes to <code>feature/orders-dedupe</code> and the branch pipeline runs. What is true?</p>
+      <button class="qopt" type="button">A · The pipeline receives the token; masking only rewrites the job log, and the docs say it is not a guaranteed way to keep the value from being read</button>
+      <button class="qopt" type="button">B · The pipeline does not receive the token, because masked variables go only to the default branch</button>
+      <button class="qopt" type="button">C · The token is safe because it never appears in the log</button>
+      <button class="qopt" type="button">D · The pipeline fails, because masked variables require a protected branch</button>
+      <p class="qwhy">Only the protected switch limits which pipelines receive a variable: protected branches and tags. Masking prints <code>[MASKED]</code> in the log and, in the variables page's words, "is not a guaranteed way to prevent malicious users from accessing variable values". Protected first, masked as well.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Protected branches: default, who may push and merge, force push, wildcards</span><span class="note">GitLab Docs, "Protected branches", read at source 2026-10-29; group-level rules labelled Premium and Ultimate</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Approvals on Free and required approval rules</span><span class="note">GitLab Docs, "Merge request approvals", read at source; "optional and don't prevent merging" quoted</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Code Owners and the CODEOWNERS file paths</span><span class="note">GitLab Docs, "Code Owners", read at source; Premium and Ultimate</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Protected environments and the blocking manual job</span><span class="note">GitLab Docs, "Protected environments" and "Control how jobs run", read at source; allow_failure defaults inside and outside rules</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Compliance frameworks and epics as paid tiers</span><span class="note">GitLab Docs, "Compliance frameworks" and "Epics", read at source; Premium and Ultimate</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Protected and masked variables; YAML variables visible to the repository</span><span class="note">GitLab Docs, "CI/CD variables", read at source; "not a guaranteed way" quoted</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Developer and Maintainer permissions; Premium price</span><span class="note">GitLab Docs, "Roles and permissions" and GitLab, "Pricing", read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Penwood's deploy-production job</span><span class="note">Quoted verbatim from the constructed penwood.yml the bench in Builder session 8 parses; Penwood is constructed</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Variable precedence, artifacts and cache</span><span class="note">Builder session 4</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What a pull request is; branching itself</span><span class="note">Linked to the two GitHub courses, not retaught</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Leader session 5 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>The branch is the gate</b><span>The default branch is protected by default; Maintainers push and merge; force push off. Keep the Maintainer list short and dated.</span></div>
+      <div class="cheat-item"><b>Approvals on Free signal</b><span>Developer+ can approve; approvals are optional and do not prevent merging. Required rules and Code Owner approval are Premium and Ultimate.</span></div>
+      <div class="cheat-item"><b>The Free production gate</b><span>when: manual inside rules: allow_failure false, pipeline stops at the stage, status blocked until a named click.</span></div>
+      <div class="cheat-item"><b>Protected decides, masked edits</b><span>Protected variables reach only protected branches and tags. Masked prints [MASKED] and is "not a guaranteed way". Nothing secret in YAML.</span></div>
+      <div class="cheat-item"><b>Paid buys enforcement</b><span>Each Premium control has a Free convention. Count the misses for a month; that count is the argument. Premium $29 per user a month, annual (as of 2026-10-29).</span></div>
+      <div class="cheat-item"><b>One page, three columns</b><span>Control, what it stops, tier with the date. Unverified beats guessed. Repeat per project on Free.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have the control list and the tier of every row. Session 6 puts everything from the Leader track on one calendar: ninety days in three blocks, repo and issues first, then the pipeline with the quota arithmetic in view, then the registry, environments and the exit criteria, with a go or no-go at the end of each block.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Leader session 5 of 6 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="a4-reading-a-pipeline.html">← Prev: Reading a pipeline like a manager</a> &nbsp;·&nbsp; <a href="a6-the-90-day-migration.html">Next: The 90-day migration plan →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

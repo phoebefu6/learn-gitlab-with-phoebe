@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 5 of 8. Rules decide which jobs exist in a pipeline and stop at the first match; needs let a job start the moment its inputs finish instead of waiting for a whole stage; a job that was never added cannot fail. Penwood's constructed pipeline goes from 30:08 to 26:22 to 19:17 on the bench.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Rules, needs and the DAG - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 5 of 8. First match wins, needs skip the queue, and the job that is not there.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b5-rules-needs-dag.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rules, needs and the DAG - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 5 of 8. Rules pick the jobs, needs pick the order, and a missing job is green.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 5 · Rules, needs and the DAG - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 5 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 5 of 8</div>
+    <h1>Rules, needs and <span class="accent">the DAG</span></h1>
+    <p class="sub">Session 3 gave Penwood a pipeline that goes green in 30:08 because every stage waits for the slowest job of the stage before it. Tonight two keywords change that. <code>needs</code> tells a job which jobs it actually depends on, so it starts the moment they finish and the stage boundary stops mattering. <code>rules</code> tells GitLab whether a job belongs in this pipeline at all, read top to bottom, stopping at the first match. Penwood, a constructed five-person logistics-analytics team on GitLab.com Free, takes its 14 jobs from 30:08 with stages only, to 26:22 with needs, to 19:17 and eight jobs when rules meet a merge request. Every one of those numbers comes from the bench in session 8, which parses the real YAML and runs nothing on GitLab; the durations are a constructed run log.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Advanced</span>
+      <span class="chip audience">Builders who finished sessions 3 and 4</span>
+      <span class="chip audience">Anyone whose pipeline waits on a stage</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Rules, needs, the missing job</span>
+      <span class="a3" style="flex:4">20-42 · Build-along: needs and rules on the b3 file</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where session 5 sits</h2>
+    </div>
+    <p class="lede">You have a <code>.gitlab-ci.yml</code> with five stages and fourteen jobs, variables that resolve by precedence, artifacts that carry compile-models' output into the tests, and a cache you do not trust. Everything in it still runs in lockstep: <code>test</code> starts when all of <code>build</code> is done, <code>publish</code> starts when all of <code>test</code> is done, and every job runs on every push, including a nightly backfill nobody asked for in a merge request. Tonight fixes both. The order of jobs becomes a graph of what needs what, a DAG, and the set of jobs becomes a decision made per pipeline. Session 6 then puts environments on the deploy jobs, session 7 adds the registry and the included scan template, and session 8 is the bench that measured every number on this page.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> The b3 file with <code>needs</code> on every job and <code>rules</code> on the seven that should not run everywhere, a <code>workflow:rules</code> block that stops the duplicate pipeline, the exact docs sentence about what happens when a needed job is not in the pipeline, and three wall clocks you can read off the bench: 30:08, 26:22, 19:17. Plus the uncomfortable fact behind the third: a job that was never added cannot fail, so a shorter green pipeline deserves a second look.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers rules, if, changes, when: never and the duplicate-pipeline trap</span>
+      <h2>First match wins</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The job rules page says it in two sentences worth memorising: "Rules are evaluated in order until the first match" and "If no rules match, the job is not added to the pipeline". A rule is a condition, usually <code>if:</code> on a predefined variable or <code>changes:</code> on a file path, and an optional <code>when</code>. The first rule whose condition is true decides the job's fate and the rest are never read. A matching rule with <code>when: never</code> removes the job; a matching rule with no <code>when</code> keeps the job's own <code>when</code>, which defaults to <code>on_success</code>. If you know the <code>if:</code> of a workflow file from the Actions session in <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/courses/05-actions-authoring.html">GitHub for builders</a>, leave it there; only GitLab's <code>rules</code> are taught here, because the stop-at-first-match reading is the part that bites.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 316" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three hand-drawn columns, each a pipeline context with the job's rules read from the top. Column one, a merge request with pipelines changed: unit-tests rule 1, CI_PIPELINE_SOURCE equals merge_request_event, matches and reading stops; rule 2 is never read; the job is added with when on_success. Column two, a push to main: rule 1 does not match because the source is push, rule 2, CI_COMMIT_BRANCH equals the default branch, matches; the job is added. Column three, docs-build in the same merge request: its only rule, changes docs, does not match because only pipelines files changed, so no rule matched and the job is never added to the pipeline. A note says the first match ends the reading, and that a match with when never also excludes the job.">
+        <defs>
+          <filter id="b5aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="71" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b5aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b5aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b5aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b5aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b5aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b5aW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b5aR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b5aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b5aH" x="30" y="26">RULES ARE READ TOP TO BOTTOM AND STOP AT THE FIRST MATCH</text>
+        <text class="b5aS" x="460" y="26">job rules page, read 2026-10-29 · the jobs are Penwood's (constructed)</text>
+
+        <g filter="url(#b5aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="48" width="260" height="30" rx="7" transform="rotate(-0.4 170 63)" fill="#483698"/>
+          <rect x="310" y="48" width="260" height="30" rx="7" transform="rotate(0.3 440 63)" fill="#483698"/>
+          <rect x="580" y="48" width="260" height="30" rx="7" transform="rotate(-0.3 710 63)" fill="#483698"/>
+
+          <path d="M24 108 L36 118 L24 128 Z" fill="#1F1633"/>
+          <rect x="40" y="96" width="260" height="44" rx="8" transform="rotate(-0.6 170 118)" fill="#FC6D26"/>
+          <rect x="40" y="152" width="260" height="44" rx="8" transform="rotate(0.5 170 174)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <path d="M296 120 Q 322 174 300 232" marker-end="url(#b5aAr)"/>
+          <rect x="40" y="216" width="260" height="44" rx="8" transform="rotate(-0.3 170 238)" fill="#F4F0FC"/>
+
+          <rect x="310" y="96" width="260" height="44" rx="8" transform="rotate(0.4 440 118)" fill="#FFFFFF"/>
+          <path d="M440 142 L440 150" marker-end="url(#b5aAr)"/>
+          <rect x="310" y="152" width="260" height="44" rx="8" transform="rotate(-0.5 440 174)" fill="#FC6D26"/>
+          <path d="M440 198 L440 214" marker-end="url(#b5aAr)"/>
+          <rect x="310" y="216" width="260" height="44" rx="8" transform="rotate(0.3 440 238)" fill="#F4F0FC"/>
+
+          <rect x="580" y="96" width="260" height="44" rx="8" transform="rotate(-0.4 710 118)" fill="#FFFFFF"/>
+          <path d="M710 142 L710 150" marker-end="url(#b5aAr)"/>
+          <rect x="580" y="152" width="260" height="44" rx="8" transform="rotate(0.4 710 174)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="6 4"/>
+          <path d="M710 198 L710 214" marker-end="url(#b5aAr)"/>
+          <rect x="580" y="216" width="260" height="44" rx="8" transform="rotate(-0.3 710 238)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="6 4"/>
+        </g>
+
+        <text class="b5aW" x="54" y="67">unit-tests · in a merge request</text>
+        <text class="b5aW" x="324" y="67">unit-tests · push to main</text>
+        <text class="b5aW" x="594" y="67">docs-build · the same merge request</text>
+
+        <text class="b5aL" x="54" y="114">rule 1 · if: $CI_PIPELINE_SOURCE</text>
+        <text class="b5aL" x="54" y="131">== "merge_request_event" · match, stop</text>
+        <text class="b5aL" x="54" y="170">rule 2 · if: $CI_COMMIT_BRANCH</text>
+        <text class="b5aS" x="54" y="187">== $CI_DEFAULT_BRANCH · never read</text>
+        <text class="b5aL" x="54" y="234">added, when on_success (default)</text>
+        <text class="b5aS" x="54" y="251">a matching rule with no when keeps the job's own</text>
+
+        <text class="b5aL" x="324" y="114">rule 1 · merge_request_event? no</text>
+        <text class="b5aS" x="324" y="131">CI_PIPELINE_SOURCE is push here</text>
+        <text class="b5aL" x="324" y="170">rule 2 · CI_COMMIT_BRANCH == main</text>
+        <text class="b5aL" x="324" y="187">the default branch · matches, stop</text>
+        <text class="b5aL" x="324" y="234">added, when on_success (default)</text>
+        <text class="b5aS" x="324" y="251">same job, same file, a different first match</text>
+
+        <text class="b5aL" x="594" y="114">rule 1 · changes: docs/**/*</text>
+        <text class="b5aS" x="594" y="131">changed: pipelines/orders/dedupe.py · no</text>
+        <text class="b5aR" x="594" y="170">no rule matched</text>
+        <text class="b5aS" x="594" y="187">there is no rule 2 to fall through to</text>
+        <text class="b5aR" x="594" y="234">never added to the pipeline</text>
+        <text class="b5aS" x="594" y="251">it is not skipped, it is not there; it cannot fail</text>
+
+        <text class="b5aN" x="30" y="296">First match ends the reading. A match with when: never excludes the job; no match at all excludes it too.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the same rules list gives three different answers because the context changes which line matches first</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> if, changes, and the order you write them in <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Penwood's <code>unit-tests</code> job carries two rules: run in a merge request pipeline, and run on the default branch. Written in that order they read naturally, and because neither has a <code>when</code>, a match keeps the job's default <code>on_success</code>. The order only matters once a rule carries <code>when: never</code> or <code>when: manual</code>: put the exclusion first and it wins before anything below gets a chance; put it last and it only catches what nothing above caught. <code>rules:changes</code> is the other condition worth knowing well. The job rules page says it compares against the merge request's target branch in a merge request pipeline and against the previous commit in a branch pipeline, and that it is always true on a new branch or when there is no push event. So <code>docs-build</code> with <code>changes: docs/**/*</code> stays out of a merge request that touched only <code>pipelines/</code>, and comes in the moment a runbook changes. <code>rules:exists</code> is outside tonight's subset.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> when: the six values, and which two belong to rules only <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The YAML reference lists <code>on_success</code> (the default), <code>on_failure</code>, <code>always</code>, <code>never</code>, <code>manual</code> and <code>delayed</code> with a <code>start_in</code> of one second to one week. <code>never</code> is only meaningful inside <code>rules</code> or <code>workflow:rules</code>, since a job that is always never is a job you should delete. <code>manual</code> behaves differently depending on where it sits, and that difference is session 6's whole third Part: outside rules, a manual job has <code>allow_failure: true</code> by default and the pipeline can finish green around it; inside rules, <code>allow_failure</code> defaults to <code>false</code> and the docs say "The pipeline stops at the stage where the job is defined", status blocked. Penwood's <code>deploy-production</code> puts <code>when: manual</code> inside its rule on purpose, so a production deploy blocks rather than being quietly optional.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The job rules page documents the trap directly: a rules list that ends in a bare <code>- when: always</code> (or any rule that matches both) can start a branch pipeline and a merge request pipeline on the same push, two pipelines, double the compute minutes, two results for one commit. The documented fix is <code>workflow:rules</code> at the top of the file, which decides whether a pipeline runs at all; "When no rules evaluate to true, the pipeline does not run". Penwood's second workflow rule is <code>if: $CI_COMMIT_BRANCH &amp;&amp; $CI_OPEN_MERGE_REQUESTS</code> with <code>when: never</code>: a push to a feature branch that already has an open merge request creates no branch pipeline. On the bench that context prints "No pipeline" and zero compute minutes. The merge request pipeline still runs, which is the one you wanted.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers needs, needs: [], the critical path, and why stages alone are slow</span>
+      <h2>Needs skip the queue</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">Stages are a queue. The YAML reference: "Jobs in the same stage run in parallel", and the next stage starts only after the previous stage's jobs succeed. That is simple to read and, as the pipeline architectures page admits of basic pipelines, "not the most efficient". <code>needs</code> replaces the stage boundary with an edge: name the jobs this job depends on and it may start the moment they finish, "even starting earlier than other jobs in the same stage". The pipeline becomes a directed acyclic graph, a DAG, and the wall clock becomes the longest path through it, the critical path. On Penwood's constructed pipeline the bench measures that as 30:08 with stages only and 26:22 with needs, for the same 13 jobs and the same 66.30 compute minutes.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 392" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn timelines on one clock from zero to thirty minutes. Top, rung 1, stages only: lint-sql 0 to 107 seconds, build-image 107 to 489, nightly-backfill 489 to 1383, then a dashed stage boundary at 1383 where the whole test stage ends; publish-image 1383 to 1628 and deploy-staging 1628 to 1808, wall clock 30 minutes 8 seconds. Bottom, rung 2 with needs: lint-yaml 0 to 45, build-image 45 to 427, integration-tests 427 to 1157, publish-image 1157 to 1402, deploy-staging 1402 to 1582, wall clock 26 minutes 22 seconds, while nightly-backfill runs from 0 to 894 beside everything with nothing waiting for it. Publish-image is highlighted in both because it is the job whose start moved. A note says compute minutes are 66.30 on both runs: needs move the clock, not the bill.">
+        <defs>
+          <filter id="b5bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="73" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b5bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b5bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b5bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b5bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b5bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b5bV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b5bA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b5bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b5bH" x="30" y="26">A STAGE BOUNDARY AGAINST A NEEDS EDGE: THE SAME 13 JOBS, 30:08 THEN 26:22</text>
+        <text class="b5bS" x="560" y="26">bench canon r1 and r2, push to main · durations constructed</text>
+
+        <text class="b5bA" x="146" y="52">0:00</text>
+        <text class="b5bA" x="352" y="52">10:00</text>
+        <text class="b5bA" x="568" y="52">20:00</text>
+        <text class="b5bA" x="784" y="52">30:00</text>
+
+        <g filter="url(#b5bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M150 58 L800 58" stroke="#CFC8E3"/>
+          <path d="M150 54 L150 62 M366 54 L366 62 M582 54 L582 62 M798 54 L798 62" stroke="#CFC8E3"/>
+          <circle cx="36" cy="84" r="9"/>
+          <path d="M36 78 L36 84 L41 87"/>
+
+          <rect x="150" y="96" width="38" height="14" rx="3" fill="#F4F0FC"/>
+          <rect x="188" y="118" width="138" height="14" rx="3" fill="#F4F0FC"/>
+          <rect x="326" y="140" width="322" height="14" rx="3" fill="url(#b5bHc)"/>
+          <path d="M648 90 L648 204" stroke-dasharray="5 4"/>
+          <rect x="648" y="162" width="88" height="14" rx="3" transform="rotate(-0.8 692 169)" fill="#FC6D26"/>
+          <rect x="736" y="184" width="65" height="14" rx="3" fill="#F4F0FC"/>
+
+          <rect x="150" y="244" width="16" height="14" rx="3" fill="#F4F0FC"/>
+          <path d="M166 258 L166 266" marker-end="url(#b5bAr)"/>
+          <rect x="166" y="266" width="138" height="14" rx="3" fill="#F4F0FC"/>
+          <path d="M304 280 L304 288" marker-end="url(#b5bAr)"/>
+          <rect x="304" y="288" width="263" height="14" rx="3" fill="#F4F0FC"/>
+          <path d="M567 302 L567 310" marker-end="url(#b5bAr)"/>
+          <rect x="567" y="310" width="88" height="14" rx="3" transform="rotate(0.8 611 317)" fill="#FC6D26"/>
+          <path d="M655 324 L655 332" marker-end="url(#b5bAr)"/>
+          <rect x="655" y="332" width="65" height="14" rx="3" fill="#F4F0FC"/>
+          <rect x="150" y="354" width="322" height="14" rx="3" fill="url(#b5bHc)"/>
+        </g>
+
+        <text class="b5bH" x="54" y="88">r1 stages only</text>
+        <text class="b5bL" x="30" y="108">lint-sql</text>
+        <text class="b5bL" x="30" y="130">build-image</text>
+        <text class="b5bL" x="30" y="152">nightly-backfill</text>
+        <text class="b5bL" x="30" y="174">publish-image</text>
+        <text class="b5bL" x="30" y="196">deploy-staging</text>
+        <text class="b5bV" x="812" y="198">30:08</text>
+        <text class="b5bS" x="400" y="216">the whole test stage ends at 23:03, when the 894 s backfill finishes; publish waits for it</text>
+
+        <text class="b5bH" x="30" y="236">r2 with needs</text>
+        <text class="b5bL" x="30" y="256">lint-yaml</text>
+        <text class="b5bL" x="30" y="278">build-image</text>
+        <text class="b5bL" x="30" y="300">integration-tests</text>
+        <text class="b5bL" x="30" y="322">publish-image</text>
+        <text class="b5bL" x="30" y="344">deploy-staging</text>
+        <text class="b5bL" x="30" y="366">nightly-backfill</text>
+        <text class="b5bV" x="732" y="346">26:22</text>
+        <text class="b5bS" x="482" y="366">needs: [] from second 0; nothing waits for it any more</text>
+
+        <text class="b5bN" x="30" y="384">Compute minutes are 66.30 on both runs: needs move the clock, not the bill. Free gives 400 a month as of 2026-10-29.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the orange job starts at 19:17 instead of 23:03 because it waits for two named jobs instead of a whole stage</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Write needs as the truth about inputs, not as a speed trick <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The needs page: "An array of jobs (maximum of 50 jobs)". You may name jobs in the same stage, and <code>needs: []</code> means the job starts "as soon as the pipeline is created". Artifacts of needed jobs are downloaded by default, <code>artifacts: true</code>, which is why the compile-models output from session 4 keeps reaching the tests. The discipline is to write what is true: <code>integration-tests</code> needs <code>build-image</code> and <code>compile-models</code> because it runs the image against the compiled models; <code>unit-tests</code> needs only <code>compile-models</code>; <code>scan-dependencies</code> and <code>nightly-backfill</code> need nothing, so <code>needs: []</code>. Get that right and the speed follows: the bench's r2 critical path is lint-yaml, build-image, integration-tests, publish-image, deploy-staging, and compile-models starts at 1:47 the instant lint-sql finishes rather than after the whole lint stage. Which tests Penwood should run is a different question, answered in <a href="https://phoebefu6.github.io/learn-dataops-with-phoebe/courses/b3-data-testing-contracts.html">DataOps: data testing and contracts</a>; this page only decides where in the graph a test job sits.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Two conventions that belong to the bench, not to GitLab <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Two behaviours the bench shows are its own, and are labelled as such on the widget. First: a <code>needs</code> reference to a job in a later stage is reported as an error. The needs reference read on 2026-10-29 says same-stage references are allowed and does not state the later-stage case, so the bench's convention is the strict reading, not GitLab's documented behaviour. Second: a manual job is never scheduled by the bench; it "waits for a click", and any job downstream of it is reported as waiting, because the reference does not fix a duration for a manual gate. A third assumption sits beside them: under a runner cap the bench starts ready jobs longest-remaining-path first, ties by stage then definition order. GitLab does not document a queue order for a runner fleet. When you read a number off the bench, know which of the three it leans on; the r1, r2 and r3 wall clocks here lean on none of them, since the runners are unlimited and deploy-production is simply listed as manual.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Raj, Penwood's Maintainer, adds <code>needs</code> to every job expecting the compute-minutes line on the usage page to drop. It does not. The bench's r1 and r2 both print 66.30 compute minutes, because compute minutes are serial seconds over sixty at cost factor 1, and the same thirteen jobs ran for the same constructed durations. What moved was the wall clock, from 30:08 to 26:22, which is what the team feels waiting for a merge. The quota line is Part 3's job, where rules decide a job does not run at all. Against the Free tier's 400 compute minutes a month as of 2026-10-29, that is the only lever that matters; re-verify the tier page before relying on it.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers the missing-needs error, optional: true, and the six jobs r3 never added</span>
+      <h2>The job that is not there</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Put the two keywords together and a new failure appears. Rules can remove a job from a pipeline; needs can name that job. The needs page gives the result verbatim: pipeline creation fails with "'unit_tests' job needs 'compile' job, but 'compile' does not exist in the pipeline". The escape hatch is <code>optional: true</code> on the needs entry, which lets the needed job be absent. And the quieter consequence is the one to carry home: when rules leave a job out, it is not skipped, not failed, not grey; it is simply not in the pipeline. The bench's r3, a merge request with <code>pipelines/</code> changed, runs 8 of Penwood's 14 jobs, never adds 6, and passes.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn panels and a strip. Left panel, without optional: a compile job excluded by a schedule-only rule is drawn as a dashed red outline; unit_tests needs it; the result box carries GitLab's error text, pipeline not created, unit_tests job needs compile job but compile does not exist in the pipeline. Right panel, with optional true: docs-build is a dashed outline because docs did not change, publish-docs needs it with an orange tag reading optional true, and publish-docs is added and runs; on the bench's push to main 11 jobs ran with publish-docs among them. The strip below lists rung 3: eight jobs ran and six were never added, docs-build, nightly-backfill, publish-image, publish-docs, deploy-staging and deploy-production, because no rule matched. A note says a job that was never added cannot fail, so count the jobs, not the colour.">
+        <defs>
+          <filter id="b5cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="79" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b5cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b5cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b5cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b5cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b5cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b5cR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b5cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b5cH" x="30" y="26">A NEEDED JOB THAT IS NOT IN THE PIPELINE</text>
+        <text class="b5cS" x="330" y="26">needs page and YAML reference, read 2026-10-29 · the error text is GitLab's, the jobs are constructed</text>
+
+        <g filter="url(#b5cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="48" width="400" height="200" rx="10" transform="rotate(-0.3 240 148)" fill="#FFFFFF"/>
+          <rect x="60" y="90" width="150" height="40" rx="8" transform="rotate(-1.2 135 110)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="6 4"/>
+          <rect x="250" y="90" width="170" height="40" rx="8" transform="rotate(0.9 335 110)" fill="#F4F0FC"/>
+          <path d="M250 110 L216 110" stroke-dasharray="5 4" marker-end="url(#b5cAr)"/>
+          <rect x="60" y="150" width="360" height="80" rx="8" transform="rotate(0.3 240 190)" fill="#FEF2F2" stroke="#991B1B"/>
+
+          <rect x="460" y="48" width="380" height="200" rx="10" transform="rotate(0.3 650 148)" fill="#FFFFFF"/>
+          <rect x="480" y="90" width="150" height="40" rx="8" transform="rotate(1.1 555 110)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="6 4"/>
+          <rect x="670" y="90" width="150" height="40" rx="8" transform="rotate(-0.9 745 110)" fill="#F4F0FC"/>
+          <path d="M670 110 L636 110" stroke-dasharray="5 4" marker-end="url(#b5cAr)"/>
+          <rect x="590" y="142" width="120" height="26" rx="6" transform="rotate(-1.5 650 155)" fill="#FC6D26"/>
+          <path d="M650 142 L652 126" marker-end="url(#b5cAr)"/>
+          <circle cx="24" cy="190" r="7"/>
+          <path d="M24 186 L24 192 M24 195 L24 196"/>
+
+          <rect x="40" y="264" width="800" height="50" rx="10" transform="rotate(0.2 440 289)" fill="url(#b5cHc)"/>
+        </g>
+
+        <text class="b5cL" x="56" y="72">without optional: true</text>
+        <text class="b5cR" x="72" y="106">compile</text>
+        <text class="b5cS" x="72" y="122">schedule only · not added</text>
+        <text class="b5cL" x="262" y="106">unit_tests</text>
+        <text class="b5cS" x="262" y="122">needs: [compile]</text>
+        <text class="b5cR" x="72" y="172">Pipeline not created.</text>
+        <text class="b5cS" x="72" y="192">"'unit_tests' job needs 'compile' job,</text>
+        <text class="b5cS" x="72" y="208">but 'compile' does not exist in the pipeline"</text>
+        <text class="b5cS" x="72" y="224">the needs page's own wording; the bench prints the same job names</text>
+
+        <text class="b5cL" x="476" y="72">with optional: true (publish-docs, push to main)</text>
+        <text class="b5cR" x="492" y="106">docs-build</text>
+        <text class="b5cS" x="492" y="122">docs/ unchanged · absent</text>
+        <text class="b5cL" x="682" y="106">publish-docs</text>
+        <text class="b5cS" x="682" y="122">added, runs</text>
+        <text class="b5cL" x="606" y="160">optional: true</text>
+        <text class="b5cS" x="476" y="196">the needs page: optional lets the needed job be absent;</text>
+        <text class="b5cS" x="476" y="212">bench r5, push to main: 11 jobs ran, publish-docs among them,</text>
+        <text class="b5cS" x="476" y="228">docs-build and nightly-backfill never added</text>
+
+        <text class="b5cL" x="56" y="284">r3, merge request with pipelines/ changed: 8 ran, 6 never added, pipeline passed</text>
+        <text class="b5cS" x="56" y="302">docs-build, nightly-backfill, publish-image, publish-docs, deploy-staging, deploy-production: no rule matched</text>
+
+        <text class="b5cN" x="30" y="338">A job that was never added cannot fail. Count the jobs, not the colour.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the left panel is loud and stops the pipeline; the right panel and the strip are silent, and that silence is the thing to learn to hear</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Why r3 drops six jobs, and why four of them are the same reason <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The bench's r3 context is a merge request from <code>feature/orders-dedupe</code> with <code>pipelines/orders/dedupe.py</code> and a unit test changed. <code>docs-build</code> leaves because <code>docs/</code> did not change. <code>nightly-backfill</code> leaves because its only rule is <code>CI_PIPELINE_SOURCE == "schedule"</code>. The other four, <code>publish-image</code>, <code>publish-docs</code>, <code>deploy-staging</code> and <code>deploy-production</code>, all carry the rule <code>CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code>, and the predefined variables page says <code>CI_COMMIT_BRANCH</code> is available in branch pipelines and not set in merge request pipelines. Unset compared with <code>main</code> is false; no rule matches; four jobs are never added. That is the behaviour you want for a merge request, nothing gets published or deployed from an unmerged branch, and it is also why a merge request pipeline is shorter and cheaper: 8 jobs, 19:17, 41.17 compute minutes against the push to main's 49.25.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Reading a never-added job on the real pipeline page <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>GitLab's pipeline page shows the jobs that exist. A job the rules left out is not drawn as skipped or greyed; it is absent, and the pipeline's job count is smaller. So the honest reading habit is to know how many jobs a pipeline of this type should have and to count. For Penwood the expected counts come off the bench: 8 in a merge request with <code>pipelines/</code> changed, 11 on a push to main, 11 on a schedule. The bench's break button makes the point unmissable: one character wrong in a rule, <code>merge_request</code> for <code>merge_request_event</code>, and unit-tests is never added, 7 jobs run instead of 8, wall clock unchanged at 19:17, pipeline passed. Nothing is red because, once more, a job that was never added cannot fail. Leader session 4 teaches the same habit from the manager's side.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Mei gives <code>compile-models</code> a rule so it runs only when <code>models/</code> changes, to save minutes. The next merge request touches only <code>pipelines/</code>. Pipeline creation fails on the spot: <code>unit-tests</code>, <code>data-quality-tests</code> and <code>integration-tests</code> all need <code>compile-models</code>, and the error names a needing job and the job it cannot find. Nothing ran, so it cost zero minutes and a red banner. The repair is a decision, not a keyword: either compile-models runs in every pipeline that tests, or the three tests get <code>optional: true</code> and you accept that they may run without fresh models. Penwood picks the first; the models are what the tests test. The bench's planted-fault file reproduces the error with two toy jobs so you can read the exact text.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Needs and rules on the b3 file, then read r2 and r3 off the bench</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Start from the session 3 file, <code>stages-only.yml</code>, on your <code>feature/orders-dedupe</code> branch. You will add <code>needs</code> to every job, a <code>workflow:rules</code> block, and <code>rules</code> to the seven jobs that should not run everywhere, ending at <code>penwood.yml</code> minus the <code>include</code> that session 7 adds. After each commit, read your pipeline graph, then open the bench in session 8 and press the matching rung to see what the same file does under the constructed durations. Your real durations will differ; the shape, the job counts and the error texts should not.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 276" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three hand-drawn horizontal bars on one time scale, one per rung, with the job counts and compute minutes beside each. Rung 1, stages-only on a push to main: 30 minutes 8 seconds, 13 ran, 0 never added, 66.30 compute minutes, critical path lint-sql, build-image, nightly-backfill, publish-image, deploy-staging. Rung 2, with-needs on a push to main: 26 minutes 22 seconds, 13 ran, 66.30 minutes, critical path lint-yaml, build-image, integration-tests, publish-image, deploy-staging. Rung 3, penwood.yml in a merge request with pipelines changed, highlighted in orange: 19 minutes 17 seconds, 8 ran, 6 never added, 41.17 minutes, critical path lint-yaml, build-image, integration-tests. A note says nothing here ran on GitLab; the bench parses the YAML and schedules it.">
+        <defs>
+          <filter id="b5dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="83" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b5dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b5dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b5dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b5dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b5dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b5dV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b5dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b5dH" x="30" y="26">READ THE THREE RUNGS OFF THE BENCH: WHAT EACH KEYWORD BOUGHT</text>
+        <text class="b5dS" x="520" y="26">bench canon · r1 and r2 push to main · r3 merge request</text>
+
+        <g filter="url(#b5dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M26 60 L26 236 M44 60 L44 236 M26 90 L44 90 M26 150 L44 150 M26 210 L44 210" stroke="#CFC8E3"/>
+          <rect x="280" y="72" width="524" height="24" rx="6" transform="rotate(0.2 542 84)" fill="#F4F0FC"/>
+          <rect x="280" y="132" width="459" height="24" rx="6" transform="rotate(-0.2 509 144)" fill="#F4F0FC"/>
+          <rect x="280" y="192" width="335" height="24" rx="6" transform="rotate(0.3 447 204)" fill="#FC6D26"/>
+        </g>
+
+        <text class="b5dL" x="56" y="84">r1 · stages-only.yml</text>
+        <text class="b5dS" x="56" y="102">13 ran · 0 never added · 66.30 min</text>
+        <text class="b5dV" x="814" y="90">30:08</text>
+        <text class="b5dS" x="280" y="116">critical path: lint-sql > build-image > nightly-backfill > publish-image > deploy-staging</text>
+
+        <text class="b5dL" x="56" y="144">r2 · with-needs.yml</text>
+        <text class="b5dS" x="56" y="162">13 ran · 0 never added · 66.30 min</text>
+        <text class="b5dV" x="749" y="150">26:22</text>
+        <text class="b5dS" x="280" y="176">critical path: lint-yaml > build-image > integration-tests > publish-image > deploy-staging</text>
+
+        <text class="b5dL" x="56" y="204">r3 · penwood.yml, merge request</text>
+        <text class="b5dS" x="56" y="222">8 ran · 6 never added · 41.17 min</text>
+        <text class="b5dV" x="625" y="210">19:17</text>
+        <text class="b5dS" x="280" y="236">critical path: lint-yaml > build-image > integration-tests</text>
+
+        <text class="b5dN" x="30" y="264">30:08 to 26:22 to 19:17; 66.30 to 66.30 to 41.17. Nothing here ran on GitLab: the bench parses the YAML and schedules it.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - needs shortened the bar and left the minutes alone; rules shortened both, by leaving six jobs out</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Give every job its needs.</strong> Open <code>stages-only.yml</code> and, job by job, write what each one truly consumes. The two lint jobs and the two standalone test jobs get <code>needs: []</code>. Keep the <code>stage</code> lines: stages still group the graph on the pipeline page, and the bench's convention treats a needs reference to a later stage as an error, so point needs backwards or sideways only. Commit, and watch <code>compile-models</code> start while <code>lint-yaml</code>'s sibling is still running.</p>
+        <div class="prompt-box good"><span class="label">★ Needs on the build and test jobs (excerpt of with-needs.yml)</span>build-image:
+  stage: build
+  needs:
+    - lint-yaml
+  script:
+    - 'docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .'
+
+compile-models:
+  stage: build
+  needs:
+    - lint-sql
+  script:
+    - python pipelines/compile.py --out build/
+
+integration-tests:
+  stage: test
+  needs:
+    - build-image
+    - compile-models
+  script:
+    - python -m pytest tests/integration -q
+
+nightly-backfill:
+  stage: test
+  needs: []
+  script:
+    - python pipelines/backfill.py --days 1</div>
+      </div>
+      <div class="step">
+        <p><strong>Read r2 off the bench.</strong> In session 8's widget, press "+ needs". Same 13 jobs, 66.30 compute minutes, wall clock 26:22 instead of 30:08. In the job table, <code>nightly-backfill</code> now starts at 0:00 and nothing waits for it; <code>publish-image</code> starts at 19:17, when <code>integration-tests</code> finishes, not at 23:03 when the test stage would have ended. On your own graph you cannot read seconds, but you can read the arrows: each job should have an edge from exactly the jobs you named.</p>
+        <div class="prompt-box good"><span class="label">★ What the bench prints for r2 (canon)</span>Pipeline passed. 13 jobs ran, 0 never added, 1 waiting for a click.
+Wall clock 26:22, serial 66:18, 66.30 compute minutes.
+critical path: lint-yaml > build-image > integration-tests > publish-image > deploy-staging
+compile-models   build   1:47 -> 4:59      publish-image   publish  19:17 -> 23:22
+nightly-backfill test    0:00 -> 14:54     deploy-staging  deploy   23:22 -> 26:22</div>
+      </div>
+      <div class="step">
+        <p><strong>Add workflow:rules at the top.</strong> Four rules, in this order: a merge request pipeline runs; a push to a branch that has an open merge request does not (that stops the duplicate); any other branch push runs; a schedule runs. Anything else, a tag for instance, matches nothing and "the pipeline does not run". The <code>&amp;&amp;</code> rule is unquoted in the data file, the string comparisons are single-quoted because of the double quotes inside.</p>
+        <div class="prompt-box good"><span class="label">★ The workflow block (excerpt of penwood.yml)</span>workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH &amp;&amp; $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'</div>
+      </div>
+      <div class="step">
+        <p><strong>Add rules to the seven jobs that should not run everywhere.</strong> <code>docs-build</code> on <code>changes: docs/**/*</code>. <code>unit-tests</code> in merge requests and on the default branch. <code>data-quality-tests</code> on changes under <code>pipelines/</code> or <code>models/</code>. <code>nightly-backfill</code> on schedule only. <code>publish-image</code>, <code>publish-docs</code> and <code>deploy-staging</code> on the default branch only. <code>deploy-production</code> on the default branch with <code>when: manual</code> inside the rule, so it blocks instead of being optional. <code>publish-docs</code> gets <code>optional: true</code> on its need, because <code>docs-build</code> will often be absent.</p>
+        <div class="prompt-box good"><span class="label">★ Rules on four of the seven (excerpt of penwood.yml)</span>docs-build:
+  stage: build
+  needs:
+    - lint-yaml
+  rules:
+    - changes:
+        - docs/**/*
+  script:
+    - python docs/build.py
+
+unit-tests:
+  stage: test
+  needs:
+    - compile-models
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - python -m pytest tests/unit -q
+
+publish-docs:
+  stage: publish
+  needs:
+    - job: docs-build
+      optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - python docs/publish.py build/docs
+
+deploy-production:
+  stage: deploy
+  needs:
+    - deploy-staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  environment:
+    name: production
+  script:
+    - python deploy/run.py --target production</div>
+      </div>
+      <div class="step">
+        <p><strong>Read r3 off the bench, then change the context.</strong> Press "+ rules with a context": a merge request with <code>pipelines/</code> changed. 8 ran, 6 never added, 19:17, 41.17 compute minutes, and the table says why for each absent job. Now pick "merge request, only docs/ changed" in the context menu and watch <code>data-quality-tests</code> leave and <code>docs-build</code> arrive. Then "push to a feature branch with an open merge request": no pipeline, zero minutes. On your own merge request, count the jobs on the pipeline tab against 8 and read the <code>merge request</code> label on the pipeline list.</p>
+        <div class="prompt-box good"><span class="label">★ What the bench prints for r3 (canon) and what your tab should show, roughly</span>Pipeline passed. 8 jobs ran, 6 never added, 0 waiting for a click.
+Wall clock 19:17, serial 41:10, 41.17 compute minutes.
+never added: docs-build          no rule matched (1 rules checked)
+             nightly-backfill    no rule matched (1 rules checked)
+             publish-image       no rule matched (1 rules checked)
+             publish-docs        no rule matched (1 rules checked)
+             deploy-staging      no rule matched (1 rules checked)
+             deploy-production   no rule matched (1 rules checked)
+your merge request's pipeline tab: 8 jobs, a "merge request" label; your durations will differ</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The step to skip</span>Typing the pipeline source from memory: '$CI_PIPELINE_SOURCE == "merge_request"'.
+The real value is merge_request_event. No rule matches, unit-tests is never added, 7 jobs run instead of 8, wall clock still 19:17, pipeline passed.
+That is the bench's break button, and on GitLab's own pipeline page it is a green pipeline with one fewer job. Copy predefined variable values from the predefined variables page, never from memory, and count the jobs.</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 6</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Draw your own pipeline's DAG on paper from the <code>needs</code> lines alone, then find the longest path. Compare it with the bench's r2 critical path and say which of your jobs is the one the clock waits for.</li>
+      <li>Give one test job a rule that excludes it in merge requests, leave a job that needs it untouched, and open a merge request. Copy the exact error text GitLab shows, then fix it with <code>optional: true</code> and decide whether you can live with that.</li>
+      <li>Push a second commit to a branch that already has an open merge request. Confirm that exactly one pipeline appears, the merge request one, and that the pipeline list shows no branch pipeline for that push.</li>
+      <li>Write down the expected job count for each of your pipeline types (merge request, push to main, schedule). Pin it where you read pipelines; from now on a green pipeline with the wrong count is a bug.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 5 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · A job has two rules in this order: <code>if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code> with <code>when: never</code>, then <code>if: $CI_COMMIT_BRANCH</code>. A push lands on <code>main</code>. What happens to the job?</p>
+      <button class="qopt" type="button">A · It is added, because the second rule also matches and the last match wins</button>
+      <button class="qopt" type="button">B · It is added as a manual job, since the two rules disagree</button>
+      <button class="qopt" type="button">C · It is not added: the first rule matches and its when: never ends the reading</button>
+      <button class="qopt" type="button">D · Pipeline creation fails, because rules must not overlap</button>
+      <p class="qwhy">"Rules are evaluated in order until the first match." The first rule matches on main and carries when: never, so the job is excluded and the second rule is never read. Swap the two lines and the job runs on every branch including main.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · Penwood adds <code>needs</code> to all fourteen jobs and pushes to main. On the bench the wall clock goes from 30:08 to 26:22. What happens to the compute minutes?</p>
+      <button class="qopt" type="button">A · Nothing: 66.30 on both runs, because the same 13 jobs ran for the same durations</button>
+      <button class="qopt" type="button">B · They fall in proportion to the wall clock, to roughly 58</button>
+      <button class="qopt" type="button">C · They rise, because jobs running in parallel are billed at a higher cost factor</button>
+      <button class="qopt" type="button">D · They fall to 41.17, the merge request figure</button>
+      <p class="qwhy">Compute minutes are serial seconds over sixty at cost factor 1. Needs change when jobs start, not how long they run or how many run. Only rules, which leave jobs out, change the bill: r3's 41.17 is a merge request pipeline with six jobs never added.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · <code>unit_tests</code> has <code>needs: [compile]</code>. A rule leaves <code>compile</code> out of this pipeline. What does GitLab do, and what is the keyword that changes it?</p>
+      <button class="qopt" type="button">A · Runs unit_tests without the artifacts; the fix is artifacts: false</button>
+      <button class="qopt" type="button">B · Marks unit_tests as skipped in grey; the fix is allow_failure: true</button>
+      <button class="qopt" type="button">C · Runs compile anyway, because a needed job overrides its rules; no fix needed</button>
+      <button class="qopt" type="button">D · Pipeline creation fails: "'unit_tests' job needs 'compile' job, but 'compile' does not exist in the pipeline"; optional: true on the need lets it be absent</button>
+      <p class="qwhy">The needs page gives the error text verbatim, and the pipeline is not created at all. optional: true on the needs entry lets the needed job be missing; whether the dependent job should then run without it is a decision about the job, not about GitLab.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Rules: first match, no match, when: never, rules:changes</span><span class="note">GitLab Docs: Specify when jobs run with rules, CI/CD YAML syntax reference; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Needs, needs: [], the 50-job maximum, artifacts: true by default</span><span class="note">GitLab Docs: Make jobs start earlier with needs; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Stages as a queue; basic pipelines "not the most efficient"</span><span class="note">GitLab Docs: Pipeline architecture, CI/CD YAML syntax reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Duplicate pipelines and workflow:rules; CI_COMMIT_BRANCH unset in merge request pipelines</span><span class="note">GitLab Docs: Specify when jobs run with rules, Predefined CI/CD variables reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">The missing-needs error text and optional: true</span><span class="note">GitLab Docs: Make jobs start earlier with needs; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Wall clocks 30:08, 26:22, 19:17; job counts; 66.30 and 41.17 compute minutes</span><span class="note">Measured by the bench in session 8 on constructed durations; nothing ran on GitLab</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Needs to a later stage; a manual job's duration; queue order under a runner cap</span><span class="note">The bench's conventions, labelled as such; the docs read did not fix these behaviours</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What to test, and when: manual inside rules in depth</span><span class="note">Linked to DataOps data testing; session 6 takes the blocking manual gate</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 5 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>First match wins</b><span>Rules read top to bottom, stop at the first true one. No match: the job is not added. when: never on a match: not added.</span></div>
+      <div class="cheat-item"><b>Needs is an edge, a stage is a wall</b><span>needs names the inputs; the job starts when they finish. needs: [] starts at second 0. Max 50; artifacts: true by default.</span></div>
+      <div class="cheat-item"><b>The clock, not the bill</b><span>r1 30:08 and r2 26:22 both cost 66.30 compute minutes. Only leaving jobs out changes the minutes: r3 41.17.</span></div>
+      <div class="cheat-item"><b>workflow:rules stops the duplicate</b><span>CI_COMMIT_BRANCH and CI_OPEN_MERGE_REQUESTS both set, when: never. No branch pipeline beside the merge request one.</span></div>
+      <div class="cheat-item"><b>A needed job must exist</b><span>Otherwise pipeline creation fails with the "does not exist in the pipeline" error. optional: true lets it be absent.</span></div>
+      <div class="cheat-item"><b>Count the jobs</b><span>A never-added job cannot fail. 8 in a merge request, 11 on main, 11 on a schedule for Penwood. Wrong count, green pipeline: a bug.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>Your pipeline now knows what needs what and which jobs belong in which pipeline. Session 6 gives the two deploy jobs an <code>environment</code>, shows how a stop job and <code>auto_stop_in</code> tidy up after a branch, and takes the <code>when: manual</code> inside <code>deploy-production</code>'s rule to its conclusion: a blocked pipeline that waits for a human, and the Premium version of that gate.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 5 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="b4-variables-artifacts-cache.html">← Prev: Variables, artifacts, cache</a> &nbsp;·&nbsp; <a href="b6-environments-deployments.html">Next: Environments and deployments →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

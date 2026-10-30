@@ -1,0 +1,757 @@
+{
+ "rungs": {
+  "r1": {
+   "file": "stages-only.yml",
+   "ctx": "main",
+   "cap": 0,
+   "ok": true,
+   "errors": [],
+   "workflowBlocked": false,
+   "includedCount": 14,
+   "wall": 1808,
+   "serial": 3978,
+   "ranCount": 13,
+   "ran": [
+    "lint-yaml",
+    "lint-sql",
+    "build-image",
+    "compile-models",
+    "docs-build",
+    "unit-tests",
+    "data-quality-tests",
+    "integration-tests",
+    "scan-dependencies",
+    "nightly-backfill",
+    "publish-image",
+    "publish-docs",
+    "deploy-staging"
+   ],
+   "skipped": [],
+   "manual": [
+    "deploy-production"
+   ],
+   "waiting": [],
+   "starts": {
+    "lint-sql": {
+     "start": 0,
+     "finish": 107,
+     "stage": "lint",
+     "queued": 0
+    },
+    "lint-yaml": {
+     "start": 0,
+     "finish": 45,
+     "stage": "lint",
+     "queued": 0
+    },
+    "build-image": {
+     "start": 107,
+     "finish": 489,
+     "stage": "build",
+     "queued": 0
+    },
+    "compile-models": {
+     "start": 107,
+     "finish": 299,
+     "stage": "build",
+     "queued": 0
+    },
+    "docs-build": {
+     "start": 107,
+     "finish": 236,
+     "stage": "build",
+     "queued": 0
+    },
+    "nightly-backfill": {
+     "start": 489,
+     "finish": 1383,
+     "stage": "test",
+     "queued": 0
+    },
+    "integration-tests": {
+     "start": 489,
+     "finish": 1219,
+     "stage": "test",
+     "queued": 0
+    },
+    "data-quality-tests": {
+     "start": 489,
+     "finish": 967,
+     "stage": "test",
+     "queued": 0
+    },
+    "unit-tests": {
+     "start": 489,
+     "finish": 792,
+     "stage": "test",
+     "queued": 0
+    },
+    "scan-dependencies": {
+     "start": 489,
+     "finish": 722,
+     "stage": "test",
+     "queued": 0
+    },
+    "publish-image": {
+     "start": 1383,
+     "finish": 1628,
+     "stage": "publish",
+     "queued": 0
+    },
+    "publish-docs": {
+     "start": 1383,
+     "finish": 1443,
+     "stage": "publish",
+     "queued": 0
+    },
+    "deploy-staging": {
+     "start": 1628,
+     "finish": 1808,
+     "stage": "deploy",
+     "queued": 0
+    }
+   },
+   "criticalPath": [
+    "lint-sql",
+    "build-image",
+    "nightly-backfill",
+    "publish-image",
+    "deploy-staging"
+   ],
+   "queueTotal": 0,
+   "computeMinutes": 66.3
+  },
+  "r2": {
+   "file": "with-needs.yml",
+   "ctx": "main",
+   "cap": 0,
+   "ok": true,
+   "errors": [],
+   "workflowBlocked": false,
+   "includedCount": 14,
+   "wall": 1582,
+   "serial": 3978,
+   "ranCount": 13,
+   "ran": [
+    "lint-yaml",
+    "lint-sql",
+    "scan-dependencies",
+    "nightly-backfill",
+    "build-image",
+    "docs-build",
+    "compile-models",
+    "publish-docs",
+    "unit-tests",
+    "data-quality-tests",
+    "integration-tests",
+    "publish-image",
+    "deploy-staging"
+   ],
+   "skipped": [],
+   "manual": [
+    "deploy-production"
+   ],
+   "waiting": [],
+   "starts": {
+    "lint-yaml": {
+     "start": 0,
+     "finish": 45,
+     "stage": "lint",
+     "queued": 0
+    },
+    "lint-sql": {
+     "start": 0,
+     "finish": 107,
+     "stage": "lint",
+     "queued": 0
+    },
+    "nightly-backfill": {
+     "start": 0,
+     "finish": 894,
+     "stage": "test",
+     "queued": 0
+    },
+    "scan-dependencies": {
+     "start": 0,
+     "finish": 233,
+     "stage": "test",
+     "queued": 0
+    },
+    "build-image": {
+     "start": 45,
+     "finish": 427,
+     "stage": "build",
+     "queued": 0
+    },
+    "docs-build": {
+     "start": 45,
+     "finish": 174,
+     "stage": "build",
+     "queued": 0
+    },
+    "compile-models": {
+     "start": 107,
+     "finish": 299,
+     "stage": "build",
+     "queued": 0
+    },
+    "publish-docs": {
+     "start": 174,
+     "finish": 234,
+     "stage": "publish",
+     "queued": 0
+    },
+    "data-quality-tests": {
+     "start": 299,
+     "finish": 777,
+     "stage": "test",
+     "queued": 0
+    },
+    "unit-tests": {
+     "start": 299,
+     "finish": 602,
+     "stage": "test",
+     "queued": 0
+    },
+    "integration-tests": {
+     "start": 427,
+     "finish": 1157,
+     "stage": "test",
+     "queued": 0
+    },
+    "publish-image": {
+     "start": 1157,
+     "finish": 1402,
+     "stage": "publish",
+     "queued": 0
+    },
+    "deploy-staging": {
+     "start": 1402,
+     "finish": 1582,
+     "stage": "deploy",
+     "queued": 0
+    }
+   },
+   "criticalPath": [
+    "lint-yaml",
+    "build-image",
+    "integration-tests",
+    "publish-image",
+    "deploy-staging"
+   ],
+   "queueTotal": 0,
+   "computeMinutes": 66.3
+  },
+  "r3": {
+   "file": "penwood.yml",
+   "ctx": "mr",
+   "cap": 0,
+   "ok": true,
+   "errors": [],
+   "workflowBlocked": false,
+   "includedCount": 8,
+   "wall": 1157,
+   "serial": 2470,
+   "ranCount": 8,
+   "ran": [
+    "lint-yaml",
+    "lint-sql",
+    "scan-dependencies",
+    "build-image",
+    "compile-models",
+    "unit-tests",
+    "data-quality-tests",
+    "integration-tests"
+   ],
+   "skipped": [
+    {
+     "job": "docs-build",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "nightly-backfill",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "publish-image",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "publish-docs",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "deploy-staging",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "deploy-production",
+     "why": "no rule matched (1 rules checked)"
+    }
+   ],
+   "manual": [],
+   "waiting": [],
+   "starts": {
+    "lint-yaml": {
+     "start": 0,
+     "finish": 45,
+     "stage": "lint",
+     "queued": 0
+    },
+    "lint-sql": {
+     "start": 0,
+     "finish": 107,
+     "stage": "lint",
+     "queued": 0
+    },
+    "scan-dependencies": {
+     "start": 0,
+     "finish": 233,
+     "stage": "test",
+     "queued": 0
+    },
+    "build-image": {
+     "start": 45,
+     "finish": 427,
+     "stage": "build",
+     "queued": 0
+    },
+    "compile-models": {
+     "start": 107,
+     "finish": 299,
+     "stage": "build",
+     "queued": 0
+    },
+    "data-quality-tests": {
+     "start": 299,
+     "finish": 777,
+     "stage": "test",
+     "queued": 0
+    },
+    "unit-tests": {
+     "start": 299,
+     "finish": 602,
+     "stage": "test",
+     "queued": 0
+    },
+    "integration-tests": {
+     "start": 427,
+     "finish": 1157,
+     "stage": "test",
+     "queued": 0
+    }
+   },
+   "criticalPath": [
+    "lint-yaml",
+    "build-image",
+    "integration-tests"
+   ],
+   "queueTotal": 0,
+   "computeMinutes": 41.17
+  },
+  "r4": {
+   "file": "penwood.yml",
+   "ctx": "mr",
+   "cap": 2,
+   "ok": true,
+   "errors": [],
+   "workflowBlocked": false,
+   "includedCount": 8,
+   "wall": 1313,
+   "serial": 2470,
+   "ranCount": 8,
+   "ran": [
+    "lint-yaml",
+    "lint-sql",
+    "build-image",
+    "compile-models",
+    "data-quality-tests",
+    "integration-tests",
+    "unit-tests",
+    "scan-dependencies"
+   ],
+   "skipped": [
+    {
+     "job": "docs-build",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "nightly-backfill",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "publish-image",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "publish-docs",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "deploy-staging",
+     "why": "no rule matched (1 rules checked)"
+    },
+    {
+     "job": "deploy-production",
+     "why": "no rule matched (1 rules checked)"
+    }
+   ],
+   "manual": [],
+   "waiting": [],
+   "starts": {
+    "lint-yaml": {
+     "start": 0,
+     "finish": 45,
+     "stage": "lint",
+     "queued": 0
+    },
+    "lint-sql": {
+     "start": 0,
+     "finish": 107,
+     "stage": "lint",
+     "queued": 0
+    },
+    "build-image": {
+     "start": 45,
+     "finish": 427,
+     "stage": "build",
+     "queued": 0
+    },
+    "compile-models": {
+     "start": 107,
+     "finish": 299,
+     "stage": "build",
+     "queued": 0
+    },
+    "data-quality-tests": {
+     "start": 299,
+     "finish": 777,
+     "stage": "test",
+     "queued": 0
+    },
+    "integration-tests": {
+     "start": 427,
+     "finish": 1157,
+     "stage": "test",
+     "queued": 0
+    },
+    "unit-tests": {
+     "start": 777,
+     "finish": 1080,
+     "stage": "test",
+     "queued": 478
+    },
+    "scan-dependencies": {
+     "start": 1080,
+     "finish": 1313,
+     "stage": "test",
+     "queued": 1080
+    }
+   },
+   "criticalPath": [
+    "scan-dependencies"
+   ],
+   "queueTotal": 1558,
+   "computeMinutes": 41.17
+  },
+  "r5": {
+   "rows": {
+    "main": {
+     "runs": 12,
+     "wall": 1582,
+     "serial": 2955,
+     "computeMinutes": 49.25,
+     "ranCount": 11,
+     "skipped": 2,
+     "ok": true
+    },
+    "mr": {
+     "runs": 24,
+     "wall": 1313,
+     "serial": 2470,
+     "computeMinutes": 41.17,
+     "ranCount": 8,
+     "skipped": 6,
+     "ok": true
+    },
+    "schedule": {
+     "runs": 4,
+     "wall": 1695,
+     "serial": 3371,
+     "computeMinutes": 56.18,
+     "ranCount": 11,
+     "skipped": 2,
+     "ok": true
+    }
+   },
+   "runs": 40,
+   "computeMinutesPerMonth": 1803.8,
+   "quota": 400,
+   "quotaShare": 450.95,
+   "fitsQuota": false
+  }
+ },
+ "anti": {
+  "file": "one-per-stage.yml",
+  "ctx": "main",
+  "cap": 0,
+  "ok": true,
+  "errors": [],
+  "workflowBlocked": false,
+  "includedCount": 14,
+  "wall": 3978,
+  "serial": 3978,
+  "ranCount": 13,
+  "ran": [
+   "lint-yaml",
+   "lint-sql",
+   "build-image",
+   "compile-models",
+   "docs-build",
+   "unit-tests",
+   "data-quality-tests",
+   "integration-tests",
+   "scan-dependencies",
+   "nightly-backfill",
+   "publish-image",
+   "publish-docs",
+   "deploy-staging"
+  ],
+  "skipped": [],
+  "manual": [
+   "deploy-production"
+  ],
+  "waiting": [],
+  "starts": {
+   "lint-yaml": {
+    "start": 0,
+    "finish": 45,
+    "stage": "lint-yaml",
+    "queued": 0
+   },
+   "lint-sql": {
+    "start": 45,
+    "finish": 152,
+    "stage": "lint-sql",
+    "queued": 0
+   },
+   "build-image": {
+    "start": 152,
+    "finish": 534,
+    "stage": "build-image",
+    "queued": 0
+   },
+   "compile-models": {
+    "start": 534,
+    "finish": 726,
+    "stage": "compile-models",
+    "queued": 0
+   },
+   "docs-build": {
+    "start": 726,
+    "finish": 855,
+    "stage": "docs-build",
+    "queued": 0
+   },
+   "unit-tests": {
+    "start": 855,
+    "finish": 1158,
+    "stage": "unit-tests",
+    "queued": 0
+   },
+   "data-quality-tests": {
+    "start": 1158,
+    "finish": 1636,
+    "stage": "data-quality-tests",
+    "queued": 0
+   },
+   "integration-tests": {
+    "start": 1636,
+    "finish": 2366,
+    "stage": "integration-tests",
+    "queued": 0
+   },
+   "scan-dependencies": {
+    "start": 2366,
+    "finish": 2599,
+    "stage": "scan-dependencies",
+    "queued": 0
+   },
+   "nightly-backfill": {
+    "start": 2599,
+    "finish": 3493,
+    "stage": "nightly-backfill",
+    "queued": 0
+   },
+   "publish-image": {
+    "start": 3493,
+    "finish": 3738,
+    "stage": "publish-image",
+    "queued": 0
+   },
+   "publish-docs": {
+    "start": 3738,
+    "finish": 3798,
+    "stage": "publish-docs",
+    "queued": 0
+   },
+   "deploy-staging": {
+    "start": 3798,
+    "finish": 3978,
+    "stage": "deploy-staging",
+    "queued": 0
+   }
+  },
+  "criticalPath": [
+   "lint-yaml",
+   "lint-sql",
+   "build-image",
+   "compile-models",
+   "docs-build",
+   "unit-tests",
+   "data-quality-tests",
+   "integration-tests",
+   "scan-dependencies",
+   "nightly-backfill",
+   "publish-image",
+   "publish-docs",
+   "deploy-staging"
+  ],
+  "queueTotal": 0,
+  "computeMinutes": 66.3,
+  "minutesLostPerRun": 39.93,
+  "minutesLostPerMonth": 479.2,
+  "runsCounted": 12
+ },
+ "broken": {
+  "file": "penwood-typo.yml",
+  "ctx": "mr",
+  "cap": 0,
+  "ok": true,
+  "errors": [],
+  "workflowBlocked": false,
+  "includedCount": 7,
+  "wall": 1157,
+  "serial": 2167,
+  "ranCount": 7,
+  "ran": [
+   "lint-yaml",
+   "lint-sql",
+   "scan-dependencies",
+   "build-image",
+   "compile-models",
+   "data-quality-tests",
+   "integration-tests"
+  ],
+  "skipped": [
+   {
+    "job": "docs-build",
+    "why": "no rule matched (1 rules checked)"
+   },
+   {
+    "job": "unit-tests",
+    "why": "no rule matched (2 rules checked)"
+   },
+   {
+    "job": "nightly-backfill",
+    "why": "no rule matched (1 rules checked)"
+   },
+   {
+    "job": "publish-image",
+    "why": "no rule matched (1 rules checked)"
+   },
+   {
+    "job": "publish-docs",
+    "why": "no rule matched (1 rules checked)"
+   },
+   {
+    "job": "deploy-staging",
+    "why": "no rule matched (1 rules checked)"
+   },
+   {
+    "job": "deploy-production",
+    "why": "no rule matched (1 rules checked)"
+   }
+  ],
+  "manual": [],
+  "waiting": [],
+  "starts": {
+   "lint-yaml": {
+    "start": 0,
+    "finish": 45,
+    "stage": "lint",
+    "queued": 0
+   },
+   "lint-sql": {
+    "start": 0,
+    "finish": 107,
+    "stage": "lint",
+    "queued": 0
+   },
+   "scan-dependencies": {
+    "start": 0,
+    "finish": 233,
+    "stage": "test",
+    "queued": 0
+   },
+   "build-image": {
+    "start": 45,
+    "finish": 427,
+    "stage": "build",
+    "queued": 0
+   },
+   "compile-models": {
+    "start": 107,
+    "finish": 299,
+    "stage": "build",
+    "queued": 0
+   },
+   "data-quality-tests": {
+    "start": 299,
+    "finish": 777,
+    "stage": "test",
+    "queued": 0
+   },
+   "integration-tests": {
+    "start": 427,
+    "finish": 1157,
+    "stage": "test",
+    "queued": 0
+   }
+  },
+  "criticalPath": [
+   "lint-yaml",
+   "build-image",
+   "integration-tests"
+  ],
+  "queueTotal": 0,
+  "computeMinutes": 36.12,
+  "falseGreen": {
+   "job": "unit-tests",
+   "ranBefore": true,
+   "ranAfter": false,
+   "pipelineOk": true,
+   "isFalseGreen": true,
+   "why": "no rule matched (2 rules checked)",
+   "rule": "$CI_PIPELINE_SOURCE == \"merge_request\"",
+   "real": "merge_request_event",
+   "jobsRun": 7
+  }
+ },
+ "faults": {
+  "cycle": [
+   "ENGINE RULE: 'a' needs 'c' from a later stage",
+   "needs: cycle detected a -> c -> b -> a"
+  ],
+  "missing": [
+   "'unit_tests' job needs 'compile' job, but 'compile' is not in the pipeline"
+  ]
+ },
+ "selfTest": {
+  "held": 9,
+  "total": 9,
+  "failed": [],
+  "plantedFaultCaught": true,
+  "pass": true
+ }
+}

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Leader session 2 of 6. Where GitLab itself runs: GitLab.com, Self-Managed or Dedicated, and who patches, who pays and who holds the data in each. Whose runners do the work and which ones the compute-minutes meter counts. What the Free tier gives and withholds, dated. Penwood, a constructed analytics team, writes its one-page hosting decision.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="SaaS or self-managed - learn gitlab with phoebe">
+<meta property="og:description" content="Leader session 2 of 6. Three ways to run GitLab, two kinds of runner, one quota. A one-page hosting decision with the arithmetic filled in.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/a2-saas-or-self-managed.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SaaS or self-managed - learn gitlab with phoebe">
+<meta name="twitter:description" content="Leader session 2 of 6. Where GitLab runs, whose runners do the work, and what Free gives and withholds.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Leader session 2 · SaaS or self-managed - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Leader session 2 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Leader session 2 of 6</div>
+    <h1>SaaS or <span class="accent">self-managed</span></h1>
+    <p class="sub">Session 1 settled what moves onto GitLab. Tonight settles where GitLab itself runs, and that is three decisions wearing one name. First, who operates the application: GitLab on GitLab.com, your own team on a Self-Managed instance, or GitLab running a Dedicated instance for you. Second, whose machines run your pipeline jobs: the instance runners GitLab hosts, or runners you register yourself. Third, which tier you sit on, because the Free tier's limits are numbers with dates on them. Penwood, the constructed five-person logistics-analytics team from session 1, picks GitLab.com Free tonight and discovers the choice has a deadline built into it: 1,803.8 compute minutes a month against a quota of 400.</p>
+    <div class="chip-row">
+      <span class="chip level">🟡 Core</span>
+      <span class="chip audience">Data and analytics leads choosing a platform</span>
+      <span class="chip audience">Anyone who signs the hosting decision</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Where GitLab runs</span>
+      <span class="a3" style="flex:4">20-40 · Build-along: Penwood's hosting decision</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Three decisions, one page</h2>
+    </div>
+    <p class="lede">"SaaS or self-managed" sounds like one question. It is three, and teams that answer only the first get surprised by the other two. Where the application runs decides who patches it and who holds the data. Where the runners run decides whose machines do the work and which jobs the meter counts. Which tier you sit on decides the three limits you will meet by name. Tonight you write all three on one page for your own team, with Penwood's constructed version filled in as the worked example. Nothing tonight needs an account; it needs the tier page open and today's date written at the top.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Penwood's one-page hosting decision: the operating model (GitLab.com), the runner choice (instance runners, metered), the tier (Free, as of 2026-10-29), the first limit it hits (compute minutes), the arithmetic that says by how much (1,803.8 against 400, from the bench in Builder session 8), and the date by which the tier decision is due. Plus the discipline the page enforces: every tier number carries the date you read it, because GitLab ships monthly and the number you remember is the number that moves.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers GitLab.com, Self-Managed and Dedicated as operating models</span>
+      <h2>Three ways to run GitLab</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The application is the same in all three. What changes is the operator: who installs the monthly release, who answers when it is down at two in the morning, whose servers hold the repositories and the registry, and what the bill is denominated in. For a data team the question underneath is simpler than it looks: do you have people whose job it is to run servers, and do you have a rule that says this data may not leave your infrastructure. If the answer to both is no, the first option is the only one that costs nothing in people.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three hand-drawn hosting boxes holding the same GitLab application. GitLab.com: GitLab patches it, GitLab's servers hold the data, you pay a per-user tier; marked as Penwood's constructed choice. Self-Managed: your team patches it, your servers hold the data, you pay in people plus a licence. Dedicated, labelled reported: GitLab operates a single-tenant instance, pricing to be asked for. Arrows in each box run from the duty to who carries it.">
+        <defs>
+          <filter id="a2aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="31" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a2aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a2aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a2aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a2aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a2aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a2aB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a2aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a2aH" x="30" y="26">THE SAME APPLICATION, THREE OPERATORS: WHO PATCHES, WHO HOLDS THE DATA, WHO PAYS WITH WHAT</text>
+
+        <g filter="url(#a2aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="240" height="190" rx="12" transform="rotate(-0.4 160 145)" fill="#FFFFFF" stroke="#6B4FBB"/>
+          <rect x="320" y="50" width="240" height="190" rx="12" transform="rotate(0.4 440 145)" fill="#F4F0FC"/>
+          <rect x="600" y="50" width="240" height="190" rx="12" transform="rotate(-0.3 720 145)" fill="#FFFFFF" stroke-dasharray="7 5"/>
+          <path d="M132 122 L160 122" marker-end="url(#a2aAr)"/>
+          <path d="M132 148 L160 148" marker-end="url(#a2aAr)"/>
+          <path d="M132 174 L160 174" marker-end="url(#a2aAr)"/>
+          <path d="M412 122 L440 122" marker-end="url(#a2aAr)"/>
+          <path d="M412 148 L440 148" marker-end="url(#a2aAr)"/>
+          <path d="M412 174 L440 174" marker-end="url(#a2aAr)"/>
+          <path d="M692 122 L720 122" marker-end="url(#a2aAr)"/>
+          <path d="M692 148 L720 148" marker-end="url(#a2aAr)"/>
+          <path d="M692 174 L720 174" marker-end="url(#a2aAr)"/>
+          <rect x="52" y="200" width="216" height="28" rx="7" transform="rotate(0.6 160 214)" fill="#FC6D26"/>
+          <rect x="332" y="200" width="216" height="28" rx="7" transform="rotate(-0.5 440 214)" fill="url(#a2aHc)"/>
+        </g>
+
+        <text class="a2aL" x="54" y="76">GitLab.com</text>
+        <text class="a2aS" x="54" y="94">GitLab runs it; you sign in</text>
+        <text class="a2aS" x="54" y="126">patches</text>
+        <text class="a2aL" x="166" y="126">GitLab</text>
+        <text class="a2aS" x="54" y="152">holds data</text>
+        <text class="a2aL" x="166" y="152">GitLab's servers</text>
+        <text class="a2aS" x="54" y="178">pays with</text>
+        <text class="a2aL" x="166" y="178">a per-user tier</text>
+        <text class="a2aL" x="62" y="219">Penwood's choice (constructed)</text>
+
+        <text class="a2aL" x="334" y="76">Self-Managed</text>
+        <text class="a2aS" x="334" y="94">you install and run it</text>
+        <text class="a2aS" x="334" y="126">patches</text>
+        <text class="a2aL" x="446" y="126">your team</text>
+        <text class="a2aS" x="334" y="152">holds data</text>
+        <text class="a2aL" x="446" y="152">your servers</text>
+        <text class="a2aS" x="334" y="178">pays with</text>
+        <text class="a2aL" x="446" y="178">people + a licence</text>
+        <text class="a2aL" x="342" y="219">the people cost is the bill</text>
+
+        <text class="a2aL" x="614" y="76">Dedicated</text>
+        <text class="a2aS" x="614" y="94">reported: not read at source</text>
+        <text class="a2aS" x="614" y="126">patches</text>
+        <text class="a2aL" x="726" y="126">GitLab (reported)</text>
+        <text class="a2aS" x="614" y="152">holds data</text>
+        <text class="a2aL" x="726" y="152">one tenant's</text>
+        <text class="a2aS" x="614" y="178">pays with</text>
+        <text class="a2aL" x="726" y="178">ask GitLab</text>
+        <text class="a2aB" x="614" y="219">verify on GitLab's own page</text>
+
+        <text class="a2aN" x="30" y="272">The application is identical. The operator's duties move: in the first box they are GitLab's, in the second they are yours.</text>
+        <text class="a2aN" x="30" y="292">Only GitLab.com's tiers were read at source on 2026-10-29. Self-Managed and Dedicated are named here, not priced.</text>
+        <text class="a2aN" x="30" y="312">Penwood, constructed, has no one whose job is servers and no rule that keeps data on its own machines.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the duties are the decision; the box that gives GitLab the duties is the only one free in people</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> GitLab.com: the operator is GitLab <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>On GitLab.com you create a top-level group, and GitLab runs everything under it: the application, its monthly releases, the storage behind the repositories and the container registry, and the instance runners that pick up your jobs. The bill is denominated per user per month by tier, and the pricing page on 2026-10-29 gives the figures: Free at $0 per user a month, Premium at $29 per user a month billed annually, Ultimate at custom pricing. Re-verify the tier page before relying on it. The things you give up are the things you no longer control: the release cadence is GitLab's, the data sits on GitLab's servers, and the limits are the tier's. For a five-person data team with no server operators, that trade is usually the right one, and it is Penwood's.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Self-Managed: the operator is you <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A Self-Managed instance is the same application installed on servers you control. Installation itself is outside these sessions, and the pages read for them do not price it, so no figure appears here. What can be said without a figure is where the cost lands: in people. Someone applies the release, someone sizes the storage as the registry grows, someone restores the backup when a disk goes, someone owns the runners. The honest leader question is not "can we run it" but "whose quarter does running it come out of". An instance is worth running when a rule says the data may not leave your infrastructure, or when the team already runs servers for a living and one more application is marginal. Penwood, constructed, has neither condition.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Dedicated, and how to read a page that was not read <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>GitLab Dedicated is GitLab's third offering: reported as a single-tenant instance that GitLab operates for one customer, so the operator's duties stay with GitLab while the data stays apart from other tenants. That sentence is reported, not read at source on 2026-10-29, and the pricing is not public in the pages read. Treat it the way you would treat any vendor claim you have not checked: write it on the decision page as "reported, verify on GitLab's own page", and give it a date. The discipline matters more than the offering. A decision page that marks what it did not verify is one you can defend a year later; one that smooths it over is one you will be asked about.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Where the seams are <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>What a repository, an issue and a pull request are belongs to <a href="https://phoebefu6.github.io/learn-github-with-phoebe/">the GitHub course</a>, and git itself with branching, conflicts and workflow files belongs to <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/">GitHub for builders</a>; these sessions take only what GitLab does differently. Containers, the images a runner executes jobs in, belong to a later course; tonight a runner is "a machine that runs your jobs" and no more. Where a pipeline runs its tests is ours; what a good data test is belongs to <a href="https://phoebefu6.github.io/learn-dataops-with-phoebe/courses/b3-data-testing-contracts.html">DataOps</a>.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's data lead was asked by procurement to "compare the three hosting options with costs". She put GitLab.com's three tiers on the page with the 2026-10-29 date next to each number, wrote "no server operators on the team, no data-residency rule" under Self-Managed, and wrote "reported, pricing not public in the pages read, verify" under Dedicated. Procurement pushed back that two columns had no numbers. Her answer was that the numbers that exist are dated and the ones that do not are marked, which is a page they could sign. The alternative was a page with invented figures that nobody could.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers instance, group and project runners, and which ones the meter counts</span>
+      <h2>Hosted runners or your own</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The application and the machines that run your jobs are two separate decisions. The runner docs define a runner as "an application that works with GitLab CI/CD to run jobs in a pipeline", and GitLab.com starts you with its own: "On GitLab.com, instance runners are enabled in all projects by default". The compute-minutes page then tells you what is metered: "The usage of instance runners by projects running CI/CD jobs is measured in compute minutes". Hosted runners are the convenient choice and the metered one. Your own runners are the choice you make when the meter or the machine matters.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hand-drawn runner scopes on the left: an instance runner available to every project, a group runner for all projects and subgroups in a group, a project runner for specific projects. A solid arrow runs from the instance runner into the highlighted meter box on the right, which reads compute minutes equal job seconds over 60 times the cost factor, with cost factors 1 small, 2 medium, 3 large, 6 xlarge, 12 2xlarge. Dashed arrows from the group and project runners end at a dashed box reading: the quota page suggests using private runners for some jobs and does not state they are exempt, re-verify.">
+        <defs>
+          <filter id="a2bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="37" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a2bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a2bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a2bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a2bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a2bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a2bB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a2bV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .a2bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a2bH" x="30" y="26">THREE RUNNER SCOPES, ONE METER: THE INSTANCE RUNNER IS THE ONE THE QUOTA PAGE MEASURES</text>
+
+        <g filter="url(#a2bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="52" width="250" height="60" rx="10" transform="rotate(-0.6 165 82)" fill="#F4F0FC"/>
+          <rect x="40" y="126" width="250" height="60" rx="10" transform="rotate(0.5 165 156)" fill="#FFFFFF"/>
+          <rect x="40" y="200" width="250" height="60" rx="10" transform="rotate(-0.4 165 230)" fill="#FFFFFF"/>
+          <path d="M294 82 L400 82 L400 100 L556 100" marker-end="url(#a2bAr)"/>
+          <path d="M294 156 L420 156 L420 206 L556 206" stroke-dasharray="6 4" marker-end="url(#a2bAr)"/>
+          <path d="M294 230 L556 230" stroke-dasharray="6 4" marker-end="url(#a2bAr)"/>
+          <rect x="560" y="52" width="280" height="112" rx="12" transform="rotate(0.4 700 108)" fill="#FC6D26"/>
+          <rect x="560" y="184" width="280" height="76" rx="12" transform="rotate(-0.5 700 222)" fill="#FFFFFF" stroke-dasharray="7 5"/>
+          <path d="M586 139 L586 150 M598 139 L598 150 M610 139 L610 150 M622 139 L622 150" stroke="#9E3811"/>
+        </g>
+
+        <text class="a2bL" x="54" y="76">instance runner</text>
+        <text class="a2bS" x="54" y="94">"available to every project" · on by default</text>
+        <text class="a2bL" x="54" y="150">group runner</text>
+        <text class="a2bS" x="54" y="168">"all projects and subgroups in a group"</text>
+        <text class="a2bL" x="54" y="224">project runner</text>
+        <text class="a2bS" x="54" y="242">for specific projects · you register it</text>
+
+        <text class="a2bS" x="310" y="74">metered</text>
+        <text class="a2bS" x="430" y="180">metered? the page</text>
+        <text class="a2bS" x="430" y="194">does not say</text>
+
+        <text class="a2bL" x="574" y="76">THE METER: compute minutes</text>
+        <text class="a2bL" x="574" y="96">job seconds / 60 x cost factor</text>
+        <text class="a2bL" x="574" y="118">1 small · 2 medium · 3 large</text>
+        <text class="a2bL" x="574" y="134">6 xlarge · 12 2xlarge (Linux)</text>
+        <text class="a2bB" x="640" y="150">counts: Free 400 a month</text>
+
+        <text class="a2bL" x="574" y="206">your own runner</text>
+        <text class="a2bS" x="574" y="224">"Use private runners for some jobs"</text>
+        <text class="a2bS" x="574" y="240">is suggested; exempt is not stated</text>
+        <text class="a2bB" x="760" y="206">re-verify</text>
+
+        <text class="a2bN" x="30" y="292">Instance runners: metered, as the compute-minutes page read on 2026-10-29. Your own runners: a lever the page suggests, not a promise.</text>
+        <text class="a2bN" x="30" y="312">Factors and the 400 a month are the page's figures on 2026-10-29. Penwood's bench assumes cost factor 1 throughout.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the solid arrow is the one with a bill at the end; the dashed ones end at a sentence you must re-verify</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Three scopes, one sentence each <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The runner-scope page gives three. Instance runners are "available to every project" on the instance; on GitLab.com those are the ones GitLab hosts and the ones "enabled in all projects by default". Group runners serve "all projects and subgroups in a group". Project runners serve specific projects. The last two are runners you register: a machine you own, with the runner application installed, that asks GitLab for jobs. The docs describe the handshake in one line: the runner requests jobs with its own token, and each job then runs with a job token. For a leader, the scope decides who can reach the machine: a group runner registered at <code>penwood</code> would serve every project under it, which is the permission-tree lesson from session 1 wearing a hardware hat.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> What the meter counts, and what it does not say <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The compute-minutes page is specific about hosted runners: usage of instance runners is measured in compute minutes, with a cost factor of 1 for Linux x86-64 small and Arm64 small, 2 for medium, 3 for large, 6 for xlarge and 12 for 2xlarge, and "Free tier namespaces receive 400 compute minutes per month" as of 2026-10-29. Usage "resets to 0 for all namespaces on the first day of each month". About your own runners it says less than people assume. It suggests "Use private runners for some jobs" as a way to reduce usage, and it does not state that jobs on your own runners are exempt from the quota. So the honest line on a decision page is "runners the quota page does not measure, re-verify", never "our runners are free". What happens when the quota is exhausted, the page says only that enforcement measures apply and points elsewhere, so no description of the enforcement appears here either.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> When your own runner is worth the machine <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Three reasons survive scrutiny. First, the meter: if the quota is the binding constraint, as it is for Penwood at 450.95% of 400, moving the heaviest jobs onto a runner you own is one of the levers the compute-minutes page itself suggests, with the re-verify caveat attached. Second, the machine: a job that needs a data warehouse reachable only from inside your network, or hardware the hosted sizes do not offer, needs a runner that sits where the machine sits. Third, the data: if a rule says the test data may not leave your infrastructure, the runner must not either. None of these is free in people. A registered runner is a server someone patches, which is the Self-Managed argument from Part 1 at a smaller scale. Penwood's constructed answer is to start on instance runners, measure the month on the bench, and decide the runner question together with the tier question by day 30.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The pricing page's FAQ, read on 2026-10-29, adds a condition that the headline "No credit card required" does not: a card is required to use GitLab.com's shared runners. For a team that signs up expecting to run a pipeline on day one, that is the first time the hosting choice and the runner choice turn out to be different decisions. The Free tier is free; the hosted runners come with a card on file and a 400-minute meter. Penwood's lead, constructed, found this out from the FAQ rather than from a failed pipeline, because she read the tier page to the bottom.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers the Free tier's three limits, dated, and what Penwood's month does to them</span>
+      <h2>What Free gives and withholds</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Free gives a data team the whole surface map from session 1: source code management, CI/CD, the container registry, variables, label-list boards and Static Application Security Testing, all at $0 per user as of 2026-10-29. It withholds three things by number and several by tier. The numbers are 400 compute minutes a month, 5 users on a private top-level group and 10 GiB per project. Penwood's constructed month, measured on the bench, needs 1,803.8 compute minutes. That one number decides the shape of the next ninety days.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three hand-drawn gauges for the Free tier as of 29 October 2026. Compute minutes: the bar is Penwood's constructed month of 1,803.8 minutes, highlighted, with a mark at 400 near the left end; 450.95 percent of the quota. Users: a hatched bar filled 5 of 5 on a private top-level group, exactly full. Storage: a mostly empty 10 GiB bar, counting repository and LFS only, with the note that your numbers will differ. A footnote says re-verify the tier page.">
+        <defs>
+          <filter id="a2cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="41" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a2cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a2cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a2cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a2cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a2cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a2cB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a2cV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .a2cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a2cH" x="30" y="26">FREE'S THREE LIMITS AGAINST PENWOOD'S CONSTRUCTED MONTH · TIER FIGURES AS OF 2026-10-29</text>
+
+        <g filter="url(#a2cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="330" y="58" width="240" height="24" rx="6" transform="rotate(-0.4 450 70)" fill="#FC6D26"/>
+          <path d="M383 50 L383 90" stroke="#1F1633" stroke-width="2.4"/>
+          <rect x="330" y="140" width="240" height="24" rx="6" transform="rotate(0.4 450 152)" fill="#FFFFFF"/>
+          <rect x="330" y="140" width="240" height="24" rx="6" transform="rotate(0.4 450 152)" fill="url(#a2cHc)"/>
+          <rect x="330" y="222" width="240" height="24" rx="6" transform="rotate(-0.3 450 234)" fill="#FFFFFF"/>
+          <rect x="330" y="222" width="28" height="24" rx="6" transform="rotate(-0.3 344 234)" fill="url(#a2cHc)"/>
+          <path d="M383 100 L383 108" marker-end="url(#a2cAr)"/>
+        </g>
+
+        <text class="a2cL" x="40" y="68">compute minutes a month</text>
+        <text class="a2cS" x="40" y="86">bar = Penwood's month · mark = quota</text>
+        <text class="a2cL" x="356" y="46">400</text>
+        <text class="a2cV" x="590" y="76">1,803.8</text>
+        <text class="a2cS" x="676" y="76">needed · 450.95%</text>
+        <text class="a2cB" x="590" y="94">the first wall; does not fit</text>
+        <text class="a2cS" x="392" y="118">quota resets on the first of each month</text>
+
+        <text class="a2cL" x="40" y="150">users on a private top-level group</text>
+        <text class="a2cS" x="40" y="168">unique people across the whole tree</text>
+        <text class="a2cV" x="590" y="158">5 of 5</text>
+        <text class="a2cS" x="660" y="158">exactly full</text>
+        <text class="a2cS" x="590" y="176">a sixth makes the tree read-only</text>
+
+        <text class="a2cL" x="40" y="232">storage per project</text>
+        <text class="a2cS" x="40" y="250">repository and LFS only; registry excluded</text>
+        <text class="a2cV" x="590" y="240">10 GiB</text>
+        <text class="a2cS" x="670" y="240">limit</text>
+        <text class="a2cS" x="590" y="258">small for Penwood; your numbers will differ</text>
+
+        <text class="a2cN" x="30" y="292">Penwood's 1,803.8 is bench canon on a constructed run mix (24 merge requests, 12 pushes, 4 schedules). Builder session 8 computes it.</text>
+        <text class="a2cN" x="30" y="312">All three limits are the pricing, free-user-limit and storage pages as read on 2026-10-29; re-verify before relying on them.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - one gauge is over, one is exactly full, one is barely touched; the first decides the plan, the second decides the hiring</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Three numbers, three pages, one date <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Each limit comes from its own page, and each page was read on 2026-10-29. The compute-minutes page: 400 a month for Free namespaces. The free-user-limit page: "You can add up to five users to newly created top-level namespaces with private visibility on GitLab.com", counting every unique user across the group, its subgroups and projects; over the limit the namespace is "placed in a read-only state"; personal namespaces and public top-level groups are exempt; and accounts created after 2026-01-27 on Free may hold three top-level groups. The storage page: "Each project in a Free tier namespace on GitLab.com has 10 GiB of free storage", counting only the repository and LFS, with the container registry, package registry and artifacts excluded, and a project over the limit becomes read-only unless storage is purchased. Three numbers, three pages, one date on all of them. Write the date, not just the number.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Penwood's month does not fit, and by how much <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The bench in Builder session 8 parses Penwood's constructed pipeline and prices the month: 24 merge-request runs at 41.17 compute minutes, 12 pushes to main at 49.25, 4 scheduled runs at 56.18. That is 1,803.8 compute minutes, 450.95% of the Free tier's 400. The durations and the run mix are constructed, and the bench runs nothing on GitLab; it parses the YAML and schedules it. The shape of the finding is the lesson, not the decimals: the quota, not the wall clock, is the binding constraint, and it is binding by a factor of four and a half, so no single small lever closes it. The levers the bench prints are <code>rules:changes</code> to skip jobs when nothing relevant changed, fewer scheduled runs, runners the quota page does not measure with the re-verify caveat, or Premium's 10,000 minutes at $29 per user a month as of 2026-10-29. Session 6 budgets them in order.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> What Free withholds by tier, not by number <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Beyond the three numbers, Free withholds features that carry a Premium and Ultimate badge on their docs pages as of 2026-10-29: epics for organising work items into a hierarchy, required approval rules and code owner approval on merge requests, protected environments, compliance frameworks, assignee and milestone board lists, and group-level protected branches. None of them is required to run a data team's pipeline. Each has a Free way: label lists instead of milestone lists, optional approvals plus a protected default branch instead of required rules, a <code>CODEOWNERS</code> file kept as documentation, a blocking manual job in front of production instead of a protected environment. Session 5 takes each pair in turn. On the hosting decision page they appear as one line: "paid features wanted, with the tier of each", so the day you consider Premium you already know what you are buying besides minutes.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The free-user-limit page describes what happens the day a private top-level group on Free goes past five people: the namespace is placed in a read-only state, and writes to repositories, LFS, packages and registries stop. Penwood, constructed, is exactly five, so the users gauge above is full with no room for a contractor. The way out is not hidden: personal namespaces and public top-level groups are exempt, and Premium removes the limit at $29 per user a month as of 2026-10-29. The leader's job tonight is only to see that the hosting decision and the headcount decision are the same decision, and to put both on one page. Session 3 weighs the three ways out.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's hosting decision</h2>
+      <span class="tag demo">★ 20 min · everyone builds</span>
+    </div>
+    <p class="lede">One page, six lines: operating model, runners, tier with its date, first limit hit, the arithmetic, and the date the tier decision is due. Penwood's is filled below as a constructed example with the bench's numbers; yours uses your own CI service's duration reports, or an estimate you label as one. No GitLab account is needed tonight. Keep the tier page open and copy numbers from it, never from memory.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn one-page hosting decision for the constructed Penwood team. Six lines: operating model GitLab.com; runners, instance runners, metered; tier Free as of 29 October 2026; first limit, compute minutes; arithmetic, 1,803.8 needed against 400, 450.95 percent; levers, rules changes, fewer schedules, own runners re-verify, Premium. An arrow runs from the arithmetic line to a highlighted box on the right reading: tier decision due by day 30 of the migration. A footnote says the date on every tier number is part of the decision.">
+        <defs>
+          <filter id="a2dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="43" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a2dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a2dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a2dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a2dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a2dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a2dB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a2dV { font: 800 16px Inter, sans-serif; fill: #483698; }
+          .a2dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a2dH" x="30" y="26">PENWOOD'S HOSTING DECISION (CONSTRUCTED): SIX LINES, ONE DEADLINE</text>
+
+        <g filter="url(#a2dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="46" width="540" height="246" rx="12" transform="rotate(-0.3 310 169)" fill="#FFFFFF" stroke="#6B4FBB"/>
+          <path d="M60 94 L560 94" stroke="#CFC8E3"/>
+          <path d="M60 130 L560 130" stroke="#CFC8E3"/>
+          <path d="M60 166 L560 166" stroke="#CFC8E3"/>
+          <path d="M60 202 L560 202" stroke="#CFC8E3"/>
+          <path d="M60 238 L560 238" stroke="#CFC8E3"/>
+          <rect x="332" y="208" width="232" height="26" rx="6" transform="rotate(0.5 448 221)" fill="url(#a2dHc)"/>
+          <path d="M584 221 L616 221 L616 156 L640 156" marker-end="url(#a2dAr)"/>
+          <rect x="646" y="110" width="204" height="92" rx="12" transform="rotate(0.8 748 156)" fill="#FC6D26"/>
+        </g>
+
+        <text class="a2dS" x="60" y="76">1 · operating model</text>
+        <text class="a2dL" x="250" y="76">GitLab.com · GitLab patches and hosts</text>
+        <text class="a2dS" x="60" y="112">2 · runners</text>
+        <text class="a2dL" x="250" y="112">instance runners · metered in compute minutes</text>
+        <text class="a2dS" x="60" y="148">3 · tier, dated</text>
+        <text class="a2dL" x="250" y="148">Free · $0 per user · as of 2026-10-29</text>
+        <text class="a2dS" x="60" y="184">4 · first limit hit</text>
+        <text class="a2dL" x="250" y="184">compute minutes, then users (5 of 5)</text>
+        <text class="a2dS" x="60" y="220">5 · arithmetic</text>
+        <text class="a2dL" x="250" y="220">1,803.8 vs</text>
+        <text class="a2dL" x="344" y="225">400 · 450.95% · does not fit</text>
+        <text class="a2dS" x="60" y="256">6 · levers, in order</text>
+        <text class="a2dL" x="250" y="256">rules:changes · fewer schedules · own runners · Premium</text>
+
+        <text class="a2dV" x="662" y="140">due by day 30</text>
+        <text class="a2dL" x="662" y="162">tier decision, with</text>
+        <text class="a2dL" x="662" y="180">the runner question</text>
+        <text class="a2dL" x="662" y="196">decided alongside</text>
+        <text class="a2dB" x="646" y="230">the deadline is on the page</text>
+
+        <text class="a2dN" x="30" y="316">Lines 3 to 5 carry the date they were read. A tier number without a date is a number you cannot defend next quarter.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the arithmetic line is the one that produces a deadline; everything else on the page is a choice, that one is a clock</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Write the operating model, and the reason in one clause.</strong> GitLab.com, Self-Managed or Dedicated, followed by the condition that decided it: "no server operators" or "data must stay on our infrastructure" or "reported, verify". If you cannot write the clause, you have not decided yet; write "undecided" and the question that would decide it.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's lines 1 and 2 (constructed)</span>1 · operating model : GitLab.com. No one on the team runs servers; no data-residency rule.
+                      Self-Managed: not now (cost is people). Dedicated: reported, pricing not
+                      public in the pages read; verify on GitLab's own page before comparing.
+2 · runners          : instance runners, enabled by default on GitLab.com; metered in
+                      compute minutes. Own runners: a lever the quota page suggests, exempt
+                      not stated; re-verify. Decide with the tier by day 30.</div>
+      </div>
+      <div class="step">
+        <p><strong>Copy the tier's three limits with the date you read them.</strong> Open the pricing page, the free-user-limit page and the storage page. Copy the three numbers and write today's date beside each. Penwood's were read on 2026-10-29; yours get your date, and the two may differ, which is the point of writing it.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's line 3 (tier figures as of 2026-10-29; re-verify before relying on them)</span>3 · tier, dated      : Free, $0 per user a month (card on file required for hosted runners)
+                      400 compute minutes a month      (compute-minutes page, 2026-10-29)
+                      5 users per private top-level group (free-user-limit page, 2026-10-29)
+                      10 GiB per project, repo + LFS only (storage page, 2026-10-29)
+                      next tier: Premium, $29 per user a month billed annually, 10,000 minutes</div>
+      </div>
+      <div class="step">
+        <p><strong>Do the quota arithmetic.</strong> Runs per month by type, times minutes per run, against the quota. Penwood's minutes per run are bench canon from Builder session 8 on a constructed run mix; yours come from your current CI service's own reports or an estimate you label as one. The ratio, not the total, tells you whether a small lever can close the gap.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's lines 4 and 5 (bench canon, constructed run mix)</span>4 · first limit hit  : compute minutes (users is exactly 5 of 5; storage is barely touched)
+5 · arithmetic       : 24 merge requests x 41.17 min =  988.08
+                       12 pushes to main  x 49.25 min =  591.00
+                        4 schedules       x 56.18 min =  224.72
+                       total                          = 1,803.8 compute minutes a month
+                       Free quota (as of 2026-10-29)  =   400      -> 450.95%, does not fit</div>
+      </div>
+      <div class="step">
+        <p><strong>List the levers in the order you would pull them, and write the deadline.</strong> The order is the plan for session 6. The deadline is the day by which the tier decision must be made, counted from day one of the migration, so that the page produces an action and not only a finding.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's line 6 and the sentence (constructed)</span>6 · levers, in order : rules:changes on the heavy test jobs -> fewer scheduled runs
+                      -> runners the quota page does not measure (re-verify)
+                      -> Premium at $29 per user a month (as of 2026-10-29), 10,000 minutes
+
+Penwood runs on GitLab.com Free with instance runners, needs 1,803.8 compute minutes a month
+against 400 (tier figures as of 2026-10-29), tries rules:changes and fewer schedules first,
+and decides tier and runners together by day 30 of the migration.</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The page to avoid</span>Hosting: GitLab cloud, free tier, unlimited runners. Our own runners would be free anyway.
+(Three claims with no date and one the quota page does not make: the tier has three dated
+limits, hosted runners are metered at 400 minutes a month, and "exempt" is not stated anywhere.)</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 3</h2>
+      <span class="tag exercise">25 min</span>
+    </div>
+    <ol>
+      <li>Finish your six-line hosting decision. Every tier number carries the date you read it, and every line you could not verify says "reported" or "undecided" with the question that would decide it.</li>
+      <li>Ask your current CI service for last month's job minutes by run type (merge request, push to main, schedule), or estimate them and label the estimate. Write the ratio against 400 and against 10,000.</li>
+      <li>Name the person whose quarter a Self-Managed instance would come out of. If there is no such person, write that sentence on the page; it is the decision.</li>
+      <li>Count the unique people who would need access across the whole group tree, contractors included. Write the number beside "5" and bring it to session 3.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Leader session 2 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">1 · Penwood's constructed pipeline needs 1,803.8 compute minutes a month on GitLab.com's instance runners. A colleague proposes registering the team's own runner so that "the heavy jobs are free". How should that lever appear on the decision page?</p>
+      <button class="qopt" type="button">A · As a solved problem: jobs on your own runners are exempt from the quota</button>
+      <button class="qopt" type="button">B · As a lever the compute-minutes page suggests, with "exempt is not stated; re-verify" beside it, and a person named to run the machine</button>
+      <button class="qopt" type="button">C · Not at all: runners you register are a Premium feature</button>
+      <button class="qopt" type="button">D · As the first lever, since it needs no change to the YAML</button>
+      <p class="qwhy">The compute-minutes page measures instance runners and suggests "Use private runners for some jobs"; it does not say your own runners are exempt, so the page cannot either. And a registered runner is a server someone patches, which is the people cost from Part 1 at a smaller scale.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · The Free tier's three limits as of 2026-10-29 are 400 compute minutes a month, 5 users on a private top-level group and 10 GiB per project. Which statement about the storage limit is right?</p>
+      <button class="qopt" type="button">A · It counts everything the project stores, including container images and artifacts</button>
+      <button class="qopt" type="button">B · It is shared across the whole group, like the user limit</button>
+      <button class="qopt" type="button">C · Exceeding it has no effect on Free</button>
+      <button class="qopt" type="button">D · It counts only the repository and LFS; the registry, package registry and artifacts are excluded, and a project over it becomes read-only unless storage is purchased</button>
+      <p class="qwhy">The storage page gives 10 GiB per project, counting the repository and LFS only. That is why Penwood's storage gauge is barely touched while its compute gauge is at 450.95%. Re-verify the tier page before relying on any of the three numbers.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · A leader writes "GitLab Dedicated: single-tenant, operated by GitLab" on the hosting page without having read GitLab's page on it. What belongs beside that line?</p>
+      <button class="qopt" type="button">A · "Reported; pricing not public in the pages read; verify on GitLab's own page", with the date</button>
+      <button class="qopt" type="button">B · Nothing; it is common knowledge</button>
+      <button class="qopt" type="button">C · An estimated price, so the column is not empty</button>
+      <button class="qopt" type="button">D · A recommendation against it, since Penwood did not choose it</button>
+      <p class="qwhy">A decision page marks what it did not verify. An invented price is the one thing on the page nobody can defend; a dated "reported, verify" is a line a reviewer can check in five minutes.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Free, Premium and Ultimate: price, compute minutes, storage, users</span><span class="note"><a href="https://about.gitlab.com/pricing/">GitLab, Pricing</a>; <a href="https://docs.gitlab.com/user/free_user_limit/">GitLab Docs, Free user limit</a>; <a href="https://docs.gitlab.com/user/storage_usage_quotas/">GitLab Docs, Storage usage quotas</a>; read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Compute minutes: what is measured, cost factors, monthly reset</span><span class="note"><a href="https://docs.gitlab.com/ci/pipelines/compute_minutes/">GitLab Docs, Compute minutes</a>, read at source 2026-10-29; own-runner exemption not stated, printed as re-verify</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Runners: definition, instance, group and project scope, default on GitLab.com</span><span class="note"><a href="https://docs.gitlab.com/runner/">GitLab Docs, GitLab Runner</a>; <a href="https://docs.gitlab.com/ci/runners/runners_scope/">GitLab Docs, Runner scope</a>; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Penwood's quota arithmetic</span><span class="note">Computed by the bench in Builder session 8 from a constructed pipeline and run mix; Penwood is constructed</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Self-Managed installation and GitLab Dedicated in depth</span><span class="note">Not read at source; named as operating models and marked reported; no figures quoted</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Enforcement when the quota is exceeded</span><span class="note">The compute-minutes page says only that enforcement measures apply and links elsewhere; not described</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Roles, the group tree and the three ways around five users</span><span class="note">Session 3</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Leader session 2 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Three decisions, not one</b><span>Who operates the application, whose machines run the jobs, which tier. Each gets its own line.</span></div>
+      <div class="cheat-item"><b>Self-Managed costs people</b><span>Worth it when data may not leave your infrastructure or the team already runs servers. Name whose quarter it comes from.</span></div>
+      <div class="cheat-item"><b>The meter counts instance runners</b><span>Compute minutes = job seconds / 60 x cost factor (1 small, 2 medium, 3 large). Own runners: "exempt" is not stated; re-verify.</span></div>
+      <div class="cheat-item"><b>Three limits, dated</b><span>400 compute minutes a month, 5 users on a private top-level group, 10 GiB per project (repo + LFS), as of 2026-10-29.</span></div>
+      <div class="cheat-item"><b>Penwood's arithmetic</b><span>24 x 41.17 + 12 x 49.25 + 4 x 56.18 = 1,803.8 minutes, 450.95% of 400. Constructed; bench canon.</span></div>
+      <div class="cheat-item"><b>Unverified gets a label</b><span>"Reported, verify" with a date beats an invented figure. A tier number without a date cannot be defended next quarter.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have the hosting decision and its deadline. Session 3 opens the group tree itself: top-level group, subgroups and projects, the eight roles and the one inheritance rule, and the five-user limit that is already exactly full for Penwood, with the three ways around it and what each one trades away.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Leader session 2 of 6 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="a1-one-application-not-six.html">← Prev: One application, not six</a> &nbsp;·&nbsp; <a href="a3-groups-projects-permissions.html">Next: Groups, projects and permissions →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

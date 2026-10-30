@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Fourteen sessions on GitLab as one application: planning, code, CI/CD, registry and security under one permission tree, taught on the GitLab.com Free tier with Penwood, a constructed analytics team. Six leader sessions from the platform decision to a 90-day plan; eight builder sessions from the first project to a pipeline DAG bench computed in your browser. Free, by Phoebe Fu.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Learn GitLab - Learn with Phoebe">
+<meta property="og:description" content="One application, not six: groups and roles, merge requests, .gitlab-ci.yml, rules, needs and the DAG, environments, the registry, and a bench that parses the real pipeline.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Learn GitLab - Learn with Phoebe">
+<meta name="twitter:description" content="Stages only 30:08, with needs 26:22, with rules 19:17, and 1,803.8 compute minutes against the Free tier's 400.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Learn GitLab - Learn with Phoebe</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+<style>
+
+  .stats-row { display: flex; gap: 2.4rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .stat b { display: block; font-size: 2.1rem; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .72rem; opacity: 1; text-transform: uppercase; letter-spacing: .09em; font-weight: 600; }
+
+  .course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .course-card {
+    border: 1px solid var(--hairline);
+    border-top: 4px solid var(--diff, var(--indigo));
+    border-radius: var(--radius);
+    padding: 1.2rem 1.3rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    text-decoration: none;
+    color: var(--ink);
+    background: #fff;
+    transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+    position: relative;
+  }
+  .course-card:hover { border-color: var(--indigo-soft); border-top-color: var(--diff, var(--indigo)); box-shadow: 0 8px 28px rgba(var(--shadow-rgb),.16); transform: translateY(-3px); }
+  .course-card .cicon { font-size: 1.7rem; line-height: 1; }
+  .course-card .cnum { font-size: .72rem; font-weight: 700; color: var(--indigo-deep); text-transform: uppercase; letter-spacing: .1em; }
+  .course-card h3 { font-size: 1.05rem; font-weight: 800; line-height: 1.3; }
+  .course-card p { font-size: .85rem; color: var(--muted); flex: 1; }
+  .course-card .meta { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+  .diff-legend { display: flex; gap: 1rem; margin-top: 1.6rem; font-size: .74rem; color: var(--muted); font-weight: 600; flex-wrap: wrap; }
+  .diff-legend i { display: inline-block; width: .85rem; height: .35rem; border-radius: 999px; margin-right: .35rem; vertical-align: middle; }
+
+  .paths { margin-top: 2.6rem; }
+  .paths h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .3rem; }
+  .paths .plede { color: var(--muted); font-size: .92rem; margin-bottom: .8rem; }
+  .path { display: flex; gap: .55rem; align-items: center; padding: .75rem 0; border-bottom: .5px solid var(--hairline); flex-wrap: wrap; }
+  .path:last-child { border-bottom: none; }
+  .path b { min-width: 15.5rem; font-size: .9rem; }
+  .path .pstep { background: var(--indigo-50); color: var(--indigo-deep); border-radius: 999px; padding: .16rem .68rem; font-weight: 700; font-size: .8rem; text-decoration: none; transition: all .12s ease; }
+  .path .pstep:hover { background: var(--indigo-deep); color: #fff; }
+  .path .parr { color: var(--muted); font-weight: 700; }
+
+  .mm-section { margin-top: 1.6rem; }
+  .mm-section h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .2rem; }
+  .mm-section .mm-lede { color: var(--muted); font-size: .92rem; margin-bottom: .4rem; }
+  .mm-wrap { border: 1px solid var(--hairline); border-radius: var(--radius); background: linear-gradient(180deg, #fff, var(--indigo-50)); padding: .6rem; overflow-x: auto; }
+  .mm-svg { width: 100%; height: auto; display: block; max-width: 60rem; margin: 0 auto; min-width: 34rem; }
+  .mm-link { cursor: pointer; text-decoration: none; }
+  .mm-node rect { transition: opacity .15s ease, filter .15s ease; }
+  .mm-node text { pointer-events: none; }
+  .mm-link:hover .mm-node rect { filter: brightness(1.06); }
+  .mm-edge { transition: opacity .15s ease; }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn with Phoebe · Programming and tools</div>
+    <h1>Learn <span class="accent">GitLab</span></h1>
+    <p class="sub">GitLab taught as what it adds over git plus a host: planning, code review, CI/CD, a container registry and security scanning under one permission tree, and the trade-offs that come with one application. Penwood, a constructed five-person logistics-analytics team, moves its data pipelines onto GitLab.com's Free tier across every session, so everything in the build-alongs runs on a free account and every paid feature is shown with its tier. Six leader sessions take the platform decision from "one application, not six" to a 90-day migration plan. Eight builder sessions build Penwood's project, merge request, <code>.gitlab-ci.yml</code>, variables, rules and needs, environments and registry, and end at a bench that parses the real pipeline in your browser and prints its two clocks and its compute minutes.</p>
+    <div class="stats-row">
+      <div class="stat"><b data-count="14">14</b><span>sessions, two tracks</span></div>
+      <div class="stat"><b data-count="14">14</b><span>jobs in Penwood's pipeline</span></div>
+      <div class="stat"><b data-count="400">400</b><span>compute minutes on Free, as of 2026-10-29</span></div>
+      <div class="stat"><b data-count="5">5</b><span>users per private top-level group</span></div>
+      <div class="stat"><b data-count="45">45</b><span>min per session</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section">
+    <div class="paths" style="margin-top:0">
+      <h2>Leader track 🧭 <span style="font-size:.85rem;font-weight:600;color:var(--muted)">· six sessions, no code</span></h2>
+      <p class="plede">For whoever chooses the platform, owns the group and pays for the minutes. Decide hosting and tier, set roles once, read a pipeline without running one, pick the controls that matter, and plan the move in three blocks.</p>
+    </div>
+
+    <div class="course-grid">
+      <a class="course-card" href="courses/a1-one-application-not-six.html" style="--diff:#34D399">
+        <span class="cicon">🧩</span>
+        <span class="cnum">Leader session 1 · start here</span>
+        <h3>One application, not six</h3>
+        <p>What a git host leaves out and GitLab folds in, one tree of roles that inherit down, and the three costs of one application: one model of the work, one bill in compute minutes, one blast radius.</p>
+        <span class="meta"><span class="pill amber">▶ Start here</span></span>
+      </a>
+      <a class="course-card" href="courses/a2-saas-or-self-managed.html" style="--diff:#FBBF24">
+        <span class="cicon">🏗️</span>
+        <span class="cnum">Leader session 2</span>
+        <h3>SaaS or self-managed</h3>
+        <p>GitLab.com, Self-Managed or Dedicated; hosted runners or your own; what the Free tier gives and withholds, with the dates on every number.</p>
+      </a>
+      <a class="course-card" href="courses/a3-groups-projects-permissions.html" style="--diff:#FBBF24">
+        <span class="cicon">🌳</span>
+        <span class="cnum">Leader session 3</span>
+        <h3>Groups, projects and permissions</h3>
+        <p>Top-level group, subgroups, projects. Eight roles and the one rule about inheritance. Five seats on Free and the three ways out when the sixth person arrives.</p>
+      </a>
+      <a class="course-card" href="courses/a4-reading-a-pipeline.html" style="--diff:#FB923C">
+        <span class="cicon">📈</span>
+        <span class="cnum">Leader session 4</span>
+        <h3>Reading a pipeline like a manager</h3>
+        <p>Stages are a queue, needs are edges, rules decide what exists. Three clocks: wall, serial, compute minutes. Why a green pipeline with one job fewer is the one to ask about.</p>
+      </a>
+      <a class="course-card" href="courses/a5-governance-without-friction.html" style="--diff:#FB923C">
+        <span class="cicon">🛡️</span>
+        <span class="cnum">Leader session 5</span>
+        <h3>Governance without friction</h3>
+        <p>The protected branch and the merge request as the control point on Free; what Premium adds and when it is worth it; why masked is not secret.</p>
+      </a>
+      <a class="course-card" href="courses/a6-the-90-day-migration.html" style="--diff:#FB923C">
+        <span class="cicon">🗓️</span>
+        <span class="cnum">Leader session 6</span>
+        <h3>The 90-day migration plan</h3>
+        <p>Three 30-day blocks: repo and board, the pipeline with the quota in view, registry and environments. The exit criteria and the day the tier decision is due.</p>
+        <span class="meta"><span class="pill amber">the plan</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="paths" style="margin-top:0">
+      <h2>Builder track 🔧 <span style="font-size:.85rem;font-weight:600;color:var(--muted)">· eight sessions, a free account and the browser</span></h2>
+      <p class="plede">Penwood's pipeline built one keyword at a time, in the order a team meets them, from the first project to a bench that measures the whole file.</p>
+    </div>
+
+    <div class="course-grid">
+      <a class="course-card" href="courses/b1-project-issues-boards.html" style="--diff:#34D399">
+        <span class="cicon">🗂️</span>
+        <span class="cnum">Builder session 1 · start here</span>
+        <h3>Project, issues, boards</h3>
+        <p>The group, subgroup and project whose URL is the tree; five people at the smallest role that works; labels, a board whose lists are labels, and what dragging a card really changes.</p>
+        <span class="meta"><span class="pill amber">▶ Start here</span></span>
+      </a>
+      <a class="course-card" href="courses/b2-the-merge-request.html" style="--diff:#FBBF24">
+        <span class="cicon">🔀</span>
+        <span class="cnum">Builder session 2</span>
+        <h3>The merge request</h3>
+        <p>Same idea as a pull request, different mechanics: approvals that are optional on Free, "pipelines must succeed", and a pipeline that belongs to the merge request itself.</p>
+      </a>
+      <a class="course-card" href="courses/b3-first-gitlab-ci-yml.html" style="--diff:#FBBF24">
+        <span class="cicon">📄</span>
+        <span class="cnum">Builder session 3</span>
+        <h3>Your first .gitlab-ci.yml</h3>
+        <p>Stages, jobs, script, image, default. The first green pipeline, 13 jobs in 30:08, and what each compute minute costs on Free.</p>
+      </a>
+      <a class="course-card" href="courses/b4-variables-artifacts-cache.html" style="--diff:#FB923C">
+        <span class="cicon">📦</span>
+        <span class="cnum">Builder session 4</span>
+        <h3>Variables, artifacts, cache</h3>
+        <p>Where a variable comes from and which one wins; artifacts that move results forward and expire; a cache that is a hope, not a promise.</p>
+      </a>
+      <a class="course-card" href="courses/b5-rules-needs-dag.html" style="--diff:#FB923C">
+        <span class="cicon">🕸️</span>
+        <span class="cnum">Builder session 5</span>
+        <h3>Rules, needs and the DAG</h3>
+        <p>First match wins and no match means not added; needs that skip the stage queue, 30:08 to 26:22; the job that is not there and the optional need that saves the pipeline.</p>
+      </a>
+      <a class="course-card" href="courses/b6-environments-deployments.html" style="--diff:#FB923C">
+        <span class="cicon">🚀</span>
+        <span class="cnum">Builder session 6</span>
+        <h3>Environments and deployments</h3>
+        <p>An environment is a name on a job; stop it on purpose; the blocking manual gate on production, and the Premium version shown beside it.</p>
+      </a>
+      <a class="course-card" href="courses/b7-registry-and-templates.html" style="--diff:#FB923C">
+        <span class="cicon">🧰</span>
+        <span class="cnum">Builder session 7</span>
+        <h3>Container registry and templates</h3>
+        <p>The project's own registry at the project's own path, the job's own login, include then extend, and the templates GitLab ships.</p>
+      </a>
+      <a class="course-card" href="courses/b8-the-pipeline-dag-bench.html" style="--diff:#F87171">
+        <span class="cicon">🎛️</span>
+        <span class="cnum">Builder session 8</span>
+        <h3>The pipeline DAG bench</h3>
+        <p>Four rungs from 30:08 to 19:17, a stage-per-job layout that costs 479 minutes a month, a rules typo that drops the tests and stays green, and 1,803.8 compute minutes against 400.</p>
+        <span class="meta"><span class="pill amber">the capstone</span></span>
+      </a>
+    </div>
+
+    <div class="diff-legend">
+      <span><i style="background:#34D399"></i>start here</span>
+      <span><i style="background:#FBBF24"></i>foundations</span>
+      <span><i style="background:#FB923C"></i>hands-on</span>
+      <span><i style="background:#F87171"></i>capstone</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="paths">
+      <h2>Choose your path 🗺️</h2>
+      <p class="plede">Three doors into the same team. Both tracks start at their own session 1, because the tree and the surface map are what make the rest arguable.</p>
+      <div class="path"><b>💼 I choose the platform and pay for it</b>
+        <a class="pstep" href="courses/a1-one-application-not-six.html">L1</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/a2-saas-or-self-managed.html">L2</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/a4-reading-a-pipeline.html">L4</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/a6-the-90-day-migration.html">L6</a>
+        <span style="font-size:.82rem;color:var(--muted)">the surface map, hosting, the three clocks, the plan</span>
+      </div>
+      <div class="path"><b>🛡️ I own the group and its controls</b>
+        <a class="pstep" href="courses/a3-groups-projects-permissions.html">L3</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/a5-governance-without-friction.html">L5</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/b2-the-merge-request.html">B2</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/b6-environments-deployments.html">B6</a>
+        <span style="font-size:.82rem;color:var(--muted)">roles, protected branches, the merge request, the manual gate</span>
+      </div>
+      <div class="path"><b>🔧 I build the pipeline</b>
+        <a class="pstep" href="courses/b1-project-issues-boards.html">B1</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/b3-first-gitlab-ci-yml.html">B3</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/b5-rules-needs-dag.html">B5</a>
+        <span class="parr">→</span>
+        <a class="pstep" href="courses/b8-the-pipeline-dag-bench.html">B8</a>
+        <span style="font-size:.82rem;color:var(--muted)">the tree, the first file, rules and needs, then measure it</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="paths" style="margin-top:0">
+      <h2>Your passport 🎫</h2>
+      <p class="plede">Clear all three quiz questions in a session and it gets stamped. Fourteen stamps across both tracks, and they live in this browser only.</p>
+    </div>
+    <div class="pp-strip"></div>
+  </section>
+
+  <section class="section">
+    <div class="paths" style="margin-top:0">
+      <h2>What is real here 🧾</h2>
+      <p class="plede">A course about a metered platform should be exact about which of its own numbers are measured.</p>
+    </div>
+    <table class="clean">
+      <tr><th>Claim</th><th>Status</th></tr>
+      <tr><td>Penwood, its people, its pipeline, its run log and its monthly run mix</td><td>Constructed. A five-person analytics team invented for these pages; every file, duration and count is labelled constructed where it appears. No real company is shown</td></tr>
+      <tr><td>Wall clock, serial time, compute minutes, jobs never added, the critical path, the scorecard</td><td>Computed live in your browser from the real <code>.gitlab-ci.yml</code> text: a parser for the taught subset, include and extends, workflow and job rules against a context, the DAG, and a scheduler. An independent Python reference matches every number</td></tr>
+      <tr><td>Keyword semantics: stages, needs, rules, when, include, extends, artifacts, cache, variables</td><td>Read at source in the GitLab Docs on 2026-10-29 and quoted with the page named. Where a page did not fix a behaviour, the bench's convention is labelled as the bench's</td></tr>
+      <tr><td>Tier facts: 400 compute minutes, 5 users per private top-level group, 10 GiB per project, $29 Premium</td><td>Read on the GitLab.com pricing, free user limit, storage and compute minutes pages on 2026-10-29. Tiers change: re-verify the tier page before relying on them</td></tr>
+      <tr><td>The runner cap and the queue order under it</td><td>Assumptions, printed on the widget. GitLab does not document a queue order for a runner fleet</td></tr>
+      <tr><td>GitLab's "one platform" description</td><td>GitLab's own claim, quoted from its platform page as the vendor's words</td></tr>
+      <tr><td>What a repository, an issue or a pull request is; git itself; what to test in a data pipeline</td><td>Not retaught. Linked to the GitHub courses, DataOps and Data reliability on the shelf</td></tr>
+    </table>
+  </section>
+
+  <section class="section mm-section">
+    <h2>The knowledge map 🧠</h2>
+    <p class="mm-lede">Both tracks at a glance. Hover a session to spotlight its concepts, click any node to jump in.</p>
+    <div class="mm-wrap"><div id="mindmap"></div></div>
+  </section>
+
+  <footer class="pagefoot">
+    <span>learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span>Pairs with <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/">GitHub for builders ↗</a> and <a href="https://phoebefu6.github.io/learn-dataops-with-phoebe/">DataOps ↗</a></span>
+  </footer>
+
+</main>
+
+<script>
+window.MINDMAP_DATA = {
+  "title": "Learn\nGitLab",
+  "centerColor": "#483698",
+  "sessions": [
+    {
+      "label": "One application",
+      "href": "courses/a1-one-application-not-six.html",
+      "color": "#34D399",
+      "concepts": [
+        {
+          "label": "What a host leaves out",
+          "href": "courses/a1-one-application-not-six.html"
+        },
+        {
+          "label": "One tree, one set of roles",
+          "href": "courses/a1-one-application-not-six.html"
+        },
+        {
+          "label": "The trade-offs",
+          "href": "courses/a1-one-application-not-six.html"
+        }
+      ]
+    },
+    {
+      "label": "SaaS or self-managed",
+      "href": "courses/a2-saas-or-self-managed.html",
+      "color": "#FBBF24",
+      "concepts": [
+        {
+          "label": "Three ways to run GitLab",
+          "href": "courses/a2-saas-or-self-managed.html"
+        },
+        {
+          "label": "Hosted runners or your own",
+          "href": "courses/a2-saas-or-self-managed.html"
+        },
+        {
+          "label": "What Free withholds",
+          "href": "courses/a2-saas-or-self-managed.html"
+        }
+      ]
+    },
+    {
+      "label": "Groups and permissions",
+      "href": "courses/a3-groups-projects-permissions.html",
+      "color": "#FBBF24",
+      "concepts": [
+        {
+          "label": "The tree",
+          "href": "courses/a3-groups-projects-permissions.html"
+        },
+        {
+          "label": "Eight roles, one rule",
+          "href": "courses/a3-groups-projects-permissions.html"
+        },
+        {
+          "label": "Five seats",
+          "href": "courses/a3-groups-projects-permissions.html"
+        }
+      ]
+    },
+    {
+      "label": "Reading a pipeline",
+      "href": "courses/a4-reading-a-pipeline.html",
+      "color": "#FB923C",
+      "concepts": [
+        {
+          "label": "Stages are a queue",
+          "href": "courses/a4-reading-a-pipeline.html"
+        },
+        {
+          "label": "Three clocks",
+          "href": "courses/a4-reading-a-pipeline.html"
+        },
+        {
+          "label": "Green is not proof",
+          "href": "courses/a4-reading-a-pipeline.html"
+        }
+      ]
+    },
+    {
+      "label": "Governance",
+      "href": "courses/a5-governance-without-friction.html",
+      "color": "#FB923C",
+      "concepts": [
+        {
+          "label": "The branch is the control point",
+          "href": "courses/a5-governance-without-friction.html"
+        },
+        {
+          "label": "Premium and the Free substitute",
+          "href": "courses/a5-governance-without-friction.html"
+        },
+        {
+          "label": "Masked is not secret",
+          "href": "courses/a5-governance-without-friction.html"
+        }
+      ]
+    },
+    {
+      "label": "90-day migration",
+      "href": "courses/a6-the-90-day-migration.html",
+      "color": "#FB923C",
+      "concepts": [
+        {
+          "label": "Repo, issues, board",
+          "href": "courses/a6-the-90-day-migration.html"
+        },
+        {
+          "label": "The pipeline and the quota",
+          "href": "courses/a6-the-90-day-migration.html"
+        },
+        {
+          "label": "Registry, environments, exit",
+          "href": "courses/a6-the-90-day-migration.html"
+        }
+      ]
+    },
+    {
+      "label": "Project, issues, boards",
+      "href": "courses/b1-project-issues-boards.html",
+      "color": "#34D399",
+      "concepts": [
+        {
+          "label": "The tree you create first",
+          "href": "courses/b1-project-issues-boards.html"
+        },
+        {
+          "label": "Boards read labels",
+          "href": "courses/b1-project-issues-boards.html"
+        },
+        {
+          "label": "What GitLab calls it",
+          "href": "courses/b1-project-issues-boards.html"
+        }
+      ]
+    },
+    {
+      "label": "The merge request",
+      "href": "courses/b2-the-merge-request.html",
+      "color": "#FBBF24",
+      "concepts": [
+        {
+          "label": "Same idea, new name",
+          "href": "courses/b2-the-merge-request.html"
+        },
+        {
+          "label": "Approvals optional on Free",
+          "href": "courses/b2-the-merge-request.html"
+        },
+        {
+          "label": "The merge request pipeline",
+          "href": "courses/b2-the-merge-request.html"
+        }
+      ]
+    },
+    {
+      "label": "First .gitlab-ci.yml",
+      "href": "courses/b3-first-gitlab-ci-yml.html",
+      "color": "#FBBF24",
+      "concepts": [
+        {
+          "label": "Stages, jobs, script",
+          "href": "courses/b3-first-gitlab-ci-yml.html"
+        },
+        {
+          "label": "The first green",
+          "href": "courses/b3-first-gitlab-ci-yml.html"
+        },
+        {
+          "label": "What a minute costs",
+          "href": "courses/b3-first-gitlab-ci-yml.html"
+        }
+      ]
+    },
+    {
+      "label": "Variables, artifacts, cache",
+      "href": "courses/b4-variables-artifacts-cache.html",
+      "color": "#FB923C",
+      "concepts": [
+        {
+          "label": "Where a variable comes from",
+          "href": "courses/b4-variables-artifacts-cache.html"
+        },
+        {
+          "label": "Artifacts move results",
+          "href": "courses/b4-variables-artifacts-cache.html"
+        },
+        {
+          "label": "Cache is a hope",
+          "href": "courses/b4-variables-artifacts-cache.html"
+        }
+      ]
+    },
+    {
+      "label": "Rules, needs, DAG",
+      "href": "courses/b5-rules-needs-dag.html",
+      "color": "#FB923C",
+      "concepts": [
+        {
+          "label": "First match wins",
+          "href": "courses/b5-rules-needs-dag.html"
+        },
+        {
+          "label": "Needs skip the queue",
+          "href": "courses/b5-rules-needs-dag.html"
+        },
+        {
+          "label": "The job that is not there",
+          "href": "courses/b5-rules-needs-dag.html"
+        }
+      ]
+    },
+    {
+      "label": "Environments",
+      "href": "courses/b6-environments-deployments.html",
+      "color": "#FB923C",
+      "concepts": [
+        {
+          "label": "A name on a job",
+          "href": "courses/b6-environments-deployments.html"
+        },
+        {
+          "label": "Stop it on purpose",
+          "href": "courses/b6-environments-deployments.html"
+        },
+        {
+          "label": "The blocking manual gate",
+          "href": "courses/b6-environments-deployments.html"
+        }
+      ]
+    },
+    {
+      "label": "Registry and templates",
+      "href": "courses/b7-registry-and-templates.html",
+      "color": "#FB923C",
+      "concepts": [
+        {
+          "label": "The project's own registry",
+          "href": "courses/b7-registry-and-templates.html"
+        },
+        {
+          "label": "Include, then extend",
+          "href": "courses/b7-registry-and-templates.html"
+        },
+        {
+          "label": "Templates GitLab ships",
+          "href": "courses/b7-registry-and-templates.html"
+        }
+      ]
+    },
+    {
+      "label": "The DAG bench",
+      "href": "courses/b8-the-pipeline-dag-bench.html",
+      "color": "#F87171",
+      "concepts": [
+        {
+          "label": "Four rungs, two clocks",
+          "href": "courses/b8-the-pipeline-dag-bench.html"
+        },
+        {
+          "label": "Two traps",
+          "href": "courses/b8-the-pipeline-dag-bench.html"
+        },
+        {
+          "label": "The scorecard",
+          "href": "courses/b8-the-pipeline-dag-bench.html"
+        }
+      ]
+    }
+  ]
+};
+</script>
+<script src="assets/mindmap.js?v=1"></script>
+<script src="assets/app.js?v=1"></script>
+</body>
+</html>

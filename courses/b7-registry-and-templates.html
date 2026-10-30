@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 7 of 8. The project's own container registry on GitLab.com Free, logging in from a job with the job's own credentials and CI_REGISTRY_IMAGE, then include and extends: one shared template file merged into Penwood's .gitlab-ci.yml. Penwood is a constructed analytics team.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Container registry and templates - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 7 of 8. The image path mirrors the project path, the job token logs in, and include plus extends keep one scan job for the whole team.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b7-registry-and-templates.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Container registry and templates - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 7 of 8. Registry path, job-token login, include and extends with hidden jobs, the templates GitLab ships.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 7 · Container registry and templates - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 7 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 7 of 8</div>
+    <h1>Container <span class="accent">registry</span> and templates</h1>
+    <p class="sub">Session 6 gave Penwood a staging and a production environment. Tonight is about the two things every deploy job quietly depends on: an image to deploy, and a pipeline file that five people can share without copying it five times. GitLab gives every project its own container registry, on Free, at a path that is simply the project path again, and lets a job push to it with credentials it already holds. Then <code>include</code> and <code>extends</code> let one small template file carry the dependency scan for the whole team. Penwood, a constructed five-person logistics-analytics team on GitLab.com Free, pushes its first image to <code>registry.gitlab.com/penwood/data/pipelines</code> tonight and moves <code>scan-dependencies</code> into <code>ci/scan-template.yml</code>. What a container or an image actually is belongs to a later course; here you only see where it lives and how a job gets there.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Advanced</span>
+      <span class="chip audience">Analytics engineers and data builders</span>
+      <span class="chip audience">Anyone who has pasted the same job into three files</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Registry, include, extends, templates</span>
+      <span class="a3" style="flex:4">20-42 · Build-along: Penwood's image and scan</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where tonight sits</h2>
+    </div>
+    <p class="lede">Six sessions in, Penwood's <code>.gitlab-ci.yml</code> has 14 jobs in five stages, <code>needs</code> edges, <code>rules</code> that decide which jobs exist, and two environments. Two of those jobs, <code>build-image</code> and <code>publish-image</code>, have been running a build and a push since session 3 without anyone asking where the pushed thing goes. Tonight answers that, and then fixes the other thing a growing file does: it starts repeating itself. One shared template, included and extended, is how GitLab keeps a team's pipelines from drifting apart. Penwood is constructed: its jobs, durations and run mix are invented for these pages, and the bench in session 8 parses the YAML but runs nothing on GitLab.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> The registry path of your project read off the UI and matched to <code>CI_REGISTRY_IMAGE</code>, one login line that uses only the credentials the job already has, a <code>build-image</code> and <code>publish-image</code> pair where the push happens on <code>main</code> only, and a <code>ci/scan-template.yml</code> whose hidden <code>.dependency-scan</code> job is extended by <code>scan-dependencies</code> in the main file. Session 8's bench reads exactly that include and that extends.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers the registry path, CI_REGISTRY_IMAGE and the job's own login</span>
+      <h2>The project's own registry</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The container registry page says the path of a container repository "always matches the related project's repository path". So Penwood's images live at <code>registry.gitlab.com/penwood/data/pipelines</code>, the same three segments as the project URL from session 1, with up to two optional name levels below it. The registry is on every tier, stores Docker V2 and OCI formats, and is visible either to everyone with access to the project or to project members only. What an image is, how a container runtime builds and runs one, is <a href="https://phoebefu6.github.io/learn-with-phoebe/">a later course</a>; this page takes only where it is stored and how a job signs in.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn mirror. On the left, the project path gitlab.com slash penwood slash data slash pipelines. A dashed arrow carries it to the right, where the same three segments appear under registry.gitlab.com, with two optional name levels drawn as dashed boxes below. The registry path box is highlighted orange and labelled CI_REGISTRY_IMAGE, the base address a job reads. Under both, a job box holds CI_REGISTRY_USER and CI_REGISTRY_PASSWORD and an arrow labelled docker login points at the registry; a note says the job token can pull and push only the registry of the project that runs the job. A bottom note says the registry does not count toward the 10 GiB per project on Free, as of 2026-10-29.">
+        <defs>
+          <filter id="b7aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="71" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b7aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b7aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b7aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b7aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b7aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b7aB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b7aW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b7aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b7aH" x="30" y="26">THE IMAGE PATH IS THE PROJECT PATH AGAIN: PENWOOD (CONSTRUCTED)</text>
+        <text class="b7aS" x="470" y="26">container registry and authentication pages, read 2026-10-29</text>
+
+        <g filter="url(#b7aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="56" width="340" height="50" rx="10" transform="rotate(-0.4 210 81)" fill="#F4F0FC"/>
+          <path d="M384 81 L446 81" stroke-dasharray="5 4" marker-end="url(#b7aAr)"/>
+          <rect x="452" y="56" width="398" height="50" rx="10" transform="rotate(0.3 651 81)" fill="#FC6D26"/>
+          <rect x="492" y="120" width="170" height="30" rx="6" transform="rotate(-0.8 577 135)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <rect x="676" y="120" width="174" height="30" rx="6" transform="rotate(0.7 763 135)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <path d="M520 106 L520 118" marker-end="url(#b7aAr)"/>
+          <path d="M700 106 L700 118" marker-end="url(#b7aAr)"/>
+          <rect x="40" y="176" width="340" height="96" rx="10" transform="rotate(0.4 210 224)" fill="#483698"/>
+          <path d="M384 224 L440 224 L440 110" marker-end="url(#b7aAr)"/>
+          <rect x="452" y="176" width="398" height="96" rx="10" transform="rotate(-0.3 651 224)" fill="url(#b7aHc)"/>
+        </g>
+
+        <text class="b7aL" x="56" y="78">project path</text>
+        <text class="b7aS" x="56" y="96">gitlab.com / penwood / data / pipelines</text>
+        <text class="b7aH" x="466" y="78">registry.gitlab.com / penwood / data / pipelines</text>
+        <text class="b7aL" x="466" y="96">= CI_REGISTRY_IMAGE, the base address a job reads</text>
+        <text class="b7aS" x="504" y="139">optional level 1: /ingest</text>
+        <text class="b7aS" x="688" y="139">optional level 2: /ingest/dev</text>
+
+        <text class="b7aW" x="56" y="200">the job, while it runs</text>
+        <text class="b7aW" x="56" y="222">CI_REGISTRY_USER + CI_REGISTRY_PASSWORD</text>
+        <text class="b7aW" x="56" y="244">docker login $CI_REGISTRY</text>
+        <text class="b7aW" x="56" y="264">nothing stored in settings or YAML</text>
+
+        <text class="b7aL" x="466" y="200">what the job token may touch</text>
+        <text class="b7aS" x="466" y="220">"read (pull) and write (push) access to the container</text>
+        <text class="b7aS" x="466" y="238">registry of the project that runs the job"</text>
+        <text class="b7aB" x="466" y="262">another project's registry: not with this token</text>
+
+        <text class="b7aN" x="30" y="304">Storage quota, as of 2026-10-29: 10 GiB per project on Free counts the repository and LFS; the registry is excluded.</text>
+        <text class="b7aN" x="30" y="324">Renaming or moving the project moves the image path with it. Pick the tree once; session 1 said so.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - one path, two hosts: the registry address is derived, never chosen, and the job already holds the key</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> Three variables and one login line <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The predefined variables page lists <code>CI_REGISTRY_IMAGE</code> as the "Base address for the container registry", set only when the registry is enabled for the project. The authentication page gives the login a job should use: <code>echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin</code>. Those three variables exist in every job without anyone creating them, and the password is the job token, which "has read (pull) and write (push) access to the container registry of the project that runs the job". Penwood's <code>build-image</code> has tagged <code>$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA</code> since session 3; tonight the login line goes in front of the push so the tag has somewhere to land. No personal token, no masked variable from session 4, nothing to rotate.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Visibility, formats and what the quota counts <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The registry page lets a project set its registry to "Everyone With Access" or "Only Project Members"; Penwood's project is private, so both read the same for outsiders and the setting matters only if the project is ever opened up. It accepts Docker V2 and OCI image formats. The storage quotas page, as of 2026-10-29, says each project in a Free namespace has 10 GiB of free storage, that only the repository and LFS count, and that the container registry, package registry and artifacts are excluded; a project over 10 GiB becomes read-only unless storage is purchased. So images do not eat the project's 10 GiB, but the free user limit page's read-only state over five users does stop writes to registries. Re-verify the tier page before relying on it.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The free user limit page says a private top-level namespace over five users is "placed in a read-only state", and session 1 listed what that covers: repositories, LFS, packages and registries. Constructed: Penwood invites a sixth person to look at the board; the next push to <code>main</code> builds the image fine, then <code>publish-image</code> fails at the push because the registry will not accept a write. The pipeline is red for a reason that has nothing to do with the YAML. The fix is on the members page, not in the job.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers include:local, hidden jobs and how extends merges</span>
+      <h2>Include, then extend</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">A pipeline file grows by copy and paste until two jobs that should be identical are not. GitLab's answer has two halves. <code>include</code> pulls another YAML file into the configuration before anything else is read, and the includes page says the main file "takes precedence" over what it includes. <code>extends</code> lets a job inherit from a hidden job, one whose name starts with a dot and which never runs on its own, through what the YAML reference calls a "reverse deep merge based on the keys". Penwood puts one hidden job in <code>ci/scan-template.yml</code> and extends it from <code>scan-dependencies</code>.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn merge. On the left, the file ci slash scan-template.yml holds a hidden job dot dependency-scan with the keys image, script and allow_failure true. An arrow labelled include local carries it into the middle. On the right, the main file's job scan-dependencies has stage test, extends dot dependency-scan and needs empty list. Below, the resolved job is drawn as a single box with all five keys: stage and needs from the job, image, script and allow_failure from the hidden job. The resolved job is highlighted orange. A note says that when both define the same key the job wins over the template, and that the bench treats include merging as a key-level deep merge, its own convention.">
+        <defs>
+          <filter id="b7bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="73" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b7bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b7bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b7bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b7bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b7bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b7bB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b7bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b7bH" x="30" y="26">ONE HIDDEN JOB, ONE EXTENDS: HOW SCAN-DEPENDENCIES IS ASSEMBLED</text>
+        <text class="b7bS" x="500" y="26">includes page and YAML reference, read 2026-10-29 · Penwood constructed</text>
+
+        <g filter="url(#b7bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="330" height="124" rx="10" transform="rotate(-0.5 205 112)" fill="url(#b7bHc)"/>
+          <path d="M374 112 L446 112" stroke-dasharray="5 4" marker-end="url(#b7bAr)"/>
+          <rect x="452" y="50" width="398" height="124" rx="10" transform="rotate(0.4 651 112)" fill="#F4F0FC"/>
+          <path d="M205 178 L205 206 L440 206 L440 222" marker-end="url(#b7bAr)"/>
+          <path d="M651 178 L651 206 L470 206 L470 222" marker-end="url(#b7bAr)"/>
+          <rect x="300" y="226" width="300" height="78" rx="10" transform="rotate(-0.3 450 265)" fill="#FC6D26"/>
+          <rect x="40" y="226" width="236" height="78" rx="10" transform="rotate(0.5 158 265)" fill="#FFFFFF"/>
+          <rect x="624" y="226" width="226" height="78" rx="10" transform="rotate(-0.6 737 265)" fill="#FFFFFF"/>
+        </g>
+
+        <text class="b7bL" x="56" y="72">ci/scan-template.yml (included)</text>
+        <text class="b7bS" x="56" y="92">.dependency-scan:        hidden, never runs alone</text>
+        <text class="b7bS" x="56" y="110">  image: python:3.12-slim</text>
+        <text class="b7bS" x="56" y="128">  script: python -m pip_audit -r requirements.txt</text>
+        <text class="b7bS" x="56" y="146">  allow_failure: true</text>
+        <text class="b7bL" x="56" y="166">include: - local: ci/scan-template.yml</text>
+
+        <text class="b7bL" x="468" y="72">.gitlab-ci.yml (main file)</text>
+        <text class="b7bS" x="468" y="92">scan-dependencies:</text>
+        <text class="b7bS" x="468" y="110">  stage: test</text>
+        <text class="b7bS" x="468" y="128">  extends: .dependency-scan</text>
+        <text class="b7bS" x="468" y="146">  needs: []</text>
+        <text class="b7bL" x="468" y="166">no script here: it arrives through extends</text>
+
+        <text class="b7bL" x="314" y="248">scan-dependencies, resolved</text>
+        <text class="b7bS" x="314" y="266" style="fill:#1F1633">stage test · needs [] · image · script · allow_failure</text>
+        <text class="b7bL" x="314" y="290">5 keys from 2 files, 1 job in the pipeline</text>
+
+        <text class="b7bL" x="54" y="248">same key in both?</text>
+        <text class="b7bS" x="54" y="266">the job wins over the hidden job,</text>
+        <text class="b7bS" x="54" y="284">key by key; values are not merged</text>
+
+        <text class="b7bB" x="638" y="248">the bench's convention</text>
+        <text class="b7bS" x="638" y="266">include merge is key-level, deep,</text>
+        <text class="b7bS" x="638" y="284">includes in order, main file last</text>
+
+        <text class="b7bN" x="30" y="334">Reverse deep merge: read the job, then fill the gaps from its parent. Up to eleven levels work; the reference says avoid more than three.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the job keeps what it says and inherits what it does not; the template never runs by itself</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> What "reverse deep merge" means in practice <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The YAML reference says <code>extends</code> is a "reverse deep merge based on the keys", that the values of keys are not merged, that up to eleven levels of inheritance work, that more than three is best avoided, and that a job may extend several parents. In practice: GitLab builds the job from the hidden job upward, then lets each key the job itself defines replace the parent's. For Penwood that means <code>scan-dependencies</code> gets <code>image</code>, <code>script</code> and <code>allow_failure</code> from <code>.dependency-scan</code>, keeps its own <code>stage</code> and <code>needs: []</code>, and if someone one day adds a <code>script</code> to the job, the template's script is replaced whole, not appended to. The bench in session 8 shows the resolved job: after the include its file holds 14 jobs, and <code>scan-dependencies</code> has a script it never wrote.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Which file wins, and which part of that is the bench's <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Two ordering facts come from the includes page: includes are evaluated first and merged with <code>.gitlab-ci.yml</code>, which "takes precedence"; and between several includes, the last one wins. What the page does not spell out is how deep that merge goes inside a job. The bench's convention is a key-level deep merge, includes in order and then the main file last; say "the bench's convention" when you quote it, not "GitLab". The practical rule is the same either way: define a key once, in the template, and override it in the main file only when you mean to. Two definitions of the same hidden job in two included files is a defect waiting for someone to reorder the include list.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The YAML reference says <code>allow_failure: true</code> lets a job fail while the pipeline still passes, with an orange warning, the status GitLab shows as passed with warnings. Penwood's template sets exactly that on the scan, so a new advisory in a dependency never blocks a merge; it shows orange and someone reads it. Constructed consequence: in week three the orange is there every day and nobody opens it. The template made the scan cheap to ignore. Deciding when a scan should block is a team rule, not a keyword; <code>allow_failure</code> only records the decision you made.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers include:template, include:project, remote URLs and the limits</span>
+      <h2>Templates GitLab ships</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">The includes page lists four ways to include: <code>local</code>, a file in the same project; <code>project</code>, a file in another project on the same instance; <code>remote</code>, a URL; and <code>template</code>, a file GitLab ships with the application. The pricing page, as of 2026-10-29, lists "Static Application Security Testing" in the Free tier, and GitLab's own scanners arrive in a pipeline through <code>include:template</code>. The exact template file names are listed on the includes page and the scanner pages; copy them from there rather than from memory, because a template path that does not exist fails the pipeline at creation.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn funnel of four include sources flowing into one configuration. Left column, four boxes: local, a file in this project; project, a file in another project on the instance, marked as the preferred way to share across projects; remote, a URL, marked as the way the docs say to prefer project over; template, a file GitLab ships, highlighted orange because it is tonight's new keyword. Arrows carry all four into one box labelled the merged configuration, includes first in order, then the main file wins. A side panel prints the limits: up to 150 includes, 30 seconds to resolve.">
+        <defs>
+          <filter id="b7cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="79" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b7cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b7cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b7cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b7cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b7cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b7cB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b7cV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b7cW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b7cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b7cH" x="30" y="26">FOUR WAYS IN, ONE CONFIGURATION OUT</text>
+        <text class="b7cS" x="300" y="26">includes page, read 2026-10-29 · the template file names live on that page, not here</text>
+
+        <g filter="url(#b7cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="300" height="46" rx="8" transform="rotate(-0.5 190 73)" fill="#F4F0FC"/>
+          <rect x="40" y="108" width="300" height="46" rx="8" transform="rotate(0.4 190 131)" fill="#F4F0FC"/>
+          <rect x="40" y="166" width="300" height="46" rx="8" transform="rotate(-0.4 190 189)" fill="#FFFFFF"/>
+          <rect x="40" y="224" width="300" height="46" rx="8" transform="rotate(0.5 190 247)" fill="#FC6D26"/>
+          <path d="M344 73 L420 73 L420 150 L446 150" marker-end="url(#b7cAr)"/>
+          <path d="M344 131 L446 148" marker-end="url(#b7cAr)"/>
+          <path d="M344 189 L446 172" marker-end="url(#b7cAr)"/>
+          <path d="M344 247 L420 247 L420 170 L446 170" marker-end="url(#b7cAr)"/>
+          <rect x="452" y="110" width="230" height="100" rx="10" transform="rotate(0.3 567 160)" fill="#483698"/>
+          <rect x="700" y="50" width="150" height="220" rx="10" transform="rotate(-0.4 775 160)" fill="url(#b7cHc)"/>
+        </g>
+
+        <text class="b7cL" x="54" y="70">include: local</text>
+        <text class="b7cS" x="54" y="88">a file in this project · Penwood's ci/scan-template.yml</text>
+        <text class="b7cL" x="54" y="128">include: project</text>
+        <text class="b7cS" x="54" y="146">a file in another project here · preferred for sharing</text>
+        <text class="b7cL" x="54" y="186">include: remote</text>
+        <text class="b7cS" x="54" y="204">a URL · the docs prefer project over this</text>
+        <text class="b7cH" x="54" y="244">include: template</text>
+        <text class="b7cL" x="54" y="262">a file GitLab ships · Free SAST arrives this way</text>
+
+        <text class="b7cW" x="468" y="136">the merged configuration</text>
+        <text class="b7cW" x="468" y="158">includes first, in order</text>
+        <text class="b7cW" x="468" y="178">last include beats earlier ones</text>
+        <text class="b7cW" x="468" y="198">then .gitlab-ci.yml wins</text>
+
+        <text class="b7cL" x="714" y="76">limits on the page</text>
+        <text class="b7cV" x="714" y="110">150</text>
+        <text class="b7cS" x="714" y="128">includes at most</text>
+        <text class="b7cV" x="714" y="166">30 s</text>
+        <text class="b7cS" x="714" y="184">to resolve them all</text>
+        <text class="b7cB" x="714" y="222">template names:</text>
+        <text class="b7cS" x="714" y="240">copy from the docs,</text>
+        <text class="b7cS" x="714" y="258">never from memory</text>
+
+        <text class="b7cN" x="30" y="302">Penwood uses one local include tonight. The other three are the same mechanism with a different address.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the address differs, the merge does not; the orange one is how GitLab's own scanners enter a Free pipeline</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Why a template is still just an include <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A shipped template is a YAML file like Penwood's own, written by GitLab, merged by the same rule: includes first, main file wins. That is what makes it safe to adopt. If a shipped scanner job declares a <code>stage</code> Penwood's file does not have, the main file can redefine that job's <code>stage</code> and the override takes precedence. The pricing page puts Static Application Security Testing in Free as of 2026-10-29; which scanners beyond that are Free, and what each one does, is on the scanner pages and changes between releases, so read the badge on the page the day you add it. Penwood's constructed <code>.dependency-scan</code> is a stand-in: a small local template that behaves like a shipped one, so the merge can be watched on the bench without depending on a scanner this page did not read.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Sharing across projects: project over remote <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>When Penwood's <code>finance</code> subgroup gets its own project next year, the scan template should not be copied into it. The includes page prefers <code>include:project</code>, a file in another project on the same instance, over <code>include:remote</code>, a URL: the project version is read with GitLab's own permissions and pinned to a ref you name, where a URL is whatever is at that address when the pipeline is created. A single <code>penwood/ci-templates</code> project holding <code>scan-template.yml</code>, included by ref from every pipeline, is the pattern. The limits are generous for a team of five: up to 150 includes and 30 seconds to resolve them; a nested include counts toward the 150.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's analyst finds a scan template on a public URL and adds it with <code>include:remote</code>. It works for a month. Then the file at that URL changes its job names and the pipeline fails at creation with a message about a job that no longer exists; nothing in Penwood's repository changed. Moving the file into a project of their own and including it by ref makes every change to the template a merge request someone reads. The includes page states the preference for <code>project</code> over <code>remote</code>; this is the reason behind it.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's image jobs and the included scan</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Open the project from session 1 and the <code>.gitlab-ci.yml</code> from session 6. Tonight you add a login line to <code>build-image</code>, give <code>publish-image</code> a rule so it pushes from <code>main</code> only, create <code>ci/scan-template.yml</code>, and make <code>scan-dependencies</code> extend it. The YAML below is Penwood's real file as the bench parses it, quoted in excerpt. Penwood's durations are constructed; nothing here runs GitLab for real, and your output will differ. The container runtime inside the job and what <code>docker build</code> does are <a href="https://phoebefu6.github.io/learn-with-phoebe/">a later course</a>; tonight you only need the two lines to run.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn strip of three jobs across stages. build-image in the build stage, 382 seconds constructed, tags the image with CI_REGISTRY_IMAGE and the short commit hash and logs in with the job token. publish-image in the publish stage, 245 seconds constructed, pushes that tag and carries one rule, CI_COMMIT_BRANCH equals CI_DEFAULT_BRANCH; it is highlighted orange because it is the job that writes to the registry. scan-dependencies in the test stage, 233 seconds constructed, has needs empty and extends dot dependency-scan from the included file. Two context rows beneath: on a push to main all three run; in a merge request pipeline build-image and scan-dependencies run and publish-image is never added, printed in red, because CI_COMMIT_BRANCH is unset. Bench rung 3 counts six never-added jobs, publish-image among them.">
+        <defs>
+          <filter id="b7dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="83" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b7dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b7dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b7dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b7dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b7dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b7dB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b7dR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b7dA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b7dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b7dH" x="30" y="26">BUILD HERE, PUSH ONLY FROM MAIN, SCAN FROM THE TEMPLATE (PENWOOD, CONSTRUCTED)</text>
+        <text class="b7dS" x="560" y="42">durations constructed · never-added count from bench rung 3</text>
+
+        <g filter="url(#b7dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="250" height="110" rx="10" transform="rotate(-0.5 165 105)" fill="#F4F0FC"/>
+          <rect x="316" y="50" width="250" height="110" rx="10" transform="rotate(0.4 441 105)" fill="url(#b7dHc)"/>
+          <rect x="592" y="50" width="258" height="110" rx="10" transform="rotate(-0.4 721 105)" fill="#FC6D26"/>
+          <path d="M165 164 L165 174 L721 174 L721 166" stroke-dasharray="5 4" marker-end="url(#b7dAr)"/>
+          <rect x="40" y="186" width="810" height="40" rx="8" transform="rotate(0.2 445 206)" fill="#FFFFFF"/>
+          <rect x="40" y="236" width="810" height="40" rx="8" transform="rotate(-0.2 445 256)" fill="#FEF2F2" stroke="#991B1B"/>
+          <path d="M700 232 L700 240" stroke="#991B1B"/>
+        </g>
+
+        <text class="b7dA" x="54" y="68">stage build</text>
+        <text class="b7dL" x="54" y="90">build-image · 382 s</text>
+        <text class="b7dS" x="54" y="110">docker login $CI_REGISTRY (job token)</text>
+        <text class="b7dS" x="54" y="128">docker build -t $CI_REGISTRY_IMAGE:</text>
+        <text class="b7dS" x="54" y="146">  $CI_COMMIT_SHORT_SHA .</text>
+
+        <text class="b7dA" x="330" y="68">stage test</text>
+        <text class="b7dL" x="330" y="90">scan-dependencies · 233 s</text>
+        <text class="b7dS" x="330" y="110">extends: .dependency-scan</text>
+        <text class="b7dS" x="330" y="128">needs: []  (starts at pipeline creation)</text>
+        <text class="b7dS" x="330" y="146">script arrives from ci/scan-template.yml</text>
+
+        <text class="b7dA" x="606" y="68">stage publish</text>
+        <text class="b7dH" x="606" y="90">publish-image · 245 s</text>
+        <text class="b7dL" x="606" y="110">docker push $CI_REGISTRY_IMAGE:$SHA</text>
+        <text class="b7dL" x="606" y="128">rules: CI_COMMIT_BRANCH ==</text>
+        <text class="b7dL" x="606" y="146">  CI_DEFAULT_BRANCH</text>
+
+        <text class="b7dL" x="54" y="210">push to main</text>
+        <text class="b7dS" x="180" y="210">build-image runs · scan-dependencies runs · publish-image runs: the registry gets one new tag</text>
+
+        <text class="b7dR" x="54" y="260">merge request</text>
+        <text class="b7dS" x="180" y="260">build-image runs · scan-dependencies runs ·</text>
+        <text class="b7dR" x="470" y="260">publish-image never added</text>
+        <text class="b7dS" x="640" y="260">CI_COMMIT_BRANCH is unset here</text>
+
+        <text class="b7dN" x="30" y="304">Bench rung 3, merge request with pipelines/ changed: 8 jobs run, 6 never added, publish-image among them. The image is built and tested on every</text>
+        <text class="b7dN" x="30" y="324">merge request and written to the registry only from main. Your numbers will differ.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the build proves the image, the push publishes it, and one rule keeps the two on different branches</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Find the registry and read its path.</strong> In the project's left menu, open the container registry page under deploy or packages (names move between releases; search the menu for "registry"). It is empty, and the page shows the path your pushes will land at. Compare it with the project URL: same three segments, different host.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's registry path (constructed) · what you should see, roughly</span>project   gitlab.com/penwood/data/pipelines
+registry  registry.gitlab.com/penwood/data/pipelines        <- CI_REGISTRY_IMAGE in every job
+optional  registry.gitlab.com/penwood/data/pipelines/ingest  <- up to two name levels below the project</div>
+      </div>
+      <div class="step">
+        <p><strong>Put the login in front of the build.</strong> Edit <code>build-image</code>. The login line is the one from the authentication page; the three variables already exist in the job. Keep the tag <code>$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA</code> from session 3. The <code>needs: [lint-yaml]</code> from session 5 stays.</p>
+        <div class="prompt-box good"><span class="label">★ build-image, from penwood.yml, with the login line added</span>build-image:
+  stage: build
+  needs:
+    - lint-yaml
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - 'docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .'</div>
+      </div>
+      <div class="step">
+        <p><strong>Make the push a main-only job.</strong> <code>publish-image</code> needs <code>build-image</code> and <code>integration-tests</code> from session 5, so it never pushes an untested image. Its one rule says the job exists only when the branch is the default branch, which, as session 2 showed, is unset in a merge request pipeline. The login goes here too: each job is its own shell.</p>
+        <div class="prompt-box good"><span class="label">★ publish-image, from penwood.yml, quoted in excerpt</span>publish-image:
+  stage: publish
+  needs:
+    - build-image
+    - integration-tests
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - 'docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA'</div>
+      </div>
+      <div class="step">
+        <p><strong>Create the template file.</strong> New file <code>ci/scan-template.yml</code> at the repository root's <code>ci/</code> folder. One hidden job, leading dot, with the keys the scan needs and nothing about where it sits in a pipeline. Commit it on your branch.</p>
+        <div class="prompt-box good"><span class="label">★ ci/scan-template.yml, verbatim from the data file</span># ci/scan-template.yml (constructed) - included by the main file
+.dependency-scan:
+  image: python:3.12-slim
+  script:
+    - python -m pip_audit -r requirements.txt
+  allow_failure: true</div>
+      </div>
+      <div class="step">
+        <p><strong>Include it and extend it.</strong> Add the <code>include</code> at the top level of <code>.gitlab-ci.yml</code>, then replace the body of <code>scan-dependencies</code> with <code>extends</code>. Delete its old <code>script</code>: if you leave one, it wins over the template's and the template is doing nothing. Open the merge request; the pipeline tab lists <code>scan-dependencies</code> with the inherited script in its log.</p>
+        <div class="prompt-box good"><span class="label">★ The include and the job, from penwood.yml</span>include:
+  - local: ci/scan-template.yml
+
+scan-dependencies:
+  stage: test
+  extends: .dependency-scan
+  needs: []</div>
+      </div>
+      <div class="step">
+        <p><strong>Read the two pipelines.</strong> On the merge request, count the jobs; <code>publish-image</code> is not among them. Merge, then open the pipeline on <code>main</code>: <code>publish-image</code> ran, and the registry page now shows one tag, the short commit hash. Paste both files into the bench in session 8 and it prints the same include and the same never-added list.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly (durations constructed, your numbers will differ)</span>merge request pipeline:  build-image ran (382 s) · scan-dependencies ran (233 s, passed with warnings if pip_audit reports) · publish-image not in the job list
+pipeline on main:        build-image ran · scan-dependencies ran · publish-image ran (245 s)
+registry page:           penwood/data/pipelines · 1 tag · <short sha>
+bench rung 3 (canon):    8 jobs ran, 6 never added, publish-image among the 6</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The step to skip</span>Creating a personal access token, saving it as a masked variable, and logging in with it from the job.
+It works, and now a secret exists that someone must rotate and that every job on an unprotected branch can read.
+The job token is already in CI_REGISTRY_PASSWORD, scoped to the registry of the project that runs the job, and gone when the job ends.</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 8</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Add a second tag to <code>publish-image</code>, <code>$CI_REGISTRY_IMAGE:latest</code>, pushed only from <code>main</code>. Then write one sentence on why a short commit hash is the tag the deploy jobs should reference and <code>latest</code> is not.</li>
+      <li>Add a <code>script</code> line to <code>scan-dependencies</code> in the main file on a branch, open a merge request and read the job log. Confirm the template's script is replaced whole, not appended. Revert before merging.</li>
+      <li>Move <code>.dependency-scan</code> into a second included file and include both. Change the hidden job's <code>allow_failure</code> in one of them. Work out from the includes page which file wins, then check the job on the merge request.</li>
+      <li>Open the includes page in GitLab Docs and find the template list. Write down the exact path of one Free scanner template and the badge on its page, dated; do not add it yet.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 7 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · Penwood renames the project <code>pipelines</code> to <code>data-pipelines</code>. What happens to the address its images are pushed to?</p>
+      <button class="qopt" type="button">A · Nothing; the registry path was fixed when the first image was pushed</button>
+      <button class="qopt" type="button">B · Nothing until someone edits the registry settings page</button>
+      <button class="qopt" type="button">C · It moves with the project, because the registry path always matches the project's repository path</button>
+      <button class="qopt" type="button">D · The images are deleted and must be pushed again</button>
+      <p class="qwhy">The container registry page: the path "always matches the related project's repository path". The address is derived from the tree, never chosen, so renaming the project renames the registry path; anything outside GitLab that held the old address now points at nothing.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · <code>.dependency-scan</code> in the included file sets <code>script</code> and <code>allow_failure: true</code>. <code>scan-dependencies</code> in the main file sets <code>stage</code>, <code>needs: []</code>, <code>extends: .dependency-scan</code> and its own one-line <code>script</code>. What does the resolved job run?</p>
+      <button class="qopt" type="button">A · Only the main file's script line; the template's script is replaced whole, and allow_failure is inherited</button>
+      <button class="qopt" type="button">B · The template's script followed by the main file's line, merged into one list</button>
+      <button class="qopt" type="button">C · Only the template's script; the included file takes precedence</button>
+      <button class="qopt" type="button">D · Nothing; two scripts for one job fail the pipeline at creation</button>
+      <p class="qwhy">The YAML reference calls extends a "reverse deep merge based on the keys" and says the values of keys are not merged: the job's own key replaces the parent's whole. Keys the job does not define, here allow_failure, are inherited. The main file wins over the include.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · A job needs to push to Penwood's own registry. Which credential does the authentication page's login line use, and what can it reach?</p>
+      <button class="qopt" type="button">A · A personal access token saved as a masked variable; every registry the user can see</button>
+      <button class="qopt" type="button">B · The runner's registration token; every project the runner serves</button>
+      <button class="qopt" type="button">C · The project's deploy key; this project's repository and registry</button>
+      <button class="qopt" type="button">D · The job token in CI_REGISTRY_PASSWORD; read and write on the registry of the project that runs the job</button>
+      <p class="qwhy">The login is <code>echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin</code>, and the job token "has read (pull) and write (push) access to the container registry of the project that runs the job". Nothing to create, store or rotate.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Registry path mirrors the project path; name levels; formats; visibility; all tiers</span><span class="note">GitLab Docs: Container registry; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Login from a job with the job token; what the token may reach</span><span class="note">GitLab Docs: Authenticate with the container registry, Predefined CI/CD variables reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">include: local, project, remote, template; order of precedence; 150 includes; 30 seconds</span><span class="note">GitLab Docs: Use CI/CD configuration from other files; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">extends as a reverse deep merge; hidden jobs; allow_failure</span><span class="note">GitLab Docs: CI/CD YAML syntax reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Free tier: SAST included; 10 GiB per project excludes the registry; read-only over five users</span><span class="note">GitLab Pricing, Storage usage quotas, Free user limit; read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Include merge depth inside a job</span><span class="note">Not fixed by the page read; the bench's key-level convention, labelled as such</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What a container or an image is; shipped scanner template names</span><span class="note">Linked to a later course and to the includes page; not taught here</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 7 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>The registry path is derived</b><span>registry host + the project path, up to two name levels below. Rename the project and the path moves.</span></div>
+      <div class="cheat-item"><b>Three variables, one line</b><span>echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin. The job token pulls and pushes this project's registry only.</span></div>
+      <div class="cheat-item"><b>Build everywhere, push from main</b><span>publish-image needs build-image and integration-tests and has one rule: CI_COMMIT_BRANCH == CI_DEFAULT_BRANCH.</span></div>
+      <div class="cheat-item"><b>Hidden job + extends</b><span>A dot-prefixed job never runs. extends is a reverse deep merge by key; the job's own key replaces the parent's whole.</span></div>
+      <div class="cheat-item"><b>Include order</b><span>Includes first, last include wins between them, then .gitlab-ci.yml wins. local, project, remote, template; prefer project over remote.</span></div>
+      <div class="cheat-item"><b>Dated limits</b><span>150 includes, 30 s to resolve. Free SAST on the pricing page and 10 GiB per project excluding the registry, as of 2026-10-29.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>Penwood's file is complete: five stages, 14 jobs, needs, rules, two environments, an image in the registry and one included template. Session 8 is the bench. It parses that exact YAML in your browser, resolves the include and the extends, builds the DAG, schedules it with and without a runner cap, and then shows two pipelines that look fine and are not.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 7 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="b6-environments-deployments.html">← Prev: Environments and deployments</a> &nbsp;·&nbsp; <a href="b8-the-pipeline-dag-bench.html">Next: The pipeline DAG bench →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

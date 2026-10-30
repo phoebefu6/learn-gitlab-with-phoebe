@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 2 of 8. Open Penwood's first merge request from feature/orders-dedupe, read the four tabs, approve it on Free and watch the merge button stay live, then learn why a merge request pipeline runs on the source branch with CI_COMMIT_BRANCH unset. Penwood is a constructed analytics team.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="The merge request - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 2 of 8. Same idea as a pull request, two mechanisms that differ: approvals that are optional on Free, and a pipeline that belongs to the merge request.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b2-the-merge-request.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The merge request - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 2 of 8. The merge request page, optional approvals on Free, and the merge_request_event pipeline.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 2 · The merge request - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 2 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 2 of 8</div>
+    <h1>The <span class="accent">merge request</span></h1>
+    <p class="sub">Session 1 ended with a Developer refused on <code>main</code> and told to open a branch instead. Tonight that branch becomes Penwood's first merge request. A merge request is the same idea as a pull request: a proposed change, a diff, a conversation, a pipeline result and a merge button on one page. Two mechanisms underneath are GitLab's own and shape every later session: approvals that exist on Free but do not block the merge, and a pipeline that belongs to the merge request itself, runs on the source branch and never sees <code>CI_COMMIT_BRANCH</code>. Penwood, a constructed five-person logistics-analytics team, opens the request from <code>feature/orders-dedupe</code> and reads what its pipeline tab will show against the bench's r3 job table.</p>
+    <div class="chip-row">
+      <span class="chip level">🟡 Core</span>
+      <span class="chip audience">Analytics engineers and data builders</span>
+      <span class="chip audience">Anyone who has opened a pull request before</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Page, approvals, pipeline</span>
+      <span class="a3" style="flex:4">20-42 · Build-along: Penwood's first merge request</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where session 1 left you</h2>
+    </div>
+    <p class="lede">You have a private top-level group, a subgroup, a project with a protected <code>main</code>, five members and a board. The protected branches page says the default branch "is protected by default" and that Maintainers are the ones "Allowed to push and merge". So a Developer's only road to <code>main</code> is a branch and a merge request. Tonight is that road: what the merge request page gathers, what an approval does on Free, and what kind of pipeline runs when the source of the event is a merge request rather than a push. Session 3 writes the first <code>.gitlab-ci.yml</code>; session 5 gives it the rules that make the merge request pipeline small. Penwood is constructed: its people, branch and job table are invented for these pages.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> One open merge request from <code>feature/orders-dedupe</code> into <code>main</code> with a description, one review thread and one approval; the docs' exact sentence about what that approval does on Free; the name of the event source a merge request pipeline carries, <code>merge_request_event</code>; and a reading of the bench's r3 table that tells you, before any pipeline exists, that this merge request should run 8 jobs and never add 6.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers what the merge request page gathers in one place</span>
+      <h2>Same idea, different name</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">What a repository, an issue and a pull request are belongs to <a href="https://phoebefu6.github.io/learn-github-with-phoebe/courses/04-branches-and-prs.html">the GitHub course's branches and PRs session</a>; this page takes only GitLab's side of the seam, the deltas. The merge requests page calls the merge request "a central location for your team to review code, have discussions, and track code changes", and that is the whole of the rename: a proposed change from a source branch into a target branch, with the description, the comment threads, the commits, the pipelines and the diff on one page, and a merge button at the bottom that the branch rule decides who may press.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn merge request page for the constructed Penwood request number 1, dedupe the orders feed, from feature/orders-dedupe into main. Four tabs across the top: Overview holding the description and comment threads, Commits holding the list of commits on the source branch, Pipelines holding one pipeline per push with a merge request label, and Changes holding the diff. A merge button strip at the bottom says Maintainers press it because main is protected. A note says the page is a view over the branch; push again and every tab updates.">
+        <defs>
+          <filter id="b2aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="53" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b2aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b2aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b2aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b2aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b2aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b2aW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b2aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b2aH" x="30" y="26">ONE PAGE OVER A BRANCH: PENWOOD'S !1 (CONSTRUCTED)</text>
+        <text class="b2aS" x="400" y="26">merge requests page, read 2026-10-29 · the tabs are the page's own sections</text>
+
+        <g filter="url(#b2aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="44" width="800" height="256" rx="12" transform="rotate(0.2 440 172)" fill="#FFFFFF"/>
+          <rect x="56" y="58" width="52" height="24" rx="6" transform="rotate(-1.2 82 70)" fill="#FC6D26"/>
+          <rect x="470" y="58" width="178" height="24" rx="6" transform="rotate(0.6 559 70)" fill="#F4F0FC"/>
+          <path d="M652 70 L700 70" marker-end="url(#b2aAr)"/>
+          <rect x="706" y="58" width="60" height="24" rx="6" transform="rotate(-0.8 736 70)" fill="#483698"/>
+          <rect x="56" y="100" width="186" height="26" rx="6" transform="rotate(-0.4 149 113)" fill="#483698"/>
+          <rect x="254" y="100" width="186" height="26" rx="6" transform="rotate(0.5 347 113)" fill="#F4F0FC"/>
+          <rect x="452" y="100" width="186" height="26" rx="6" transform="rotate(-0.5 545 113)" fill="#F4F0FC"/>
+          <rect x="650" y="100" width="174" height="26" rx="6" transform="rotate(0.4 737 113)" fill="#F4F0FC"/>
+          <rect x="56" y="138" width="186" height="98" rx="8" transform="rotate(0.3 149 187)" fill="#F4F0FC"/>
+          <rect x="254" y="138" width="186" height="98" rx="8" transform="rotate(-0.3 347 187)" fill="#FFFFFF"/>
+          <rect x="452" y="138" width="186" height="98" rx="8" transform="rotate(0.4 545 187)" fill="#FFFFFF"/>
+          <rect x="650" y="138" width="174" height="98" rx="8" transform="rotate(-0.4 737 187)" fill="url(#b2aHc)"/>
+          <rect x="56" y="250" width="768" height="36" rx="8" transform="rotate(0.1 440 268)" fill="#F4F0FC"/>
+          <rect x="68" y="256" width="70" height="24" rx="6" transform="rotate(-0.9 103 268)" fill="#483698"/>
+        </g>
+
+        <text class="b2aL" x="64" y="75">!1</text>
+        <text class="b2aL" x="118" y="75">dedupe the orders feed</text>
+        <text class="b2aL" x="480" y="75">feature/orders-dedupe</text>
+        <text class="b2aW" x="720" y="75">main</text>
+
+        <text class="b2aW" x="68" y="118">Overview</text>
+        <text class="b2aL" x="266" y="118">Commits</text>
+        <text class="b2aL" x="464" y="118">Pipelines</text>
+        <text class="b2aL" x="662" y="118">Changes</text>
+
+        <text class="b2aL" x="68" y="160">description</text>
+        <text class="b2aS" x="68" y="178">what and why, links issue #2</text>
+        <text class="b2aL" x="68" y="202">comment threads</text>
+        <text class="b2aS" x="68" y="220">on a line or on the whole</text>
+
+        <text class="b2aL" x="266" y="160">the source branch's commits</text>
+        <text class="b2aS" x="266" y="178">newest on top</text>
+        <text class="b2aS" x="266" y="202">push again: the list grows,</text>
+        <text class="b2aS" x="266" y="220">every other tab updates too</text>
+
+        <text class="b2aL" x="464" y="160">one pipeline per push</text>
+        <text class="b2aS" x="464" y="178">label: merge request (Part 3)</text>
+        <text class="b2aS" x="464" y="202">empty until .gitlab-ci.yml</text>
+        <text class="b2aS" x="464" y="220">exists (session 3)</text>
+
+        <text class="b2aL" x="662" y="160">the diff</text>
+        <text class="b2aS" x="662" y="178">source against target</text>
+        <text class="b2aS" x="662" y="202">threads start here,</text>
+        <text class="b2aS" x="662" y="220">land in Overview</text>
+
+        <text class="b2aW" x="80" y="273">Merge</text>
+        <text class="b2aL" x="152" y="273">main is protected: Maintainers press it, Developers open and discuss</text>
+        <text class="b2aS" x="598" y="273">branch rule, protected branches page</text>
+
+        <text class="b2aN" x="30" y="324">The page is a view over the branch. Nothing on it is edited by hand except the description and the threads.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - four tabs, one branch underneath, and a merge button the branch rule hands to Maintainers</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> Where a thread lives and when it closes <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A comment made on a line in Changes and a comment made at the bottom of Overview are the same kind of thing: a thread on the merge request. Changes shows it beside the line it was about; Overview shows every thread in time order with the line of code quoted. The habit that matters for Penwood is to leave review on the line, because the next push moves the conversation forward with the code and the reviewer can see whether the line changed. Resolving a thread is a click by whoever is satisfied, usually the reviewer. Whether an unresolved thread may block the merge is a project setting; the settings page for it was not read at source on 2026-10-29, so open your project's merge request settings and read the option's own wording before you make it a team rule.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Draft, squash and the merge method: settings exist, read them yourself <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Three things a team coming from a pull request habit will look for: marking a request as a draft so it cannot be merged yet, squashing the source branch's commits into one when merging, and the merge method itself (a merge commit or a linear history). All three exist in GitLab as options on the merge request or in the project's merge request settings. None of their documentation pages were read at source on 2026-10-29, so no sentence about their exact behaviour is printed here. The honest instruction is: open the project's merge request settings, read the three options' own descriptions, and decide Penwood's rule in session 3 after you have seen the first real merge. Learning to say "the docs page says" instead of "I think it does" is half of being the person a team trusts with its settings.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Raj, Maintainer in <code>data</code>, opens Changes on Penwood's !1 and leaves a thread on the line that dedupes by order id alone, asking about late-arriving corrections. Mei pushes a second commit keyed on order id and version. The Commits tab shows two, the Changes tab shows the new line, Raj's thread still sits beside the old one with a note that the line changed, and the Overview shows the whole exchange. Nobody copied anything between tabs. That is the mechanism the merge requests page is describing when it says "a central location": one branch, one record, several views.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers who can approve on Free and what the approval does</span>
+      <h2>Approvals on Free are optional</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The approvals page is precise. On Free, users with at least the Developer role can approve a merge request, and "These approvals are optional and don't prevent merging without approval". Required approval rules, the kind that grey out the merge button until two people from a named group have approved, are Premium and Ultimate, as is approval by Code Owners. So on Free an approval is a signal, not a lock, and the lock Penwood actually has is the branch rule: only Maintainers merge into <code>main</code>.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn approval widgets side by side. Left, Free: Raj, a Developer or higher, has approved, the counter reads 1 approval, and the Merge button is live and highlighted; the docs' sentence that approvals are optional and do not prevent merging sits under it. Right, Premium and Ultimate: a required rule asks for 2 approvals from the data group, 1 of 2 is met, and the Merge button is greyed out. A hachure strip across the bottom gives the Free substitute: the protected branch decides who merges, a team convention decides when, and a blocking manual job from session 6 gates production.">
+        <defs>
+          <filter id="b2bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="59" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b2bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b2bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b2bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b2bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b2bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b2bB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b2bV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b2bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b2bH" x="30" y="26">AN APPROVAL IS A SIGNAL ON FREE AND A LOCK ON PREMIUM</text>
+        <text class="b2bS" x="430" y="26">merge request approvals page, read 2026-10-29 · Penwood's names are constructed</text>
+
+        <g filter="url(#b2bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="48" width="400" height="190" rx="10" transform="rotate(-0.3 240 143)" fill="#FFFFFF"/>
+          <rect x="56" y="84" width="368" height="30" rx="6" transform="rotate(0.4 240 99)" fill="#F4F0FC"/>
+          <path d="M70 99 L78 107 L92 91"/>
+          <rect x="56" y="170" width="92" height="30" rx="6" transform="rotate(-1.4 102 185)" fill="#FC6D26"/>
+          <rect x="460" y="48" width="380" height="190" rx="10" transform="rotate(0.3 650 143)" fill="#FFFFFF"/>
+          <rect x="476" y="84" width="348" height="30" rx="6" transform="rotate(-0.4 650 99)" fill="#F4F0FC"/>
+          <path d="M490 99 L498 107 L512 91"/>
+          <rect x="476" y="124" width="348" height="30" rx="6" transform="rotate(0.3 650 139)" fill="#FFFFFF" stroke-dasharray="5 4"/>
+          <rect x="476" y="170" width="92" height="30" rx="6" transform="rotate(0.8 522 185)" fill="#E9E5F4" stroke="#CFC8E3"/>
+          <rect x="40" y="258" width="800" height="40" rx="10" transform="rotate(0.1 440 278)" fill="url(#b2bHc)"/>
+        </g>
+
+        <text class="b2bL" x="56" y="70">Free · GitLab.com</text>
+        <text class="b2bS" x="424" y="70" text-anchor="end">Developer or higher may approve</text>
+        <text class="b2bL" x="102" y="104">Raj approved</text>
+        <text class="b2bS" x="200" y="104">Maintainer, data subgroup · 1 approval</text>
+        <text class="b2bL" x="74" y="190">Merge</text>
+        <text class="b2bS" x="162" y="182">live: "optional and don't prevent</text>
+        <text class="b2bS" x="162" y="198">merging without approval"</text>
+        <text class="b2bS" x="56" y="226">the only lock here is the branch rule: Maintainers merge main</text>
+
+        <text class="b2bB" x="476" y="70">Premium and Ultimate</text>
+        <text class="b2bS" x="640" y="70">required approval rules</text>
+        <text class="b2bL" x="522" y="104">rule: 2 approvals from data</text>
+        <text class="b2bV" x="760" y="107">1 of 2</text>
+        <text class="b2bS" x="490" y="143">waiting for a second approver</text>
+        <text class="b2bS" x="500" y="190">Merge</text>
+        <text class="b2bS" x="582" y="182">greyed until the rule is met;</text>
+        <text class="b2bS" x="582" y="198">Code Owner approval sits here too</text>
+        <text class="b2bS" x="476" y="226">not required for Penwood tonight; shown so the tier is clear</text>
+
+        <text class="b2bL" x="56" y="283">The Free way: the protected branch decides who merges, a written team convention decides when, and</text>
+        <text class="b2bL" x="56" y="298" style="font-size:11px">a blocking manual job (session 6) gates production even if a merge slips through early.</text>
+
+        <text class="b2bN" x="30" y="322">Re-verify the approvals and pricing pages before relying on the tier split; GitLab ships monthly.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - on Free the approval is read by people; on Premium the merge button reads it</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Who approves, who merges, at Penwood <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Because the approval does not lock anything on Free, Penwood writes down what it means instead. Constructed convention: one approval from someone who did not write the change, left after reading Changes, before a Maintainer merges. The permissions page gives the roles that make this work: Developer can "Push code to non-protected branches, create merge requests, and run CI/CD pipelines"; Maintainer can "Manage branches, merge requests, CI/CD settings, and project members". So Mei and the analyst, both Developers, open and approve; Raj, Maintainer in <code>data</code>, and the data lead, Owner, merge. The finance partner, Reporter, can read the diff and comment but cannot approve, which is the right shape for a partner who should be asked but not made responsible.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> When the signal is not enough <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A convention holds while the team is five people who sit together. The moment it has to hold against someone in a hurry, or against an auditor's question "show me that nobody merged without review", the Free approval has nothing to show. That is the honest shape of the Premium decision: required approval rules and Code Owner approval are Premium and Ultimate, at $29 per user per month billed annually as of 2026-10-29; re-verify the tier page before relying on it. Leader session 5 weighs that against the Free substitutes. On the Builder track the substitute you can build is session 6's blocking manual deploy: a merge may slip through early, but production does not move until a named person clicks.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: the analyst approves !1 after a quick read, and Mei, who wrote it, sees the green approval and reaches for Merge. The button is not there for her: she is a Developer, and the branch rule hands the merge of <code>main</code> to Maintainers. Raj gets a ping, reads Changes, and asks for the version-keyed fix from Part 1 before merging. The approval said "one person looked"; the branch rule said "a Maintainer decides"; both did exactly what the docs say they do, and neither pretended to be the other.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers merge_request_event, the source branch and the unset variable</span>
+      <h2>The merge request pipeline</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">A pipeline can be started by a push to a branch or by a merge request event, and GitLab treats them as different kinds of pipeline. The merge request pipelines page says the configuration "must include job rules or workflow rules that match" <code>$CI_PIPELINE_SOURCE == "merge_request_event"</code>, that these pipelines "Run on the contents of the source branch only", and that they "Display a <code>merge request</code> label in pipeline lists". The predefined variables reference adds the consequence that catches everyone once: <code>CI_COMMIT_BRANCH</code> is "Available in branch pipelines, including pipelines for the default branch" and is not set in merge request pipelines. Any rule that compares it never matches there.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn evaluation of Penwood's workflow rules for one push to feature/orders-dedupe while a merge request is open. Two columns. Left, the event source is merge_request_event: rule 1 matches at once and evaluation stops, so a pipeline is created, labelled merge request, running on the source branch, with CI_COMMIT_BRANCH unset and CI_MERGE_REQUEST_IID set. Right, the same push seen as a branch event with source push: rule 1 does not match, rule 2 matches because the branch has an open merge request and says when never, so no pipeline is created and zero compute minutes are spent. A note says without rule 2 both pipelines would run, the documented duplicate-pipeline trap.">
+        <defs>
+          <filter id="b2cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b2cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b2cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b2cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b2cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b2cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b2cW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .b2cR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b2cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b2cH" x="30" y="26">ONE PUSH, TWO EVENTS, WORKFLOW RULES READ TOP TO BOTTOM</text>
+        <text class="b2cS" x="500" y="26">job rules + merge request pipelines pages, 2026-10-29</text>
+
+        <g filter="url(#b2cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="44" width="400" height="26" rx="6" transform="rotate(-0.3 240 57)" fill="#483698"/>
+          <rect x="40" y="84" width="400" height="26" rx="6" transform="rotate(0.4 240 97)" fill="#FC6D26"/>
+          <rect x="40" y="118" width="400" height="26" rx="6" transform="rotate(-0.3 240 131)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="40" y="152" width="400" height="26" rx="6" transform="rotate(0.3 240 165)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="40" y="186" width="400" height="26" rx="6" transform="rotate(-0.4 240 199)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <path d="M240 112 L240 118" stroke="#9E3811" stroke-width="3"/>
+          <rect x="40" y="228" width="400" height="76" rx="10" transform="rotate(0.2 240 266)" fill="#F4F0FC"/>
+
+          <rect x="460" y="44" width="380" height="26" rx="6" transform="rotate(0.3 650 57)" fill="#483698"/>
+          <rect x="460" y="84" width="380" height="26" rx="6" transform="rotate(-0.4 650 97)" fill="#FFFFFF"/>
+          <path d="M650 70 L650 78" marker-end="url(#b2cAr)"/>
+          <rect x="460" y="118" width="380" height="26" rx="6" transform="rotate(0.4 650 131)" fill="#FEF2F2" stroke="#991B1B"/>
+          <rect x="460" y="152" width="380" height="26" rx="6" transform="rotate(-0.3 650 165)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="460" y="186" width="380" height="26" rx="6" transform="rotate(0.3 650 199)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="460" y="228" width="380" height="76" rx="10" transform="rotate(-0.2 650 266)" fill="url(#b2cHc)"/>
+        </g>
+
+        <text class="b2cW" x="54" y="61">event A · CI_PIPELINE_SOURCE = merge_request_event</text>
+        <text class="b2cL" x="54" y="101">1 · if $CI_PIPELINE_SOURCE == "merge_request_event"</text>
+        <text class="b2cS" x="54" y="135">2 · if $CI_COMMIT_BRANCH and $CI_OPEN_MERGE_REQUESTS, never</text>
+        <text class="b2cS" x="54" y="169">3 · if $CI_COMMIT_BRANCH</text>
+        <text class="b2cS" x="54" y="203">4 · if $CI_PIPELINE_SOURCE == "schedule"</text>
+        <text class="b2cL" x="54" y="250">matched at rule 1, evaluation stops: pipeline created</text>
+        <text class="b2cS" x="54" y="268">label "merge request" · runs on the source branch's contents</text>
+        <text class="b2cS" x="54" y="286">CI_COMMIT_BRANCH unset · CI_MERGE_REQUEST_IID = 1 · target = main</text>
+
+        <text class="b2cW" x="474" y="61">event B · CI_PIPELINE_SOURCE = push, branch feature/...</text>
+        <text class="b2cS" x="474" y="101">1 · source is push, not merge_request_event: no match</text>
+        <text class="b2cR" x="474" y="135">2 · branch set and an open merge request exists: when: never</text>
+        <text class="b2cS" x="474" y="169">3 · never reached</text>
+        <text class="b2cS" x="474" y="203">4 · never reached</text>
+        <text class="b2cL" x="474" y="250">stopped at rule 2: no branch pipeline for this push</text>
+        <text class="b2cS" x="474" y="268">0 compute minutes · the merge request pipeline carries the work</text>
+        <text class="b2cS" x="474" y="286">delete rule 2 and both A and B run: the duplicate-pipeline trap</text>
+
+        <text class="b2cN" x="30" y="332">"Rules are evaluated in order until the first match." The same text decides both events; only the variables differ.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - rule 1 catches the merge request event, rule 2 silences the branch event, and the bench prices the silence at 0 minutes</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> What the unset variable does to Penwood's jobs <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Six of Penwood's fourteen jobs carry a rule that compares <code>CI_COMMIT_BRANCH</code> with <code>CI_DEFAULT_BRANCH</code>: publish-image, publish-docs, deploy-staging and deploy-production, plus docs-build on a <code>changes</code> rule and nightly-backfill on the schedule source. In a merge request pipeline the branch variable is unset, so those four comparisons can never be true, and the job rules page says what follows: "If no rules match, the job is not added to the pipeline". Not failed, not skipped with a grey icon, simply absent. That is the design, not an accident: a merge request should prove the change, and publishing and deploying belong to <code>main</code>. The bench's r3 rung measures exactly this: 8 jobs run, 6 never added, 19:17 on the wall clock, 41.17 compute minutes. Session 5 writes the rules; tonight you only need to recognise the shape when you see a merge request pipeline with fewer jobs than <code>main</code> has.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The variables a merge request pipeline does have <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The predefined variables reference lists what replaces the missing branch name: <code>CI_MERGE_REQUEST_IID</code>, the request's number in the project, and <code>CI_MERGE_REQUEST_TARGET_BRANCH_NAME</code>, which for Penwood's !1 is <code>main</code>. <code>CI_COMMIT_REF_NAME</code>, "The branch or tag name for which project is built", is set in every pipeline. So a job that needs to know "am I in a merge request, and into what" has its answers; a job that asks "which branch am I on" using <code>CI_COMMIT_BRANCH</code> is asking the branch pipeline's question in the wrong room. The <code>rules:changes</code> keyword, used by docs-build and data-quality-tests, also behaves differently here: in a merge request pipeline it compares against the target branch, in a branch pipeline against the previous commit. Merged results pipelines and merge trains exist on top of all this and are deliberately outside these eight sessions.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Documented, not constructed: the job rules page describes the duplicate-pipeline trap. If a job's rules end in a bare rule with no <code>if</code>, a push to a branch that has an open merge request starts two pipelines, a branch pipeline and a merge request pipeline, both running the same jobs and both charging compute minutes. The fix the page gives is <code>workflow:rules</code> at the top of the file, and Penwood's second workflow rule is that fix: when a branch has an open merge request, <code>when: never</code> for the branch event. The bench prices the silenced pipeline at 0 compute minutes, which on a 400-minute Free quota as of 2026-10-29 is not a small thing.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's first merge request, and the table its pipeline tab will show</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Open the project from session 1. You will branch, change one file, push, open the merge request, review and approve it, then read what its Pipelines tab will show once a <code>.gitlab-ci.yml</code> exists. Tonight that tab is empty, and that is correct: the project has no pipeline file yet. The bench's r3 rung is this exact merge request, from <code>feature/orders-dedupe</code> with <code>pipelines/</code> changed, run against the finished file; its table is what you are building towards. Git commands themselves are <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/courses/02-the-daily-loop.html">the builders course's daily loop</a>; they are printed, not taught. Penwood's values are constructed; your branch and issue numbers will differ.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 370" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn timeline of the bench's r3 rung: the merge request pipeline for feature/orders-dedupe with pipelines/ changed. Eight bars on a 0 to 1200 second axis: lint-yaml 0 to 45, lint-sql 0 to 107, scan-dependencies 0 to 233, build-image 45 to 427, compile-models 107 to 299, unit-tests 299 to 602, data-quality-tests 299 to 777, integration-tests 427 to 1157. The integration-tests bar is highlighted as the end of the critical path. A dashed red panel lists the six jobs never added: docs-build, nightly-backfill, publish-image, publish-docs, deploy-staging, deploy-production. Totals: wall clock 19 minutes 17 seconds, serial 41 minutes 10 seconds, 41.17 compute minutes, 8 ran, 6 never added.">
+        <defs>
+          <filter id="b2dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b2dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b2dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b2dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b2dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b2dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b2dV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b2dA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b2dR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .b2dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b2dH" x="30" y="26">R3: WHAT THE PIPELINE TAB WILL SHOW (BENCH, CONSTRUCTED DURATIONS)</text>
+        <text class="b2dS" x="580" y="26">canon r3 · penwood.yml · pipelines/ changed</text>
+
+        <g filter="url(#b2dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M200 44 L200 250" stroke="#CFC8E3"/>
+          <path d="M200 250 L846 250" marker-end="url(#b2dAr)"/>
+          <path d="M360 246 L360 254 M520 246 L520 254 M680 246 L680 254 M840 246 L840 254"/>
+          <rect x="200" y="54" width="24" height="16" rx="4" fill="#F4F0FC"/>
+          <rect x="200" y="78" width="57" height="16" rx="4" fill="#F4F0FC"/>
+          <rect x="200" y="102" width="124" height="16" rx="4" fill="#F4F0FC"/>
+          <rect x="224" y="126" width="204" height="16" rx="4" fill="#C9BEEF"/>
+          <rect x="257" y="150" width="102" height="16" rx="4" fill="#C9BEEF"/>
+          <rect x="359" y="174" width="162" height="16" rx="4" fill="#F4F0FC"/>
+          <rect x="359" y="198" width="255" height="16" rx="4" fill="#F4F0FC"/>
+          <rect x="428" y="222" width="389" height="16" rx="4" fill="#FC6D26"/>
+          <path d="M817 238 L817 250" stroke="#9E3811" stroke-dasharray="3 3"/>
+          <rect x="40" y="276" width="400" height="66" rx="10" transform="rotate(0.2 240 309)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="6 4"/>
+          <rect x="460" y="276" width="380" height="66" rx="10" transform="rotate(-0.2 650 309)" fill="url(#b2dHc)"/>
+        </g>
+
+        <text class="b2dL" x="30" y="66">lint-yaml</text>
+        <text class="b2dL" x="30" y="90">lint-sql</text>
+        <text class="b2dL" x="30" y="114">scan-dependencies</text>
+        <text class="b2dL" x="30" y="138">build-image</text>
+        <text class="b2dL" x="30" y="162">compile-models</text>
+        <text class="b2dL" x="30" y="186">unit-tests</text>
+        <text class="b2dL" x="30" y="210">data-quality-tests</text>
+        <text class="b2dL" x="30" y="234">integration-tests</text>
+
+        <text class="b2dS" x="232" y="66">0-45 s</text>
+        <text class="b2dS" x="265" y="90">0-107 s · needs: []</text>
+        <text class="b2dS" x="332" y="114">0-233 s · needs: [], from the included scan</text>
+        <text class="b2dS" x="436" y="138">45-427 s · needs lint-yaml</text>
+        <text class="b2dS" x="367" y="162">107-299 s · needs lint-sql</text>
+        <text class="b2dS" x="529" y="186">299-602 s · rule: merge_request_event</text>
+        <text class="b2dS" x="622" y="210">299-777 s · changes: pipelines/</text>
+        <text class="b2dL" x="440" y="234">427-1157 s · end of the critical path</text>
+
+        <text class="b2dA" x="196" y="268">0</text>
+        <text class="b2dA" x="346" y="268">300 s</text>
+        <text class="b2dA" x="506" y="268">600 s</text>
+        <text class="b2dA" x="666" y="268">900 s</text>
+        <text class="b2dA" x="820" y="268">1200 s</text>
+
+        <text class="b2dR" x="56" y="296">never added (6): no rule matched</text>
+        <text class="b2dS" x="56" y="314">docs-build · nightly-backfill · publish-image</text>
+        <text class="b2dS" x="56" y="332">publish-docs · deploy-staging · deploy-production</text>
+
+        <text class="b2dV" x="476" y="302">19:17</text>
+        <text class="b2dS" x="540" y="302">wall clock · 8 jobs ran</text>
+        <text class="b2dV" x="476" y="330">41.17</text>
+        <text class="b2dS" x="540" y="330">compute minutes · serial 41:10 · unlimited runners</text>
+
+        <text class="b2dN" x="30" y="362">Durations are the bench's constructed medians; your numbers will differ. The shape, 8 run and 6 never added, is what to check.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the pipeline tab of this merge request, once the file exists: eight bars, six absences, and the tests on the critical path</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Branch and change one file under <code>pipelines/</code>.</strong> Clone the project if you have not, branch from <code>main</code>, add a small change in the folder the r3 context names, commit and push. The push response from GitLab prints a link to create the merge request; copy it.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's branch (constructed) · git itself is the builders course</span>git switch -c feature/orders-dedupe
+mkdir -p pipelines
+printf 'SELECT DISTINCT order_id, version FROM raw.orders;\n' &gt; pipelines/dedupe_orders.sql
+git add pipelines/dedupe_orders.sql
+git commit -m "Dedupe the orders feed by order id and version (#2)"
+git push -u origin feature/orders-dedupe</div>
+      </div>
+      <div class="step">
+        <p><strong>Open the merge request into <code>main</code>.</strong> Follow the link from the push, or use the project's merge requests page. Title it from issue #2, write a description that says what changes and why, and mention <code>#2</code> so the issue and the request link each other. Leave every other option at its default tonight; Part 1's self-study card says why.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's !1 (constructed)</span>source   feature/orders-dedupe
+target   main
+title    Dedupe the orders feed by order id and version
+description
+  The orders feed repeats rows when a correction arrives. This keeps one row per
+  order_id and version so downstream totals stop double counting. Relates to #2.
+  Next: a data-quality test for the duplicate rate (session 3 onwards).</div>
+      </div>
+      <div class="step">
+        <p><strong>Read the four tabs.</strong> Overview: your description and no threads yet. Commits: one. Pipelines: nothing, because the project has no <code>.gitlab-ci.yml</code>; read the words on that tab and note them. Changes: one new file. Now open Changes and leave a thread on the <code>SELECT</code> line as if you were the reviewer. Switch to Overview and find the same thread there.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly</span>Overview    description · 1 unresolved thread (after you comment)
+Commits     1 · "Dedupe the orders feed by order id and version (#2)"
+Pipelines   no pipeline yet: the project has no .gitlab-ci.yml (correct tonight)
+Changes     1 file · pipelines/dedupe_orders.sql · +1 line
+your numbers will differ</div>
+      </div>
+      <div class="step">
+        <p><strong>Approve as another member, then look at the merge button.</strong> Sign in as a second Penwood member with Developer or higher, or ask a neighbour with that role to do it. Approve. Then, as the author, look at the bottom of Overview: on Free the approval shows, and the merge control depends on your role, not on the approval. A Developer sees no merge for a protected <code>main</code>; a Maintainer sees it live with or without the approval.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly</span>approvals   1 · optional on Free: "don't prevent merging without approval"
+as Mei (Developer)        no merge control: main is protected, Maintainers merge
+as Raj (Maintainer, data) Merge available, approval or not
+your names will differ; the roles are the point</div>
+      </div>
+      <div class="step">
+        <p><strong>Read the r3 table against the empty tab.</strong> From the figure above, write down what this merge request's pipeline will contain once session 5's file lands: the 8 jobs that run, the 6 that are never added and the one reason they share. Then write the one rule in <code>workflow</code> that makes this a merge request pipeline at all. You will paste this block into session 3's file as its first lines.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's workflow block, verbatim from penwood.yml</span>workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH &amp;&amp; $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The habit to drop</span>Treating the green approval as the lock.
+The approvals page: "These approvals are optional and don't prevent merging without approval."
+On Free the lock is the branch rule and the team's written convention. If you need the button itself to refuse, that is a required approval rule: Premium and Ultimate, as of 2026-10-29. Decide the tier; do not pretend the signal is a lock.</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 3</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Push a second commit to <code>feature/orders-dedupe</code> that changes the line your thread was on. Watch what happens to the thread in Changes and in Overview, then resolve it.</li>
+      <li>Open the project's merge request settings and read the options for draft, squash, merge method and unresolved threads in their own words. Write Penwood's one-line rule for each; bring it to session 3.</li>
+      <li>From the r3 figure, list the six never-added jobs and sort them into two groups by the variable or rule that excluded them. Check your groups against the live card in Part 3.</li>
+      <li>Find <code>CI_COMMIT_BRANCH</code>, <code>CI_MERGE_REQUEST_IID</code> and <code>CI_MERGE_REQUEST_TARGET_BRANCH_NAME</code> on the GitLab Docs predefined variables reference and copy the one sentence that says where each is available.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 2 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · Penwood is on GitLab.com Free. The analyst, a Developer, approves !1. What has that approval changed about whether the request can be merged?</p>
+      <button class="qopt" type="button">A · The merge button is now enabled for the author</button>
+      <button class="qopt" type="button">B · The request cannot be merged until a second approval arrives</button>
+      <button class="qopt" type="button">C · Nothing: on Free approvals "are optional and don't prevent merging without approval"; who may merge is decided by the branch rule</button>
+      <button class="qopt" type="button">D · The request merges automatically once its pipeline passes</button>
+      <p class="qwhy">The approvals page says Free approvals are optional and do not prevent merging. The lock on <code>main</code> is the protected branch rule, which hands push and merge to Maintainers by default. Required approval rules that grey out the button are Premium and Ultimate.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · A job's only rule is <code>if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code>. What happens to it in Penwood's merge request pipeline for !1?</p>
+      <button class="qopt" type="button">A · It is never added: <code>CI_COMMIT_BRANCH</code> is not set in merge request pipelines, so no rule matches</button>
+      <button class="qopt" type="button">B · It runs, because the request targets <code>main</code></button>
+      <button class="qopt" type="button">C · It fails with a variable-not-found error</button>
+      <button class="qopt" type="button">D · It runs on the target branch's contents instead of the source branch's</button>
+      <p class="qwhy">The predefined variables reference makes <code>CI_COMMIT_BRANCH</code> available in branch pipelines and not in merge request pipelines. The job rules page: "If no rules match, the job is not added to the pipeline". That is why r3 never adds publish-image, publish-docs, deploy-staging and deploy-production.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · Mei pushes to <code>feature/orders-dedupe</code> while !1 is open. Penwood's workflow rules are the four in the build-along. How many pipelines start, and why?</p>
+      <button class="qopt" type="button">A · Two: a branch pipeline and a merge request pipeline, because both events happened</button>
+      <button class="qopt" type="button">B · None: workflow rules only allow pipelines on <code>main</code> and on schedules</button>
+      <button class="qopt" type="button">C · One branch pipeline; merge request pipelines need Premium</button>
+      <button class="qopt" type="button">D · One merge request pipeline: rule 1 matches the merge request event, and rule 2 says <code>when: never</code> for the branch event because an open merge request exists</button>
+      <p class="qwhy">Rules are evaluated in order until the first match, once per event. The merge request event stops at rule 1 and a pipeline is created on the source branch. The branch event fails rule 1, matches rule 2 and is excluded. Without rule 2 both would run: the documented duplicate-pipeline trap that <code>workflow:rules</code> exists to prevent.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">The merge request as "a central location" for review, discussion and change tracking</span><span class="note">GitLab Docs: Merge requests; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Approvals on Free: Developer or higher, optional, do not prevent merging; required rules and Code Owner approval as Premium and Ultimate</span><span class="note">GitLab Docs: Merge request approvals, Code Owners, Pricing; read at source; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Merge request pipelines: the merge_request_event rule, source branch contents, the merge request label</span><span class="note">GitLab Docs: Merge request pipelines; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">CI_COMMIT_BRANCH unset in merge request pipelines; CI_MERGE_REQUEST_IID and the target branch name</span><span class="note">GitLab Docs: Predefined CI/CD variables reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Rules evaluated in order, no match means not added, workflow:rules against duplicate pipelines</span><span class="note">GitLab Docs: Specify when jobs run with rules, CI/CD YAML syntax reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Protected main: Maintainers push and merge; Developer and Maintainer role sentences</span><span class="note">GitLab Docs: Protected branches, Roles and permissions; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">R3: 8 jobs, 6 never added, 19:17, 41.17 compute minutes</span><span class="note">Bench canon, measured by the widget on Builder session 8; durations constructed</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Draft, squash, merge method, unresolved-thread blocking</span><span class="note">Settings exist; pages not read at source, so taught as "read the option's own words"</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Merged results pipelines and merge trains</span><span class="note">Named as existing; outside these eight sessions</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What a pull request is; git branching and pushing</span><span class="note">Linked to the two GitHub courses, not retaught</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 2 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Same idea, one page</b><span>Overview, Commits, Pipelines, Changes over one source branch into one target. Push again and every tab updates.</span></div>
+      <div class="cheat-item"><b>Approval is a signal on Free</b><span>Developer or higher can approve; approvals "don't prevent merging without approval". Required rules: Premium and Ultimate (as of 2026-10-29).</span></div>
+      <div class="cheat-item"><b>The lock is the branch rule</b><span>main is protected by default; Maintainers merge. Write the review convention down; session 6 adds a blocking manual gate.</span></div>
+      <div class="cheat-item"><b>merge_request_event</b><span>The file "must include job rules or workflow rules that match" it. The pipeline runs on the source branch and carries a "merge request" label.</span></div>
+      <div class="cheat-item"><b>CI_COMMIT_BRANCH is unset here</b><span>Any rule comparing it never matches in a merge request pipeline; the job is not added. Use CI_MERGE_REQUEST_IID and the target branch name instead.</span></div>
+      <div class="cheat-item"><b>One push, two events</b><span>Rule 1 catches the merge request event; rule 2, when: never, silences the branch event. Without it: two pipelines, double minutes.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>Your merge request has a description, a thread, an approval and an empty Pipelines tab. Session 3 fills that tab: the first <code>.gitlab-ci.yml</code> with stages, jobs and script, the first green pipeline, and what one run costs in compute minutes against the Free tier's 400.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 2 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="b1-project-issues-boards.html">← Prev: Project, issues, boards</a> &nbsp;·&nbsp; <a href="b3-first-gitlab-ci-yml.html">Next: Your first .gitlab-ci.yml →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

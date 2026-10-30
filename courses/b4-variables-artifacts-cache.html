@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Builder session 4 of 8. Where a CI/CD variable comes from and which definition wins, how artifacts carry a job's results into later stages and when they expire, and why a cache is best effort for dependencies only. Then add artifacts to compile-models and a cache keyed on requirements.txt to Penwood's test jobs. Penwood is a constructed analytics team.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Variables, artifacts, cache - learn gitlab with phoebe">
+<meta property="og:description" content="Builder session 4 of 8. Precedence decides the variable, artifacts move results forward, cache is a hope.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/b4-variables-artifacts-cache.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Variables, artifacts, cache - learn gitlab with phoebe">
+<meta name="twitter:description" content="Builder session 4 of 8. Which variable wins, what an artifact carries, what a cache may or may not do.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Builder session 4 · Variables, artifacts, cache - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Builder session 4 of 8</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Builder session 4 of 8</div>
+    <h1>Variables, <span class="accent">artifacts</span>, cache</h1>
+    <p class="sub">Session 3 got Penwood's pipeline green. Tonight is about what moves between its jobs. A variable is a value a job reads, and ten places can define it, so the question is never "what is it set to" but "which definition wins". An artifact is a file a job hands to the jobs after it, kept by GitLab and downloaded by default in later stages. A cache is a folder the runner may or may not still have from last time. Penwood, a constructed five-person logistics-analytics team on GitLab.com Free, needs all three this week: <code>compile-models</code> writes <code>build/</code> that three test jobs read, the test jobs install the same packages every run, and a publish token has to exist somewhere other than the YAML everyone can read.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Advanced</span>
+      <span class="chip audience">Analytics engineers and data builders</span>
+      <span class="chip audience">Anyone whose test job cannot find the build</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · Variables, artifacts, cache</span>
+      <span class="a3" style="flex:4">20-42 · Build-along: Penwood's build/ and pip cache</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Three things that move between jobs</h2>
+    </div>
+    <p class="lede">Every job in a GitLab pipeline starts in a fresh environment with a clone of the repository and nothing else. That is the fact behind tonight. If <code>unit-tests</code> needs the <code>build/</code> folder that <code>compile-models</code> wrote, something has to carry it across, and that something is an <strong>artifact</strong>. If the same job installs the same packages every run, a <strong>cache</strong> may spare it the download, and the word is "may". If a job needs a token, the token arrives as a <strong>variable</strong>, and the place you define it decides who can read it. Penwood is constructed: its people, durations and file names are invented for these pages, and nothing on this page runs GitLab for real.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> The precedence list that decides which definition of a variable a job sees, and the two flags (protected, masked) that keep a secret out of a feature branch's logs. An <code>artifacts:paths</code> on <code>compile-models</code> so the three test jobs find <code>build/</code>, with an expiry you chose. A <code>cache</code> keyed on <code>requirements.txt</code> on the test jobs, written so that a cache miss costs minutes and never correctness. And one sentence from the docs about why the cache is a hope, not a promise.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers variable precedence, YAML versus settings, protected and masked</span>
+      <h2>Where a variable comes from</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">Penwood's <code>penwood.yml</code> opens with <code>variables: PYTHON_VERSION: '3.12'</code>. That is one of ten places the value could come from. The CI/CD variables page lists them in order, highest first: variables from a policy, variables typed on a manual job, variables set when the pipeline is run, project settings, group settings, instance settings, dotenv reports, the YAML (<code>rules:variables</code>, the job's own, <code>workflow:rules:variables</code>, then the default block), deployment variables, and finally the predefined ones GitLab sets itself. A job reads the first definition it meets walking down that list. Inside the YAML alone the rule is simpler: a job's <code>variables</code> override the global ones.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 364" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn stack of ten layers, highest precedence at the top: policy variables, manual job variables, pipeline variables, project settings, group settings, instance settings, dotenv reports, YAML variables, deployment variables, predefined variables. An arrow reads down the stack. The YAML layer is highlighted in orange because that is where Penwood's constructed PYTHON_VERSION resolves: the job sets nothing, project settings set nothing, the YAML default block says 3.12, and resolution stops there. A side panel lists the two flags set in project settings: protected, sent only to pipelines on protected branches or tags, and masked, printed as [MASKED] in logs, which the docs call not a guaranteed way to keep a value secret.">
+        <defs>
+          <filter id="b4aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="53" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b4aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b4aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b4aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b4aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b4aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b4aB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b4aV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .b4aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b4aH" x="30" y="26">TEN PLACES, ONE WINNER: VARIABLE PRECEDENCE, HIGHEST FIRST</text>
+        <text class="b4aS" x="470" y="26">CI/CD variables page, read 2026-10-29 · Penwood's value is constructed</text>
+
+        <g filter="url(#b4aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="46" width="400" height="24" rx="6" transform="rotate(-0.3 240 58)" fill="#FFFFFF"/>
+          <rect x="40" y="74" width="400" height="24" rx="6" transform="rotate(0.3 240 86)" fill="#FFFFFF"/>
+          <rect x="40" y="102" width="400" height="24" rx="6" transform="rotate(-0.2 240 114)" fill="#FFFFFF"/>
+          <rect x="40" y="130" width="400" height="24" rx="6" transform="rotate(0.3 240 142)" fill="#F4F0FC"/>
+          <rect x="40" y="158" width="400" height="24" rx="6" transform="rotate(-0.3 240 170)" fill="#F4F0FC"/>
+          <rect x="40" y="186" width="400" height="24" rx="6" transform="rotate(0.2 240 198)" fill="#F4F0FC"/>
+          <rect x="40" y="214" width="400" height="24" rx="6" transform="rotate(-0.2 240 226)" fill="#FFFFFF"/>
+          <rect x="40" y="242" width="400" height="24" rx="6" transform="rotate(0.4 240 254)" fill="#FC6D26"/>
+          <rect x="40" y="270" width="400" height="24" rx="6" transform="rotate(-0.3 240 282)" fill="#FFFFFF"/>
+          <rect x="40" y="298" width="400" height="24" rx="6" transform="rotate(0.2 240 310)" fill="url(#b4aHc)"/>
+          <path d="M470 66 L470 300" marker-end="url(#b4aAr)"/>
+          <rect x="520" y="46" width="330" height="130" rx="10" transform="rotate(0.4 685 111)" fill="#FFFFFF"/>
+          <rect x="520" y="192" width="330" height="130" rx="10" transform="rotate(-0.4 685 257)" fill="#F4F0FC"/>
+        </g>
+
+        <text class="b4aS" x="450" y="56">top wins</text>
+        <text class="b4aS" x="450" y="320">lowest</text>
+
+        <text class="b4aL" x="52" y="63">1 · policy variables</text>
+        <text class="b4aL" x="52" y="91">2 · manual job variables</text>
+        <text class="b4aL" x="52" y="119">3 · pipeline variables</text>
+        <text class="b4aL" x="52" y="147">4 · project CI/CD settings</text>
+        <text class="b4aL" x="52" y="175">5 · group CI/CD settings</text>
+        <text class="b4aL" x="52" y="203">6 · instance CI/CD settings</text>
+        <text class="b4aL" x="52" y="231">7 · dotenv report variables</text>
+        <text class="b4aL" x="52" y="259">8 · YAML: rules, job, workflow:rules, default variables</text>
+        <text class="b4aL" x="52" y="287">9 · deployment variables</text>
+        <text class="b4aL" x="52" y="315">10 · predefined (CI_COMMIT_BRANCH, CI_PIPELINE_SOURCE ...)</text>
+
+        <text class="b4aH" x="534" y="68">PYTHON_VERSION in unit-tests (constructed)</text>
+        <text class="b4aS" x="534" y="88">job variables: not set</text>
+        <text class="b4aS" x="534" y="106">project, group, instance settings: not set</text>
+        <text class="b4aL" x="534" y="126">YAML default block: '3.12' · resolution stops here</text>
+        <text class="b4aV" x="534" y="158">3.12</text>
+        <text class="b4aS" x="590" y="158">a project setting of the same name would win</text>
+
+        <text class="b4aH" x="534" y="214">two flags, set in project settings only</text>
+        <text class="b4aL" x="534" y="236">protected</text>
+        <text class="b4aS" x="616" y="236">only pipelines on protected branches or tags</text>
+        <text class="b4aL" x="534" y="258">masked</text>
+        <text class="b4aS" x="616" y="258">one line, no spaces, 8+ chars; log: [MASKED]</text>
+        <text class="b4aB" x="534" y="284">masking "is not a guaranteed way" to keep a value secret</text>
+        <text class="b4aS" x="534" y="304">a job can still write the value to a file and upload it</text>
+
+        <text class="b4aN" x="30" y="350">Anyone with repository access can read YAML variables; secrets belong in settings, protected and masked.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - a job walks the list from the top and takes the first definition it finds; the YAML is eighth</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> YAML variables are public to the repo <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The variables page says it without softening: "Variables saved in the <code>.gitlab-ci.yml</code> file are visible to all users with access to the repository." That makes the YAML the right place for <code>PYTHON_VERSION</code> and <code>PIPELINE_OWNER</code>, which Penwood wants everyone to see and change by merge request, and the wrong place for anything a Reporter should not read. Penwood's finance partner is a Reporter and can view code, so a token in the YAML is a token the finance partner has. Settings variables sit above the YAML in precedence, which has a practical side effect: a project setting named <code>PYTHON_VERSION</code> silently beats the one in the file, and the pipeline runs a version nobody can see in the repo. Name settings variables so they cannot collide with YAML ones.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Protected means "only on protected refs", masked means "hidden in logs" <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The two flags on a settings variable do different jobs. A <strong>protected</strong> variable is passed only to pipelines running on protected branches or tags. Since <code>main</code> is protected by default (session 1 saw the rule), Penwood's publish token marked protected exists on a push to <code>main</code> and does not exist in a merge request pipeline from <code>feature/orders-dedupe</code>. That is the point: a feature branch anyone with Developer can push to never receives the token. A <strong>masked</strong> variable must be a single line with no spaces and at least 8 characters, and the job log prints <code>[MASKED]</code> where the value would appear. The page then says masking "is not a guaranteed way to prevent malicious users from accessing variable values". A script that base64-encodes the value, or writes it to a file that becomes an artifact, defeats masking without trying. Protected is the control; masked is a courtesy to whoever reads the log.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The predefined ones Penwood already uses <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>At the bottom of the precedence list sit the variables GitLab defines for every job. Penwood's file already reads four of them. <code>CI_PIPELINE_SOURCE</code> is <code>merge_request_event</code> in a merge request pipeline and <code>push</code> for a push. <code>CI_COMMIT_BRANCH</code> is "Available in branch pipelines, including pipelines for the default branch" and is not set in merge request or tag pipelines, which is why the publish and deploy jobs with <code>$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH</code> are never added to a merge request pipeline (session 5 reads that off the bench). <code>CI_REGISTRY_IMAGE</code> is the "Base address for the container registry", set only when the registry is enabled (session 7). <code>CI_COMMIT_SHORT_SHA</code> tags the image. Because these are lowest in precedence, defining your own <code>CI_COMMIT_BRANCH</code> in the YAML would override GitLab's; nothing stops you, and nothing good follows.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's analyst needs the publish token for a quick local test and pastes it into the YAML as <code>PUBLISH_TOKEN: glpat-...</code> on a feature branch, meaning to remove it before merging. The merge request pipeline runs; the job log shows the token in plain text because YAML variables are never masked; the branch is visible to all five people including the Reporter. Nothing about this is a GitLab flaw. The variables page said the YAML is visible to everyone with repository access, and it was. The fix is to rotate the token and put the new one in project settings, protected and masked, so the feature branch never receives it at all.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers artifacts:paths, default download in later stages, expiry and the GitLab.com size limit</span>
+      <h2>Artifacts move results forward</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede"><code>compile-models</code> writes <code>build/</code>. <code>unit-tests</code>, <code>data-quality-tests</code> and <code>integration-tests</code> read it. They run in a different stage, in a fresh environment, possibly on a different runner. The job artifacts page is what makes this work: "By default, jobs in later stages automatically download all the artifacts created by jobs in earlier stages." A job declares what it is handing forward with <code>artifacts:paths</code>; GitLab archives those paths when the job succeeds, stores the archive, and later jobs download it before their script runs. With <code>needs</code>, the needed jobs' artifacts are downloaded too, because <code>artifacts: true</code> is the default for a needs entry.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 344" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn flow. On the left, the constructed job compile-models in the build stage, 192 seconds, declares artifacts paths build slash. An arrow carries build slash as an orange archive to the right, where it fans out to three test-stage jobs: unit-tests, data-quality-tests and integration-tests, each downloading the archive before its script runs because each needs compile-models and artifacts true is the default. Below, a hatched panel states the store's rules from the job artifacts page: 1 GB compressed per archive on GitLab.com, collected from successful jobs by default, expire_in unset means the instance default with no number stated, artifacts of the latest successful pipeline per ref are kept, and artifacts do not count toward the 10 GiB project storage.">
+        <defs>
+          <filter id="b4bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="59" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b4bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b4bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b4bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b4bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b4bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b4bA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b4bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b4bH" x="30" y="26">ARTIFACTS CARRY build/ FROM ONE STAGE TO THE NEXT (PENWOOD, CONSTRUCTED)</text>
+        <text class="b4bS" x="560" y="26">job artifacts page, read 2026-10-29 · durations are constructed</text>
+
+        <g filter="url(#b4bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="56" width="210" height="96" rx="10" transform="rotate(-0.5 145 104)" fill="#F4F0FC"/>
+          <path d="M56 136 L70 136 L70 146 L56 146 Z M56 136 L60 132 L66 132 L70 136"/>
+          <path d="M250 104 L292 104" marker-end="url(#b4bAr)"/>
+          <rect x="300" y="68" width="220" height="72" rx="10" transform="rotate(0.6 410 104)" fill="#FC6D26"/>
+          <path d="M520 96 L584 72" marker-end="url(#b4bAr)"/>
+          <path d="M520 104 L584 128" marker-end="url(#b4bAr)"/>
+          <path d="M520 112 L584 184" marker-end="url(#b4bAr)"/>
+          <rect x="590" y="50" width="260" height="46" rx="8" transform="rotate(0.5 720 73)" fill="#FFFFFF"/>
+          <rect x="590" y="106" width="260" height="46" rx="8" transform="rotate(-0.5 720 129)" fill="#FFFFFF"/>
+          <rect x="590" y="162" width="260" height="46" rx="8" transform="rotate(0.4 720 185)" fill="#FFFFFF"/>
+          <rect x="40" y="226" width="810" height="78" rx="10" transform="rotate(0.2 445 265)" fill="url(#b4bHc)"/>
+        </g>
+
+        <text class="b4bL" x="54" y="78">compile-models · build stage</text>
+        <text class="b4bS" x="54" y="96">192 s (constructed median)</text>
+        <text class="b4bS" x="54" y="114">script writes build/</text>
+        <text class="b4bA" x="80" y="144">artifacts: paths: [build/]</text>
+
+        <text class="b4bL" x="314" y="90">build/ zipped on success</text>
+        <text class="b4bL" x="314" y="108">stored by GitLab, not the runner</text>
+        <text class="b4bL" x="314" y="126">downloaded before each script</text>
+
+        <text class="b4bL" x="604" y="68">unit-tests · 303 s</text>
+        <text class="b4bS" x="604" y="86">needs compile-models (artifacts: true default)</text>
+        <text class="b4bL" x="604" y="124">data-quality-tests · 478 s</text>
+        <text class="b4bS" x="604" y="142">needs compile-models (artifacts: true default)</text>
+        <text class="b4bL" x="604" y="180">integration-tests · 730 s</text>
+        <text class="b4bS" x="604" y="198">needs build-image and compile-models</text>
+
+        <text class="b4bL" x="56" y="248">the store, as the job artifacts page states it: 1 GB compressed per archive on GitLab.com · collected from successful jobs by default</text>
+        <text class="b4bS" x="56" y="268">expire_in unset means the instance default; the page states no number, so none is quoted here. Set your own and the question goes away.</text>
+        <text class="b4bS" x="56" y="288">artifacts of the latest successful pipeline per ref are kept · artifacts do not count toward the 10 GiB per project (as of 2026-10-29)</text>
+
+        <text class="b4bN" x="30" y="332">Later stages download earlier artifacts by default; a needs entry downloads them too (artifacts: true is the default).</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - one declaration on the producer, nothing on the consumers: the download is the default</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Declare on the producer; the consumers get it for free <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>All the work is on <code>compile-models</code>: <code>artifacts: paths: - build/</code>. The three test jobs change nothing and still find <code>build/</code> in their working directory, for two reasons that both apply here. They are in a later stage, so the default download covers them. And each one lists <code>compile-models</code> in <code>needs</code>, and a needs entry downloads that job's artifacts unless you write <code>artifacts: false</code>. Artifacts are "collected from successful jobs by default", so if <code>compile-models</code> fails there is no archive, and the test jobs do not run anyway because the stage did not succeed. The archive is stored by GitLab, not left on the runner, which is the difference from a cache and the reason an artifact is a promise.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Expiry, the kept pipeline, and the 1 GB line <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><code>expire_in</code> says how long GitLab keeps the archive after the job finishes. Leave it out and the instance default applies; the page read on 2026-10-29 does not state what that default is on GitLab.com, so no number is quoted here, and the honest move is to set one. Penwood uses <code>1 week</code> on <code>build/</code>: long enough to debug a failed Friday pipeline on Monday, short enough that forty pipelines a month do not pile up. Two more rules from the page. Artifacts of the latest successful pipeline per ref are kept regardless of expiry, so the newest green <code>main</code> always has its <code>build/</code> to download. And on GitLab.com an archive is limited to "1 GB compressed"; a <code>build/</code> that holds compiled SQL models is kilobytes, a <code>build/</code> that someone adds a sample parquet file to is not. The storage quotas page adds, as of 2026-10-29, that artifacts are excluded from the 10 GiB per project count that only the repository and LFS fill; re-verify the tier page before relying on it.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: before tonight, Penwood's <code>compile-models</code> had no <code>artifacts</code> block. The job ran, wrote <code>build/</code> and finished green. <code>unit-tests</code> then started on a clean clone, found no <code>build/</code>, and failed with a missing-directory error from the test runner. The analyst's first guess was that <code>compile-models</code> had not run; it had. The second guess was a path typo; there was none. The mechanism is the fresh environment per job: nothing crosses the stage boundary unless a job declares it. One <code>artifacts:paths</code> line on the producer fixes all three consumers. The bench does not run scripts, so it cannot show you this failure; your own project can, which is why the build-along makes you see it once on purpose.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers cache keys, runner-side storage, hit and miss, and when a cache hurts</span>
+      <h2>Cache is a hope, not a promise</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">The caching page opens with the sentence this whole Part is built on: "Caching is an optimization, but it isn't guaranteed to always work." A cache is for "dependencies, like packages you download from the internet"; artifacts "pass intermediate build results between stages". A cache is stored where the runner is, and uploaded to object storage when a distributed cache is configured; by default it is not shared between protected and unprotected branches. Penwood's test jobs each run <code>pip install -r requirements.txt</code>. A cache keyed on that file means a run with the same requirements may find the packages already there. The word is "may".</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 346" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn mechanism in two rows. Top row: an orange key box reads cache key from requirements.txt, same file contents same key. An arrow leads to a hatched store labelled where the runner is, object storage with a distributed cache, not shared between protected and unprotected branches by default. Two arrows leave the store: hit, key found, pip restores from .cache/pip and skips downloads; miss, key not found, nothing restored, pip downloads as usual, the job still passes and the cache is saved at the end. Bottom row: two panels contrast artifacts, intermediate build results delivered to later jobs that depend on them, with cache, dependencies downloaded from the internet, which the docs say is not guaranteed to always work.">
+        <defs>
+          <filter id="b4cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b4cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b4cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b4cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b4cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b4cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b4cB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .b4cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b4cH" x="30" y="26">A KEY, A RUNNER-SIDE STORE, AND TWO WAYS THE JOB STARTS</text>
+        <text class="b4cS" x="470" y="26">caching page, read 2026-10-29 · Penwood's requirements.txt is constructed</text>
+
+        <g filter="url(#b4cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="56" width="230" height="72" rx="10" transform="rotate(-0.6 155 92)" fill="#FC6D26"/>
+          <path d="M60 112 L72 112 M66 106 L66 118 M72 112 L78 112 L78 116" />
+          <path d="M270 92 L312 92" marker-end="url(#b4cAr)"/>
+          <rect x="320" y="50" width="220" height="84" rx="10" transform="rotate(0.4 430 92)" fill="url(#b4cHc)"/>
+          <path d="M540 80 L582 84" marker-end="url(#b4cAr)"/>
+          <path d="M540 104 L582 168" marker-end="url(#b4cAr)"/>
+          <rect x="590" y="50" width="260" height="74" rx="10" transform="rotate(0.5 720 87)" fill="#F4F0FC"/>
+          <rect x="590" y="136" width="260" height="74" rx="10" transform="rotate(-0.5 720 173)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <rect x="40" y="232" width="400" height="70" rx="10" transform="rotate(0.3 240 267)" fill="#FFFFFF"/>
+          <rect x="450" y="232" width="400" height="70" rx="10" transform="rotate(-0.3 650 267)" fill="#F4F0FC"/>
+        </g>
+
+        <text class="b4cL" x="54" y="80">cache key from requirements.txt</text>
+        <text class="b4cL" x="54" y="98">same file contents, same key</text>
+        <text class="b4cL" x="90" y="118">paths: [.cache/pip]</text>
+
+        <text class="b4cL" x="334" y="72">the store</text>
+        <text class="b4cS" x="334" y="92">where the runner is; object storage</text>
+        <text class="b4cS" x="334" y="108">when a distributed cache is set up</text>
+        <text class="b4cS" x="334" y="124">protected vs unprotected: separate</text>
+
+        <text class="b4cH" x="604" y="72">HIT · key found</text>
+        <text class="b4cS" x="604" y="92">.cache/pip restored; pip skips the downloads</text>
+        <text class="b4cS" x="604" y="110">same script, fewer minutes</text>
+        <text class="b4cH" x="604" y="158">MISS · key not found or store gone</text>
+        <text class="b4cS" x="604" y="178">nothing restored; pip downloads as usual</text>
+        <text class="b4cS" x="604" y="196">the job still passes; cache saved at the end</text>
+
+        <text class="b4cH" x="54" y="254">artifacts</text>
+        <text class="b4cS" x="54" y="274">"pass intermediate build results between stages"</text>
+        <text class="b4cS" x="54" y="292">stored by GitLab, delivered to the jobs that depend on them</text>
+        <text class="b4cH" x="464" y="254">cache</text>
+        <text class="b4cS" x="464" y="274">"dependencies, like packages you download from the internet"</text>
+        <text class="b4cB" x="464" y="292">"isn't guaranteed to always work" - the job must pass without it</text>
+
+        <text class="b4cN" x="30" y="330">A miss should cost minutes, never correctness; if a missing cache breaks the job, that content was an artifact.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - both arrows out of the store end in a passing job; the only difference is the clock</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> When a cache helps and when it hurts <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A cache helps when the content is reproducible from scratch, large to fetch, and the same across many runs. Python packages fit: the job can always <code>pip install</code> them, the download is slow, and <code>requirements.txt</code> changes rarely. A cache hurts in two cases. First, when the job depends on the cached content being present, because the caching page has already told you it may not be, and now a miss is a failure that nobody can reproduce by re-running. Second, when the key is too loose: the default key is <code>default</code>, one cache for the whole project, so a job that caches <code>.cache/pip</code> under the default key shares it with every other job and every branch that uses the default, and stale or mismatched packages creep in. Keying on <code>requirements.txt</code> ties the cache's identity to the file that defines its content: change the file, get a new key, start clean. On Free, every download a miss causes is paid in the 400 compute minutes a month (as of 2026-10-29), which is why a hit matters and why a miss must still pass.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Keys, four caches, and the protected-branch wall <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A job can declare up to four caches, each with its own key and paths; Penwood needs one. The key can be a string (the default is <code>default</code>) or derived from files, and <code>cache:key:files</code> is the keyword the YAML reference lists for keying on a file's contents. The source map behind this page records only the default key, so read the reference entry once before you rely on the exact spelling; the mechanism, one key per distinct file contents, is what matters. By default the cache is not shared between protected and unprotected branches: a merge request pipeline from <code>feature/orders-dedupe</code> and a push to <code>main</code> fill two separate caches, so the first run on <code>main</code> after a requirements change is a miss even though the feature branch just warmed its own. The separation exists so an unprotected branch cannot poison what a protected one restores. Live with the extra miss; it costs minutes, not correctness.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The caching page documents the behaviour, and Penwood, constructed, meets it on day two: <code>unit-tests</code> ran green on the feature branch with a warm cache, the merge request merged, and the pipeline on <code>main</code> downloaded every package again. Nobody broke anything. Caches are not shared between protected and unprotected branches by default, and <code>main</code> is protected. The analyst who wrote <code>unit-tests</code> so that it only skipped a download on a hit, and never assumed one, watched the job take longer and pass. The analyst who had written "if the cache is there, skip install" would have watched it fail on <code>main</code> and pass on the branch, which is the worst kind of bug to be handed at 17:55.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's build/ as an artifact and a pip cache on the tests</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Open the <code>pipelines</code> project from session 1 and the <code>.gitlab-ci.yml</code> from session 3 on a branch. Tonight's edits are small and the order matters: first watch the test job fail without the artifact, then add the artifact, then add the cache, then a protected masked variable. Penwood's YAML below is the same file the session 8 bench parses; your file names will differ. Every output block is labelled what you should see, roughly, because nothing on this page runs GitLab for real.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 306" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn before-and-after of two edits to Penwood's constructed penwood.yml. Left, the compile-models job in the build stage, 192 seconds, gains an orange artifacts block: paths build slash, expire_in 1 week. Arrows carry build slash to three test-stage jobs on the right. unit-tests, 303 seconds, and data-quality-tests, 478 seconds, each gain a cache keyed on requirements.txt with paths .cache/pip. integration-tests, 730 seconds, downloads build slash through needs and gets no cache tonight. A hatched panel below says the session 8 bench measures only schedule and shape, so artifacts and cache change no bench number: rung r3 stays at 19:17 wall and 41.17 compute minutes.">
+        <defs>
+          <filter id="b4dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="b4dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="b4dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .b4dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .b4dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .b4dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .b4dA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .b4dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="b4dH" x="30" y="26">TONIGHT'S TWO EDITS: ARTIFACTS ON THE PRODUCER, CACHE ON THE TEST JOBS</text>
+        <text class="b4dS" x="540" y="26">penwood.yml excerpt, constructed · nothing here runs on GitLab</text>
+
+        <g filter="url(#b4dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="280" height="124" rx="10" transform="rotate(-0.4 180 112)" fill="#F4F0FC"/>
+          <rect x="54" y="118" width="252" height="44" rx="6" transform="rotate(0.6 180 140)" fill="#FC6D26"/>
+          <path d="M320 112 L372 112" marker-end="url(#b4dAr)"/>
+          <path d="M372 112 L372 74 L390 74" marker-end="url(#b4dAr)"/>
+          <path d="M372 112 L372 132 L390 132" marker-end="url(#b4dAr)"/>
+          <path d="M372 132 L372 190 L390 190" marker-end="url(#b4dAr)"/>
+          <rect x="396" y="50" width="454" height="48" rx="8" transform="rotate(0.4 623 74)" fill="#FFFFFF"/>
+          <rect x="396" y="108" width="454" height="48" rx="8" transform="rotate(-0.4 623 132)" fill="#FFFFFF"/>
+          <rect x="396" y="166" width="454" height="48" rx="8" transform="rotate(0.3 623 190)" fill="#FFFFFF" stroke-dasharray="6 4"/>
+          <rect x="40" y="232" width="810" height="42" rx="10" transform="rotate(-0.2 445 253)" fill="url(#b4dHc)"/>
+        </g>
+
+        <text class="b4dL" x="54" y="72">compile-models · build · 192 s</text>
+        <text class="b4dS" x="54" y="90">script: python pipelines/compile.py --out build/</text>
+        <text class="b4dS" x="54" y="108">before tonight: build/ vanished with the job</text>
+        <text class="b4dL" x="66" y="138">+ artifacts: paths: [build/]</text>
+        <text class="b4dL" x="66" y="156">+ expire_in: 1 week</text>
+
+        <text class="b4dL" x="410" y="68">unit-tests · test · 303 s</text>
+        <text class="b4dA" x="410" y="86">+ cache keyed on requirements.txt, paths: [.cache/pip]</text>
+        <text class="b4dL" x="410" y="126">data-quality-tests · test · 478 s</text>
+        <text class="b4dA" x="410" y="144">+ the same cache block; a hit on either job helps the other</text>
+        <text class="b4dL" x="410" y="184">integration-tests · test · 730 s</text>
+        <text class="b4dS" x="410" y="202">downloads build/ through needs; no cache tonight, by choice</text>
+
+        <text class="b4dL" x="56" y="258">Session 8's bench parses shape and schedule only: artifacts and cache change no bench number (r3 stays 19:17, 41.17 min).</text>
+
+        <text class="b4dN" x="30" y="296">Durations are constructed medians. The minutes a warm cache saves are real on your project and unmeasured here.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - one orange block on the producer, two identical cache blocks on the consumers that download packages</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>See the failure once, on purpose.</strong> On a branch, open <code>.gitlab-ci.yml</code> and read <code>compile-models</code> and <code>unit-tests</code> as session 3 left them. Confirm there is no <code>artifacts</code> block. Push the branch, open a merge request, and watch the pipeline: <code>compile-models</code> passes, then <code>unit-tests</code> fails because <code>build/</code> is not in its working directory. Read the job log until you find the missing path.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's two jobs as session 3 left them (penwood.yml excerpt, constructed)</span>compile-models:
+  stage: build
+  needs:
+    - lint-sql
+  script:
+    - python pipelines/compile.py --out build/
+
+unit-tests:
+  stage: test
+  needs:
+    - compile-models
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - python -m pytest tests/unit -q</div>
+      </div>
+      <div class="step">
+        <p><strong>Declare the artifact on the producer.</strong> Add <code>artifacts</code> to <code>compile-models</code> only. Choose an <code>expire_in</code> rather than inheriting an instance default the docs do not number. Push. This time <code>unit-tests</code>, <code>data-quality-tests</code> and <code>integration-tests</code> all find <code>build/</code> without any change to their own YAML: later stage, and a <code>needs</code> entry with <code>artifacts: true</code> by default.</p>
+        <div class="prompt-box good"><span class="label">★ The artifact edit</span>compile-models:
+  stage: build
+  needs:
+    - lint-sql
+  script:
+    - python pipelines/compile.py --out build/
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 week</div>
+      </div>
+      <div class="step">
+        <p><strong>Add the cache to the two jobs that install packages.</strong> Key it on <code>requirements.txt</code> so a change to the file produces a new key, and point <code>paths</code> at the directory pip writes to. Make the script tell pip to use that directory. The script must be the same on a hit and a miss; only the clock may differ. Session 7's <code>extends</code> will remove the repetition between the two jobs; tonight, write it twice and see that it works.</p>
+        <div class="prompt-box good"><span class="label">★ The cache edit, on unit-tests and data-quality-tests</span>unit-tests:
+  stage: test
+  needs:
+    - compile-models
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  variables:
+    PIP_CACHE_DIR: .cache/pip
+  cache:
+    key:
+      files:
+        - requirements.txt
+    paths:
+      - .cache/pip
+  script:
+    - pip install -r requirements.txt
+    - python -m pytest tests/unit -q
+
+# repeat the variables and cache blocks on data-quality-tests
+# check cache:key:files in the YAML reference before you commit the spelling</div>
+      </div>
+      <div class="step">
+        <p><strong>Put the publish token where the YAML is not.</strong> Project settings, CI/CD, Variables: add <code>PUBLISH_TOKEN</code> with a throwaway value of at least 8 characters, no spaces, flags protected and masked. Then add a one-line job that prints it, push to the feature branch, and read the log. Then merge and read the same job on <code>main</code>. The two logs teach the two flags.</p>
+        <div class="prompt-box good"><span class="label">★ The probe job, and what you should see, roughly</span>show-token:
+  stage: lint
+  needs: []
+  script:
+    - echo "token is $PUBLISH_TOKEN"
+
+merge request pipeline on feature/orders-dedupe (unprotected):
+  token is
+  (the protected variable was never sent to this pipeline)
+
+pipeline on main (protected by default):
+  token is [MASKED]
+  (sent, and masked in the log; your numbers and names will differ)
+
+delete show-token before the next session; it exists to be read once</div>
+      </div>
+      <div class="step">
+        <p><strong>Read the artifact and the cache from the UI.</strong> Open the <code>compile-models</code> job page: the right-hand panel offers the artifact to browse and download, and shows when it expires. Open <code>unit-tests</code> on the second run after a push with an unchanged <code>requirements.txt</code>: the log's early lines report whether the cache was restored. Then change one line in <code>requirements.txt</code>, push, and watch the first run after it miss and still pass.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see, roughly</span>compile-models job page:   Job artifacts · Browse · Download · expires in 1 week (your expiry)
+unit-tests, run 2:          Checking cache for &lt;key&gt;...   Successfully extracted cache
+unit-tests after editing requirements.txt:
+                            Checking cache for &lt;new key&gt;...   (nothing to restore)
+                            pip downloads, tests run, job passes
+                            Saving cache for successful job ... Created cache
+your runner's wording and timings will differ; only the shape is fixed</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The step to skip</span>Making a job depend on the cache being there.
+The caching page: "Caching is an optimization, but it isn't guaranteed to always work."
+A script that reads "if .cache/pip exists, skip pip install" passes on the branch that warmed it and fails on main,
+which keeps a separate cache by default. If the job cannot pass without the content, that content is an artifact.</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 5</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li>Add a project-settings variable named <code>PYTHON_VERSION</code> with a different value from the YAML's <code>3.12</code>, print it in a job, and confirm which one wins. Then delete the setting and write one sentence on why settings variables should never share a name with YAML ones.</li>
+      <li>Put a 2 MB file into <code>build/</code> on purpose and read the artifact size on the job page. Work out how many such pipelines fit under the 1 GB compressed per-archive line on GitLab.com before the single archive, not the pile, becomes the problem.</li>
+      <li>Remove <code>expire_in</code> from <code>compile-models</code>, open the job page and read what expiry GitLab shows. That is your instance's default, which the docs page read for this session did not state; write it down with today's date.</li>
+      <li>Open the <code>unit-tests</code> log on <code>main</code> right after a merge from a branch that had a warm cache. Confirm the miss, confirm the pass, and time the difference against the branch run. That difference, in minutes, is what the cache is worth on Free.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Builder session 4 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · <code>PYTHON_VERSION</code> is <code>'3.12'</code> in the YAML's default <code>variables</code> block and <code>'3.11'</code> in the project's CI/CD settings. The job defines nothing. Which value does the job see, and why?</p>
+      <button class="qopt" type="button">A · 3.12, because the YAML is the file under version control</button>
+      <button class="qopt" type="button">B · 3.12, because the default block is evaluated last and overwrites earlier values</button>
+      <button class="qopt" type="button">C · 3.11, because project settings sit above YAML variables in the precedence list</button>
+      <button class="qopt" type="button">D · The pipeline fails to start because two definitions conflict</button>
+      <p class="qwhy">The variables page lists project settings above every YAML variable, including the default block. A job walks the list from the top and takes the first definition it meets. Nothing in the repository shows the 3.11, which is why settings variables should never share a name with YAML ones.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · <code>compile-models</code> writes <code>build/</code> in the build stage. <code>unit-tests</code> in the test stage lists it in <code>needs</code>. What is the smallest change that makes <code>build/</code> appear in <code>unit-tests</code>?</p>
+      <button class="qopt" type="button">A · <code>artifacts: paths: [build/]</code> on compile-models; unit-tests changes nothing</button>
+      <button class="qopt" type="button">B · <code>cache: paths: [build/]</code> on compile-models, so the runner keeps it</button>
+      <button class="qopt" type="button">C · <code>artifacts: paths: [build/]</code> on unit-tests, which is the job that needs it</button>
+      <button class="qopt" type="button">D · Put both jobs in the same stage so they share a working directory</button>
+      <p class="qwhy">The producer declares the artifact; later stages download it by default, and a needs entry downloads it too because artifacts: true is the default. A cache is not guaranteed to be present and is stored where the runner is, so B turns a build step into a hope. Jobs in one stage run in parallel in separate environments, so D shares nothing.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · A merge request pipeline on <code>feature/orders-dedupe</code> warmed the pip cache. The branch merges and the pipeline on <code>main</code> downloads every package again and passes. What happened?</p>
+      <button class="qopt" type="button">A · The cache key changed because the commit SHA is part of every key</button>
+      <button class="qopt" type="button">B · The artifact expired, so the packages were gone</button>
+      <button class="qopt" type="button">C · A cache miss is a bug; the job should have failed</button>
+      <button class="qopt" type="button">D · Caches are not shared between protected and unprotected branches by default; main is protected, so it has its own</button>
+      <p class="qwhy">The caching page documents the separation, and the default branch is protected by default. The key here is derived from requirements.txt, not the SHA. Packages were never an artifact. And a job written so a miss costs only minutes passes, which is exactly what it did.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Variable precedence, YAML variables visible to the repository, protected and masked</span><span class="note">GitLab Docs: CI/CD variables; read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Predefined variables Penwood's file reads</span><span class="note">GitLab Docs: Predefined CI/CD variables reference; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Artifacts: paths, default download in later stages, expire_in, latest pipeline kept, 1 GB compressed</span><span class="note">GitLab Docs: Job artifacts, CI/CD YAML syntax reference; read at source. The default expiry is not stated on the page and is not quoted</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Cache: optimisation not guarantee, dependencies versus intermediate results, runner-side storage, protected-branch separation</span><span class="note">GitLab Docs: Caching in GitLab CI/CD; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">needs with artifacts: true by default</span><span class="note">GitLab Docs: Make jobs start earlier with needs; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Storage: artifacts excluded from the 10 GiB per project; 400 compute minutes a month on Free</span><span class="note">GitLab Docs: Storage usage quotas, Compute minutes; read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">cache:key:files exact spelling</span><span class="note">Named as the YAML reference's keyword; the source map records only the default key, so the page tells you to read the entry before committing</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Penwood's durations, run mix and failure stories</span><span class="note">Constructed; labelled on the page; the bench parses and schedules, it runs nothing</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Builder session 4 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Top of the list wins</b><span>Policy, manual, pipeline, project, group, instance, dotenv, YAML, deployment, predefined. A job takes the first definition it meets.</span></div>
+      <div class="cheat-item"><b>YAML variables are public to the repo</b><span>Everyone with repository access reads them. Secrets go in settings, protected (protected refs only) and masked ([MASKED] in logs, not a guarantee).</span></div>
+      <div class="cheat-item"><b>Declare artifacts on the producer</b><span>artifacts:paths on the job that writes the files. Later stages download by default; needs downloads too (artifacts: true default).</span></div>
+      <div class="cheat-item"><b>Set expire_in yourself</b><span>Unset means the instance default, which the docs page did not number. Latest successful pipeline per ref is kept. 1 GB compressed per archive on GitLab.com.</span></div>
+      <div class="cheat-item"><b>Cache is a hope</b><span>"Isn't guaranteed to always work." For dependencies only. Key it on the file that defines the content. A miss must still pass.</span></div>
+      <div class="cheat-item"><b>Protected and unprotected caches differ</b><span>Not shared by default. The first run on main after a change misses even if the branch was warm. Minutes, not correctness.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>Penwood's jobs now hand each other files, reuse their packages and keep the token out of the YAML. Session 5 decides which jobs run at all: rules evaluated top to bottom until the first match, needs that let a job skip the stage queue, and the bench's own numbers for what that saves, from 30:08 to 26:22 on a push to main.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Builder session 4 of 8 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="b3-first-gitlab-ci-yml.html">← Prev: Your first .gitlab-ci.yml</a> &nbsp;·&nbsp; <a href="b5-rules-needs-dag.html">Next: Rules, needs and the DAG →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

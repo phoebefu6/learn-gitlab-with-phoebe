@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Leader session 3 of 6. The group, subgroup and project tree, visibility that can only fall down it, eight roles from Guest to Owner and the one inheritance rule, and the five-user limit on a private Free group as of 2026-10-29. Penwood, a constructed analytics team, writes its access matrix.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Groups, projects and permissions - learn gitlab with phoebe">
+<meta property="og:description" content="Leader session 3 of 6. One tree, eight roles, one rule, five seats. Who may do what, granted once.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/courses/a3-groups-projects-permissions.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Groups, projects and permissions - learn gitlab with phoebe">
+<meta name="twitter:description" content="Leader session 3 of 6. The tree, the roles, the inheritance rule and the five-seat wall on Free.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-gitlab-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Leader session 3 · Groups, projects and permissions - learn gitlab with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-gitlab-with-phoebe</a> / Leader session 3 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn GitLab · Leader session 3 of 6</div>
+    <h1>Groups, projects and <span class="accent">permissions</span></h1>
+    <p class="sub">Session 1 showed that GitLab is one application because everything hangs off one tree. Tonight is the tree itself: a top-level group at the root, subgroups under it, projects at the leaves, and three rules that govern it. Visibility can only fall as you go down. A role granted above is kept below and can never be lowered. And on the Free tier, as of 2026-10-29, a private top-level group counts every unique person in the whole tree against five seats. Penwood, the constructed five-person logistics-analytics team, is exactly five, which makes the sixth person the question of the night. You leave with Penwood's access matrix and the habit behind it: grant the high roles low in the tree and the low roles high.</p>
+    <div class="chip-row">
+      <span class="chip level">🟡 Core</span>
+      <span class="chip audience">Data and analytics leads who sign off access</span>
+      <span class="chip audience">Anyone who has to explain who can merge</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:5">3-20 · The tree, the roles, the seats</span>
+      <span class="a3" style="flex:4">20-40 · Build-along: Penwood's access matrix</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Why a leader draws the tree before anyone pushes code</h2>
+    </div>
+    <p class="lede">Access is the one platform decision that is cheap to get right on day one and expensive to unpick on day ninety. In six separate tools a wrong grant stays inside one tool; in one application it travels down a tree to projects that do not exist yet. Tonight has three parts: <strong>the tree</strong> (what a group, a subgroup and a project are, and why visibility only falls), <strong>eight roles and one rule</strong> (what each role may do, and why a role granted above cannot be taken away below), and <strong>five seats</strong> (how the Free tier counts people, what happens at six, and the three ways out). The build-along writes Penwood's access matrix: five constructed people against three levels of the tree, with the grant made at the lowest level that does the job.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">🔍 Every diagram zooms</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Penwood's access matrix: five people down the side, group, subgroup and project across the top, one role per person written in the one cell where the grant is made and inherited everywhere below it. Plus the seat count written next to the number five with today's date, and a one-line answer for the sixth person: public group, Premium, or a personal namespace, with the trade-off of each named.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers top-level groups, subgroups, projects and visibility</span>
+      <h2>The tree</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The groups page puts it plainly: "you use groups to manage one or more related projects at the same time". A top-level group is "created at the root"; subgroups nest beneath it, up to 20 levels deep though the docs recommend five or fewer; projects sit at the leaves and hold the repository, the issues and the pipeline. The URL mirrors the tree, so <code>penwood/data/pipelines</code> is both an address and an org chart. One rule shapes everything else: a subgroup or project cannot be more visible than its parent.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn tree for the constructed Penwood team. The top-level group penwood, private, is highlighted at the top. Under it a subgroup data, and under that a project pipelines, each stepped to the right. A dashed arrow down the left says visibility can fall or stay, never rise. At the right a struck-out panel shows a project set to public under a private group, refused. Below, three slots show that a new Free account may create three top-level groups, one of them taken by penwood.">
+        <defs>
+          <filter id="a3aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="31" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a3aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a3aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a3aH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a3aL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a3aS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a3aV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .a3aR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .a3aN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a3aH" x="30" y="26">PENWOOD'S TREE: ROOT, SUBGROUP, LEAF, AND A VISIBILITY THAT ONLY FALLS</text>
+        <text class="a3aS" x="540" y="26">constructed · per the groups and subgroups pages</text>
+
+        <g filter="url(#a3aSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="90" y="52" width="250" height="56" rx="10" transform="rotate(-0.5 215 80)" fill="#FC6D26"/>
+          <rect x="130" y="138" width="250" height="56" rx="10" transform="rotate(0.5 255 166)" fill="#F4F0FC"/>
+          <rect x="170" y="224" width="250" height="56" rx="10" transform="rotate(-0.4 295 252)" fill="#FFFFFF"/>
+          <path d="M215 110 L215 126 L255 126 L255 136" marker-end="url(#a3aAr)"/>
+          <path d="M255 196 L255 212 L295 212 L295 222" marker-end="url(#a3aAr)"/>
+          <path d="M50 60 L50 276" stroke="#6B4FBB" stroke-dasharray="6 4" marker-end="url(#a3aAr)"/>
+          <rect x="520" y="52" width="320" height="110" rx="12" transform="rotate(0.4 680 107)" fill="#FEF2F2" stroke="#991B1B"/>
+          <path d="M538 70 L560 92 M560 70 L538 92" stroke="#991B1B"/>
+          <rect x="520" y="192" width="96" height="40" rx="8" transform="rotate(-1.2 568 212)" fill="url(#a3aHc)"/>
+          <rect x="632" y="192" width="96" height="40" rx="8" transform="rotate(0.9 680 212)" fill="#FFFFFF" stroke-dasharray="5 4"/>
+          <rect x="744" y="192" width="96" height="40" rx="8" transform="rotate(-0.8 792 212)" fill="#FFFFFF" stroke-dasharray="5 4"/>
+        </g>
+
+        <text class="a3aL" x="106" y="76">top-level group · penwood</text>
+        <text class="a3aL" x="106" y="94">private · created at the root</text>
+        <text class="a3aL" x="146" y="162">subgroup · data</text>
+        <text class="a3aS" x="146" y="180">never more visible than penwood</text>
+        <text class="a3aL" x="186" y="248">project · pipelines</text>
+        <text class="a3aS" x="186" y="266">URL penwood/data/pipelines</text>
+
+        <text class="a3aS" x="58" y="170">visibility</text>
+        <text class="a3aS" x="58" y="186">falls or stays</text>
+
+        <text class="a3aR" x="572" y="86">refused</text>
+        <text class="a3aL" x="538" y="116">public project under a private group</text>
+        <text class="a3aS" x="538" y="136">cannot be more visible than its parent</text>
+
+        <text class="a3aV" x="520" y="184">3 slots</text>
+        <text class="a3aL" x="532" y="216">penwood</text>
+        <text class="a3aS" x="644" y="216">free slot</text>
+        <text class="a3aS" x="756" y="216">free slot</text>
+        <text class="a3aS" x="520" y="252">Free accounts created after 2026-01-27:</text>
+        <text class="a3aS" x="520" y="268">three top-level groups (as of 2026-10-29)</text>
+
+        <text class="a3aN" x="30" y="312">Three levels suit Penwood. Docs allow 20, recommend five or fewer; every level is a place a rule can be set.</text>
+        <text class="a3aN" x="30" y="332">Tier and account figures are the docs' on 2026-10-29; re-verify the tier page before relying on them.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the root sets the ceiling on visibility, and everything under it can only be as open or less</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span> Group, subgroup, project: what each one is for <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A <strong>project</strong> is where the work is: one repository, its issues, its merge requests, its pipeline, its registry. A <strong>group</strong> exists to hold projects and people together, so a grant made once at the group applies to every project in it. A <strong>subgroup</strong> is a group inside a group, available on every tier, and it is how you give a department or a product line its own corner of the tree without leaving the organisation's root. Penwood, constructed, uses all three: the top-level group <code>penwood</code> for the organisation, the subgroup <code>data</code> for the team, the project <code>pipelines</code> for the work. Three levels is deliberate. The docs allow twenty and recommend five or fewer, and every extra level is another place a rule can be set and forgotten.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> Visibility falls, never rises <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The subgroups page states the rule: a subgroup or project cannot be more visible than its parent. So a private top-level group caps everything under it at private, however the project's own setting reads. That is a safety property for a data team whose repositories hold query logic over customer tables; nobody can accidentally open a leaf to the world when the root is closed. It is also a constraint on the Free tier's five-seat limit, which applies to private top-level groups only: a team that wants the public-group exemption has to make the root public, and then every subgroup and project inherits that ceiling and has to be closed one by one if it should stay private. Part 3 weighs that trade.</p>
+        <p>The user-limit page adds one more root-level fact for new accounts: those created on Free after 2026-01-27 can create three top-level groups. Treat that as a design budget, not a nuisance; one root per organisation is the shape the inheritance rule rewards.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Where the seams are <span class="mini">1 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>What a repository is and what an issue is, for people who do not code, lives in <a href="https://phoebefu6.github.io/learn-github-with-phoebe/">the GitHub course</a>; how git itself tracks changes lives in <a href="https://phoebefu6.github.io/learn-github-for-builders-with-phoebe/courses/01-git-under-the-hood.html">GitHub for builders</a>. This page takes the other side: only the tree GitLab builds above the repository, and the permissions that travel down it.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's analyst wants to share a dashboard-building notebook with a university partner and sets the <code>pipelines</code> project to public. Under a private <code>penwood</code> root the setting cannot take; the project stays at the parent's visibility or lower. The analyst is mildly annoyed and the data lead is quietly relieved, because the same repository holds the SQL that names the customer tables. The lead's answer is a separate public project outside the private tree, or a personal namespace, which Part 3 returns to for a different reason.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers the eight roles, what each may do, and the inheritance rule</span>
+      <h2>Eight roles, one rule</h2>
+      <span class="tag concept">7 min live</span>
+    </div>
+    <p class="lede">The permissions page lists eight roles from fewest powers to most, and then one sentence that does more work than the whole table: "Users always retain the permissions for their highest role". Membership flows down from the parent group, and the subgroups page closes the loophole: "You can't give a user a role in a subgroup that is lower than the roles the user has in parent groups". A role granted at the root is a floor for the whole tree.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn ladder of the eight roles on the left, Minimal Access at the bottom up to Owner at the top. In the middle, the Penwood tree: an analytics engineer granted Maintainer at the group, highlighted; the grant flows down to the subgroup and project as Maintainer. A struck-out attempt to set the same person to Developer at the subgroup is refused, because a subgroup role cannot be lower than the parent's. A note says grant high roles low in the tree.">
+        <defs>
+          <filter id="a3bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="37" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a3bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a3bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a3bH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a3bL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a3bS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a3bW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .a3bR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .a3bN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a3bH" x="30" y="26">EIGHT ROLES, FEWEST TO MOST, AND WHAT HAPPENS TO ONE GRANT GOING DOWN THE TREE</text>
+
+        <g filter="url(#a3bSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="50" width="200" height="28" rx="6" transform="rotate(-0.6 140 64)" fill="#483698"/>
+          <rect x="40" y="84" width="200" height="28" rx="6" transform="rotate(0.5 140 98)" fill="#483698"/>
+          <rect x="40" y="118" width="200" height="28" rx="6" transform="rotate(-0.4 140 132)" fill="#F4F0FC"/>
+          <rect x="40" y="152" width="200" height="28" rx="6" transform="rotate(0.6 140 166)" fill="#F4F0FC"/>
+          <rect x="40" y="186" width="200" height="28" rx="6" transform="rotate(-0.5 140 200)" fill="#FFFFFF"/>
+          <rect x="40" y="220" width="200" height="28" rx="6" transform="rotate(0.4 140 234)" fill="#FFFFFF"/>
+          <rect x="40" y="254" width="200" height="28" rx="6" transform="rotate(-0.6 140 268)" fill="#FFFFFF"/>
+          <rect x="40" y="288" width="200" height="28" rx="6" transform="rotate(0.5 140 302)" fill="#FFFFFF"/>
+          <path d="M254 302 C 300 290, 300 100, 254 84" stroke="#6B4FBB" stroke-dasharray="5 4" marker-end="url(#a3bAr)"/>
+
+          <rect x="340" y="56" width="230" height="52" rx="10" transform="rotate(-0.5 455 82)" fill="#F4F0FC"/>
+          <rect x="380" y="146" width="230" height="52" rx="10" transform="rotate(0.5 495 172)" fill="#F4F0FC"/>
+          <rect x="420" y="236" width="230" height="52" rx="10" transform="rotate(-0.4 535 262)" fill="#FFFFFF"/>
+          <path d="M455 110 L455 128 L495 128 L495 144" marker-end="url(#a3bAr)"/>
+          <path d="M495 200 L495 218 L535 218 L535 234" marker-end="url(#a3bAr)"/>
+          <rect x="586" y="64" width="120" height="36" rx="8" transform="rotate(1.5 646 82)" fill="#FC6D26"/>
+          <rect x="626" y="154" width="120" height="36" rx="8" transform="rotate(-1 686 172)" fill="#FFFFFF"/>
+          <rect x="666" y="244" width="120" height="36" rx="8" transform="rotate(0.8 726 262)" fill="#FFFFFF"/>
+          <path d="M646 102 L646 146 L686 146 L686 152" stroke="#6B4FBB" marker-end="url(#a3bAr)"/>
+          <path d="M686 192 L686 236 L726 236 L726 242" stroke="#6B4FBB" marker-end="url(#a3bAr)"/>
+          <rect x="760" y="150" width="90" height="44" rx="8" transform="rotate(-1.4 805 172)" fill="#FEF2F2" stroke="#991B1B"/>
+          <path d="M770 160 L784 184 M784 160 L770 184" stroke="#991B1B"/>
+        </g>
+
+        <text class="a3bW" x="52" y="69">Owner · full control</text>
+        <text class="a3bW" x="52" y="103">Maintainer · settings</text>
+        <text class="a3bL" x="52" y="137">Developer · push, MRs</text>
+        <text class="a3bL" x="52" y="171">Security Manager</text>
+        <text class="a3bL" x="52" y="205">Reporter · view, issues</text>
+        <text class="a3bL" x="52" y="239">Planner · issues, plans</text>
+        <text class="a3bL" x="52" y="273">Guest · view and comment</text>
+        <text class="a3bL" x="52" y="307">Minimal Access · none</text>
+        <text class="a3bS" x="296" y="196">more</text>
+        <text class="a3bS" x="296" y="212">power</text>
+
+        <text class="a3bL" x="356" y="78">group · penwood</text>
+        <text class="a3bS" x="356" y="96">analytics engineer added here</text>
+        <text class="a3bL" x="396" y="168">subgroup · data</text>
+        <text class="a3bS" x="396" y="186">inherits the membership</text>
+        <text class="a3bL" x="436" y="258">project · pipelines</text>
+        <text class="a3bS" x="436" y="276">inherits it again</text>
+
+        <text class="a3bL" x="600" y="86">Maintainer</text>
+        <text class="a3bL" x="640" y="176">Maintainer</text>
+        <text class="a3bL" x="680" y="266">Maintainer</text>
+        <text class="a3bR" x="790" y="168">Developer</text>
+        <text class="a3bR" x="790" y="184">refused</text>
+
+        <text class="a3bN" x="30" y="344">A root grant is a floor; a subgroup cannot set the same person lower. Grant high roles low in the tree.</text>
+        <text class="a3bN" x="30" y="364">Role wording is the permissions page's, abbreviated to fit; the full sentences are in the cards below.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the grant at the group becomes a Maintainer at every level below, and the attempt to lower it at the subgroup is refused</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> The eight roles, each in the docs' own words <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Fewest to most. <strong>Minimal Access</strong> grants none of the table's permissions; it is a way to be in the tree without seeing anything in it. <strong>Guest</strong> can "View and comment on issues and epics. Cannot push code". <strong>Planner</strong> creates and manages issues, epics, milestones and iterations. <strong>Reporter</strong> can "View code, create issues, and generate reports". <strong>Security Manager</strong> manages vulnerabilities and compliance settings. <strong>Developer</strong> can "Push code to non-protected branches, create merge requests, and run CI/CD pipelines". <strong>Maintainer</strong> can "Manage branches, merge requests, CI/CD settings, and project members. Cannot delete the project". <strong>Owner</strong> has "Full control over the project or group, including deletion".</p>
+        <p>For a data team the daily three are Reporter, Developer and Maintainer. Reporter is for the people who read the quality report and file an issue when a number looks wrong. Developer is for the people who change the pipeline, and the key phrase is non-protected branches: a Developer changes <code>main</code> only through a merge request. Maintainer is for the one or two who decide what is protected and who is in the project. Owner is for whoever may delete the thing, and that should be a short list.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> Who may merge what <span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The protected-branches page says "The default branch for your repository is protected by default", and a new protection rule selects Maintainers for "Allowed to push and merge", with force push off. Put those two pages together and you have the Free tier's control point without configuring anything: Developers push to feature branches and open merge requests; Maintainers merge into <code>main</code>. Approvals on Free are optional, since users with at least Developer can approve and "These approvals are optional and don't prevent merging without approval"; required approval rules and Code Owner approval are Premium and Ultimate. Group-level protected branches, one rule for every project in the group, are Premium and Ultimate too; on Free you set the rule per project. Session 5 turns this into Penwood's control list.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The rule, and the habit it forces <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Two sentences from the docs, read together. "Users always retain the permissions for their highest role", and "You can't give a user a role in a subgroup that is lower than the roles the user has in parent groups". The first means a person who is Maintainer at the group and Reporter in some project is a Maintainer in that project, because the highest role wins. The second means you cannot even record the lower role in a subgroup. Inheritance only adds; nothing below the grant can subtract. The habit that follows is the whole of tonight's build-along: make a grant at the lowest level where it does the job. Reporter for someone who reads everything can sit at the root, because Reporter reaching every future project costs little. Maintainer should sit on the project it is needed for, because Maintainer reaching every future project is a quiet way to lose track of who can change a protected branch six months from now.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>Constructed: Penwood's second analytics engineer is granted Maintainer at <code>penwood</code> "so they can set things up". In month four the finance team asks for a <code>data/payroll-reconciliation</code> project under the same root. Nobody adds the engineer to it; the permissions page says they are already there, as Maintainer, able to manage its branches and members, because the role flowed down from the root and cannot be lowered in the subgroup. Nothing broke. That is the point: a blast radius is silent until the day it is not. The matrix in the build-along puts that Maintainer on <code>pipelines</code> only.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers how the Free tier counts people and what to do at six</span>
+      <h2>Five seats</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The free-user-limit page, as of 2026-10-29: "You can add up to five users to newly created top-level namespaces with private visibility on GitLab.com". The count is every unique user across the group, its subgroups and its projects; the same person in three projects is one, a sixth person anywhere in the tree is six. Over the limit the namespace is "placed in a read-only state". Penwood is exactly five. Re-verify the tier page before relying on it.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn counter. Five people drawn as hatched cards in a row, each tagged with where in the Penwood tree they were added: group, group, subgroup, project, group. A bracket under them reads five unique users, counted across the whole tree. A sixth dashed card at the right is marked read-only for the whole namespace. Below, three exit boxes: a public top-level group, exempt but visible to everyone; Premium at 29 dollars per user a month billed annually; a personal namespace outside the tree, exempt but outside the group's roles.">
+        <defs>
+          <filter id="a3cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="41" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a3cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a3cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a3cH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a3cL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a3cS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a3cV { font: 800 20px Inter, sans-serif; fill: #483698; }
+          .a3cB { font: 800 11px Inter, sans-serif; fill: #9E3811; }
+          .a3cR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .a3cN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a3cH" x="30" y="26">FIVE SEATS ON A PRIVATE FREE GROUP: COUNTED ACROSS THE WHOLE TREE, AS OF 2026-10-29</text>
+
+        <g filter="url(#a3cSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="52" width="136" height="72" rx="8" transform="rotate(-1.5 108 88)" fill="url(#a3cHc)"/>
+          <rect x="186" y="52" width="136" height="72" rx="8" transform="rotate(1.2 254 88)" fill="url(#a3cHc)"/>
+          <rect x="332" y="52" width="136" height="72" rx="8" transform="rotate(-0.9 400 88)" fill="url(#a3cHc)"/>
+          <rect x="478" y="52" width="136" height="72" rx="8" transform="rotate(1.4 546 88)" fill="url(#a3cHc)"/>
+          <rect x="624" y="52" width="136" height="72" rx="8" transform="rotate(-1.1 692 88)" fill="url(#a3cHc)"/>
+          <path d="M40 140 L40 150 L760 150 L760 140" stroke="#6B4FBB"/>
+          <path d="M400 150 L400 162"/>
+          <rect x="770" y="52" width="100" height="72" rx="8" transform="rotate(2 820 88)" fill="#FEF2F2" stroke="#991B1B" stroke-dasharray="5 4"/>
+          <rect x="690" y="170" width="180" height="30" rx="7" transform="rotate(-0.6 780 185)" fill="#FEF2F2" stroke="#991B1B"/>
+          <rect x="300" y="166" width="190" height="40" rx="8" transform="rotate(0.5 395 186)" fill="#FC6D26"/>
+          <rect x="40" y="236" width="250" height="82" rx="10" transform="rotate(-0.5 165 277)" fill="#FFFFFF"/>
+          <rect x="315" y="236" width="250" height="82" rx="10" transform="rotate(0.4 440 277)" fill="#F4F0FC"/>
+          <rect x="590" y="236" width="260" height="82" rx="10" transform="rotate(-0.4 720 277)" fill="#FFFFFF"/>
+        </g>
+
+        <text class="a3cL" x="52" y="76">data lead</text>
+        <text class="a3cS" x="52" y="94">Owner</text>
+        <text class="a3cS" x="52" y="110">at the group</text>
+        <text class="a3cL" x="198" y="76">analytics eng 1</text>
+        <text class="a3cS" x="198" y="94">Maintainer</text>
+        <text class="a3cS" x="198" y="110">at the project</text>
+        <text class="a3cL" x="344" y="76">analytics eng 2</text>
+        <text class="a3cS" x="344" y="94">Developer</text>
+        <text class="a3cS" x="344" y="110">at the subgroup</text>
+        <text class="a3cL" x="490" y="76">analyst</text>
+        <text class="a3cS" x="490" y="94">Developer</text>
+        <text class="a3cS" x="490" y="110">at the subgroup</text>
+        <text class="a3cL" x="636" y="76">finance partner</text>
+        <text class="a3cS" x="636" y="94">Reporter</text>
+        <text class="a3cS" x="636" y="110">at the group</text>
+
+        <text class="a3cR" x="782" y="76">contractor</text>
+        <text class="a3cR" x="782" y="94">the sixth</text>
+        <text class="a3cS" x="782" y="110">any level</text>
+        <text class="a3cR" x="702" y="190">whole namespace read-only</text>
+
+        <text class="a3cV" x="314" y="194">5 of 5</text>
+        <text class="a3cL" x="384" y="186">unique users,</text>
+        <text class="a3cL" x="384" y="200">whole tree</text>
+
+        <text class="a3cL" x="56" y="258">exit 1 · public top-level group</text>
+        <text class="a3cS" x="56" y="276">exempt from the five-seat limit</text>
+        <text class="a3cS" x="56" y="292">cost: the root is visible to all;</text>
+        <text class="a3cS" x="56" y="308">every child must be closed by hand</text>
+        <text class="a3cL" x="331" y="258">exit 2 · Premium</text>
+        <text class="a3cB" x="331" y="276">$29 per user a month (annual)</text>
+        <text class="a3cS" x="331" y="292">as of 2026-10-29; no five-seat cap</text>
+        <text class="a3cS" x="331" y="308">cost: six seats become a line item</text>
+        <text class="a3cL" x="606" y="258">exit 3 · a personal namespace</text>
+        <text class="a3cS" x="606" y="276">exempt; the project sits outside</text>
+        <text class="a3cS" x="606" y="292">cost: no group roles, no inheritance</text>
+        <text class="a3cS" x="606" y="308">a second place to grant access</text>
+
+        <text class="a3cN" x="30" y="344">Where a person is added changes nothing: one user is one seat. Re-verify the tier page before relying on it.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - five unique people are five seats wherever they sit in the tree, and the sixth makes every project in it read-only</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span> How the count works <span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Three facts from the user-limit page, read on 2026-10-29. The limit applies to "newly created top-level namespaces with private visibility on GitLab.com", so a private root is what triggers it. The count is unique users across the whole tree: the group, every subgroup and every project. And the consequence of going over is that the namespace is "placed in a read-only state", which the storage page describes in the same terms: no writes to repositories, LFS, packages or registries. Two exemptions are named on the same page: personal namespaces and public top-level groups. Penwood is five people, so one contractor, one auditor or one new hire with a login is the sixth seat, and the page does not care which level of the tree they were added at.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span> The sixth person: three exits and their price <span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Exit 1, make the root public.</strong> Public top-level groups are exempt from the limit. The price is Part 1's rule running the other way: a public root means every subgroup and project inherits public as its ceiling and must be set private one by one, and a new project created in a hurry is public until someone remembers. For a team whose repositories name customer tables, that is a standing risk in exchange for a free seat.</p>
+        <p><strong>Exit 2, Premium.</strong> The pricing page on 2026-10-29 lists Premium at $29 per user a month billed annually, with no five-seat cap, 10,000 compute minutes and 500 GiB. The price is a line item, and it also answers Session 1's first wall, the 400 compute minutes Penwood's constructed month overruns by a wide margin. If the quota pushes you to Premium anyway, the sixth seat comes with it. Re-verify the tier page before relying on any of these numbers.</p>
+        <p><strong>Exit 3, a personal namespace.</strong> Personal namespaces are exempt, so a contractor's work can live in a project under their own namespace. The price is that the project is outside the tree: none of Penwood's group roles reach it, nothing is inherited, and the lead now grants access in two places. It is the right answer for a short piece of work that does not touch the pipeline; it is the wrong answer for anything that should run on <code>main</code>.</p>
+        <p>There is no fourth exit in the docs read for this page. A leader writes which of the three Penwood would take, and when, on the decision page; Session 6 puts the date on it.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p>The GitLab Docs describe the moment plainly: a private top-level group on Free that goes over five users is "placed in a read-only state", and the storage page lists what read-only means, no writes to repositories, LFS, packages or registries. Penwood, constructed, feels it as a Friday afternoon: an auditor is added to the subgroup to read one report, and by evening the nightly schedule cannot push its image and the analyst cannot push a fix. Nobody did anything wrong by their own tool's rules. The one tree that made access simple made the limit reach everything at once.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Penwood's access matrix</h2>
+      <span class="tag demo">★ 20 min · everyone builds</span>
+    </div>
+    <p class="lede">One page, one grid: people down the side, the three levels of the tree across the top. Each person gets one role in one cell, the lowest level where it does the job; every cell below that is inherited and written in lighter ink. Penwood's five constructed people are filled in below. Yours uses your own team. No GitLab account is needed tonight; the matrix is the thing you take to the person who creates the group.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn grid. Rows: data lead, analytics engineer 1, analytics engineer 2, analyst, finance partner. Columns: group penwood, subgroup data, project pipelines. The cell where each grant is made is highlighted: data lead Owner at the group, finance partner Reporter at the group, analytics engineer 2 and the analyst Developer at the subgroup, analytics engineer 1 Maintainer at the project. Cells to the right of a grant read inherited. Cells to the left are blank. A seat counter at the bottom reads five unique users of five.">
+        <defs>
+          <filter id="a3dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="43" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="a3dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#6B4FBB" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="a3dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#1F1633" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .a3dH { font: 800 12px Inter, sans-serif; fill: #1F1633; }
+          .a3dL { font: 600 12px Inter, sans-serif; fill: #1F1633; }
+          .a3dS { font: 400 11px Inter, sans-serif; fill: #5A5176; }
+          .a3dV { font: 800 18px Inter, sans-serif; fill: #483698; }
+          .a3dA { font: 700 11px Inter, sans-serif; fill: #483698; }
+          .a3dN { font: 400 12px Inter, sans-serif; fill: #5A5176; }
+        </style>
+
+        <text class="a3dH" x="30" y="26">PENWOOD'S ACCESS MATRIX (CONSTRUCTED): ONE GRANT PER PERSON, AT THE LOWEST LEVEL THAT WORKS</text>
+
+        <text class="a3dA" x="250" y="56">group · penwood</text>
+        <text class="a3dA" x="450" y="56">subgroup · data</text>
+        <text class="a3dA" x="650" y="56">project · pipelines</text>
+
+        <g filter="url(#a3dSk)" fill="none" stroke="#1F1633" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="236" y="66" width="180" height="34" rx="7" transform="rotate(-0.5 326 83)" fill="#FC6D26"/>
+          <rect x="436" y="66" width="180" height="34" rx="7" transform="rotate(0.4 526 83)" fill="#F4F0FC"/>
+          <rect x="636" y="66" width="180" height="34" rx="7" transform="rotate(-0.3 726 83)" fill="#F4F0FC"/>
+
+          <rect x="236" y="108" width="180" height="34" rx="7" transform="rotate(0.4 326 125)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="436" y="108" width="180" height="34" rx="7" transform="rotate(-0.4 526 125)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="636" y="108" width="180" height="34" rx="7" transform="rotate(0.5 726 125)" fill="#FC6D26"/>
+
+          <rect x="236" y="150" width="180" height="34" rx="7" transform="rotate(-0.4 326 167)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="436" y="150" width="180" height="34" rx="7" transform="rotate(0.5 526 167)" fill="#FC6D26"/>
+          <rect x="636" y="150" width="180" height="34" rx="7" transform="rotate(-0.5 726 167)" fill="#F4F0FC"/>
+
+          <rect x="236" y="192" width="180" height="34" rx="7" transform="rotate(0.5 326 209)" fill="#FFFFFF" stroke-dasharray="4 4"/>
+          <rect x="436" y="192" width="180" height="34" rx="7" transform="rotate(-0.3 526 209)" fill="#FC6D26"/>
+          <rect x="636" y="192" width="180" height="34" rx="7" transform="rotate(0.4 726 209)" fill="#F4F0FC"/>
+
+          <rect x="236" y="234" width="180" height="34" rx="7" transform="rotate(-0.3 326 251)" fill="#FC6D26"/>
+          <rect x="436" y="234" width="180" height="34" rx="7" transform="rotate(0.4 526 251)" fill="#F4F0FC"/>
+          <rect x="636" y="234" width="180" height="34" rx="7" transform="rotate(-0.4 726 251)" fill="#F4F0FC"/>
+
+          <path d="M420 83 L432 83" marker-end="url(#a3dAr)"/>
+          <path d="M620 83 L632 83" marker-end="url(#a3dAr)"/>
+          <path d="M620 167 L632 167" marker-end="url(#a3dAr)"/>
+          <path d="M620 209 L632 209" marker-end="url(#a3dAr)"/>
+          <path d="M420 251 L432 251" marker-end="url(#a3dAr)"/>
+          <path d="M620 251 L632 251" marker-end="url(#a3dAr)"/>
+        </g>
+
+        <text class="a3dL" x="30" y="88">data lead</text>
+        <text class="a3dL" x="30" y="130">analytics engineer 1</text>
+        <text class="a3dL" x="30" y="172">analytics engineer 2</text>
+        <text class="a3dL" x="30" y="214">analyst</text>
+        <text class="a3dL" x="30" y="256">finance partner</text>
+
+        <text class="a3dL" x="250" y="88">Owner · granted</text>
+        <text class="a3dS" x="450" y="88">Owner · inherited</text>
+        <text class="a3dS" x="650" y="88">Owner · inherited</text>
+
+        <text class="a3dS" x="250" y="130">not a member</text>
+        <text class="a3dS" x="450" y="130">not a member</text>
+        <text class="a3dL" x="650" y="130">Maintainer · granted</text>
+
+        <text class="a3dS" x="250" y="172">not a member</text>
+        <text class="a3dL" x="450" y="172">Developer · granted</text>
+        <text class="a3dS" x="650" y="172">Developer · inherited</text>
+
+        <text class="a3dS" x="250" y="214">not a member</text>
+        <text class="a3dL" x="450" y="214">Developer · granted</text>
+        <text class="a3dS" x="650" y="214">Developer · inherited</text>
+
+        <text class="a3dL" x="250" y="256">Reporter · granted</text>
+        <text class="a3dS" x="450" y="256">Reporter · inherited</text>
+        <text class="a3dS" x="650" y="256">Reporter · inherited</text>
+
+        <text class="a3dV" x="30" y="300">5 of 5</text>
+        <text class="a3dN" x="100" y="300">unique users across a private Free tree (as of 2026-10-29). Maintainer sits on the one project it is for.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - two grants at the root, two at the subgroup, one at the project; everything to the right of a grant is inherited and cannot be lowered</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>List the people, one row each, and count them.</strong> Everyone who will need a login: the team, the contractor, the auditor, the finance partner who only reads. Write the count next to "5" with today's date. If the count is six or more and the root will be private, the sixth-person decision belongs on this page, not in month four.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's seat count (constructed) · limit as of 2026-10-29</span>people needing a login: data lead, analytics engineer 1, analytics engineer 2, analyst, finance partner
+unique users: 5   Free limit on a private top-level group: 5   headroom: 0
+sixth person expected? a contractor in the migration block (Session 6) -> decision due before day 60</div>
+      </div>
+      <div class="step">
+        <p><strong>Pick each person's role from the eight, by the smallest that does the job.</strong> Reads reports and files issues: Reporter. Changes the pipeline through merge requests: Developer. Decides what is protected and who is a member: Maintainer. May delete the group: Owner, and keep that list short.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's roles (constructed) · wording from the permissions page</span>data lead             -> Owner       full control over the project or group, including deletion
+analytics engineer 1  -> Maintainer  manage branches, merge requests, CI/CD settings, project members
+analytics engineer 2  -> Developer   push to non-protected branches, create merge requests, run pipelines
+analyst               -> Developer   same; changes to main go through a merge request
+finance partner       -> Reporter    view code, create issues, generate reports; cannot push</div>
+      </div>
+      <div class="step">
+        <p><strong>Place each grant at the lowest level that works.</strong> A grant flows down and cannot be lowered, so Owner and Reporter can sit at the root (one reaches everything on purpose, the other reaches everything harmlessly), Developer sits on the subgroup the team owns, and Maintainer sits on the single project it is needed for.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's matrix (constructed) · grant in CAPS, inherited in lower case, blank = not a member</span>                       group penwood     subgroup data     project pipelines
+data lead              OWNER             owner             owner
+analytics engineer 1   -                 -                 MAINTAINER
+analytics engineer 2   -                 DEVELOPER         developer
+analyst                -                 DEVELOPER         developer
+finance partner        REPORTER          reporter          reporter</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the two sentences under the grid.</strong> One says who may merge to <code>main</code> and why: on Free the default branch is protected by default and Maintainers are the ones allowed to push and merge, so that is one person here. The other names the sixth-person exit Penwood would take and when.</p>
+        <div class="prompt-box good"><span class="label">★ Penwood's two sentences (constructed)</span>Merging to main: the default branch is protected by default; analytics engineer 1 (Maintainer on
+pipelines) merges, the two Developers open merge requests, approvals on Free are optional (Session 5).
+The sixth seat: if a contractor joins before day 60, Penwood takes a personal namespace for short
+work that does not touch main, and revisits Premium ($29 per user a month, checked 2026-10-29)
+together with the compute-minutes decision from Session 1.</div>
+      </div>
+    </div>
+
+    <div class="prompt-box bad">
+      <span class="label">✗ The matrix to avoid</span>everyone -> Maintainer at the group "so nobody is blocked"
+(Five Maintainers in every current and future project under the root, nobody who can be lowered later, and
+one Owner who has no way to tell who changed a protected branch. Blocked is a merge request away; unbounded is not.)</div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 4</h2>
+      <span class="tag exercise">25 min</span>
+    </div>
+    <ol>
+      <li>Finish your own access matrix: every person in one cell, every cell to its right marked inherited. Circle any Maintainer or Owner that sits at the root and write one line on why it must.</li>
+      <li>Count the unique people in your tree, including contractors and read-only partners, and write the number next to "5" with the date you checked the free-user-limit page.</li>
+      <li>Write which of the three exits your team would take for a sixth person, and what it costs in one line: visibility, money, or a second place to grant access.</li>
+      <li>Find out who can merge to your current main branch today, in your current tool, and whether that list is written anywhere. If it is not, your matrix is the first time it is.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and Leader session 3 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">1 · A person is Developer at the top-level group. The subgroup owner tries to set them to Reporter in the subgroup. What happens, according to the subgroups page?</p>
+      <button class="qopt" type="button">A · It works; the subgroup role replaces the group role inside the subgroup</button>
+      <button class="qopt" type="button">B · It is refused; a subgroup role cannot be lower than the role the person has in a parent group</button>
+      <button class="qopt" type="button">C · It works but only for projects created after the change</button>
+      <button class="qopt" type="button">D · Both roles are kept and the person chooses one at login</button>
+      <p class="qwhy">"You can't give a user a role in a subgroup that is lower than the roles the user has in parent groups", and "Users always retain the permissions for their highest role". Inheritance only adds, which is why the grant goes at the lowest level that works.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · Penwood, constructed, has five people. An auditor is added to one project only, inside the private <code>penwood</code> root on Free. As of 2026-10-29, what does the free-user-limit page say happens?</p>
+      <button class="qopt" type="button">A · Nothing; the limit counts members of the top-level group itself, not of projects</button>
+      <button class="qopt" type="button">B · Only that project becomes read-only</button>
+      <button class="qopt" type="button">C · The auditor is added as Minimal Access automatically</button>
+      <button class="qopt" type="button">D · The count is six unique users across the tree, and the whole namespace is placed in a read-only state</button>
+      <p class="qwhy">The count is every unique user across the group, its subgroups and its projects, and the consequence is the namespace "placed in a read-only state". Where the person was added does not change the count. Re-verify the tier page before relying on it.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · On a Free project with no extra configuration, who merges into <code>main</code>, and why?</p>
+      <button class="qopt" type="button">A · Maintainers, because the default branch is protected by default and the rule allows Maintainers to push and merge</button>
+      <button class="qopt" type="button">B · Any Developer, because Developers can push code</button>
+      <button class="qopt" type="button">C · Only the Owner, because merging is a deletion-level action</button>
+      <button class="qopt" type="button">D · Nobody until an approval rule is configured</button>
+      <p class="qwhy">"The default branch for your repository is protected by default" and a new rule selects Maintainers for "Allowed to push and merge". Developers push to non-protected branches and open merge requests. Approvals on Free are optional; required rules are Premium and Ultimate.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Groups, subgroups, projects and visibility</span><span class="note">GitLab Docs: Groups; Subgroups, read at source 2026-10-29</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Eight roles and the inheritance rule</span><span class="note">GitLab Docs: Roles and permissions; Subgroups, read at source 2026-10-29, quoted</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Who merges on Free</span><span class="note">GitLab Docs: Protected branches; Merge request approvals, read at source 2026-10-29; required approvals and group-level protected branches are Premium and Ultimate</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Five users on a private top-level group, read-only over the limit, three top-level groups</span><span class="note">GitLab Docs: Free user limit; Storage usage quotas; GitLab Pricing, read at source 2026-10-29; re-verify before delivery</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Penwood's people and matrix</span><span class="note">Constructed for these pages; roles chosen to illustrate the inheritance rule</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Approvals, Code Owners, protected environments, compliance frameworks</span><span class="note">Session 5</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">What a repository or an issue is</span><span class="note">Linked to the two GitHub courses, not retaught</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Leader session 3 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>The tree</b><span>Top-level group at the root, subgroups (up to 20, five or fewer recommended), projects at the leaves. The URL mirrors it.</span></div>
+      <div class="cheat-item"><b>Visibility only falls</b><span>A subgroup or project cannot be more visible than its parent. A private root caps the whole tree.</span></div>
+      <div class="cheat-item"><b>Eight roles</b><span>Minimal Access, Guest, Planner, Reporter, Security Manager, Developer, Maintainer, Owner. Daily three: Reporter, Developer, Maintainer.</span></div>
+      <div class="cheat-item"><b>One rule</b><span>Highest role always wins; a subgroup cannot set a lower one. Grant high roles low in the tree, low roles high.</span></div>
+      <div class="cheat-item"><b>Five seats</b><span>Unique users across the whole private tree, as of 2026-10-29. Six makes the namespace read-only. Public roots and personal namespaces are exempt.</span></div>
+      <div class="cheat-item"><b>Who merges on Free</b><span>Default branch protected by default; Maintainers push and merge; Developers open merge requests; approvals optional.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have the tree and the matrix. Session 4 opens a pipeline and reads it the way a manager must: stages as a queue, three clocks that disagree, and why a green pipeline proves less than it looks, all from Penwood's constructed job table without running anything.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Leader session 3 of 6 · learn-gitlab-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="a2-saas-or-self-managed.html">← Prev: SaaS or self-managed</a> &nbsp;·&nbsp; <a href="a4-reading-a-pipeline.html">Next: Reading a pipeline like a manager →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>
